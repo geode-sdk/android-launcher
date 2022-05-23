@@ -1,5 +1,6 @@
 package com.robtopx.geometryjump
 
+import android.content.pm.PackageManager
 import dalvik.system.BaseDexClassLoader
 import java.io.File
 
@@ -41,4 +42,12 @@ object LaunchUtils {
         }
     }
 
+    fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
+        return try {
+            packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
 }

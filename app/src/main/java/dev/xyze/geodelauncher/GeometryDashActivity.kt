@@ -1,10 +1,9 @@
 package dev.xyze.geodelauncher
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +30,14 @@ import org.fmod.FMOD
 class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
+
+        // return back to main if Geometry Dash isn't found
+        if (!LaunchUtils.isGeometryDashInstalled(packageManager)) {
+            val launchIntent = Intent(this, MainActivity::class.java)
+            launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+
+            startActivity(launchIntent)
+        }
 
         val gdPackageInfo = packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
         val gdNativeLibraryPath = "${gdPackageInfo.applicationInfo.nativeLibraryDir}/"

@@ -2,7 +2,6 @@ package dev.xyze.geodelauncher
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -21,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.robtopx.geometryjump.GJConstants
+import com.robtopx.geometryjump.LaunchUtils
 import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
 
 
@@ -29,7 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val gdInstalled = isGeometryDashInstalled(packageManager)
+        val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)
 
         setContent {
             GeodeLauncherTheme {
@@ -50,15 +49,6 @@ fun onLaunch(context: Context) {
 
 fun onSettings(context: Context) {
     Toast.makeText(context, "Settings are not implemented yet!", Toast.LENGTH_SHORT).show()
-}
-
-fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
-    return try {
-        packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
-        true
-    } catch (e: PackageManager.NameNotFoundException) {
-        false
-    }
 }
 
 @Composable

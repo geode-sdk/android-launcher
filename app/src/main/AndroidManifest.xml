@@ -25,11 +25,11 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:theme="@style/Theme.Geodelauncher"
+        android:theme="@style/Theme.GeodeLauncher"
         tools:targetApi="31">
         <activity
             android:name=".GeometryDashActivity"
-            android:exported="false"
+            android:exported="true"
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
@@ -37,16 +37,15 @@
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="cocos2dcpp" />
-        </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Geodelauncher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/Theme.GeodeLauncher">
         </activity>
     </application>
 
