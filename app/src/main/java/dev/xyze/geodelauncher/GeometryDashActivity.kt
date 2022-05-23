@@ -28,7 +28,7 @@ import org.cocos2dx.lib.Cocos2dxHelper
 import org.cocos2dx.lib.Cocos2dxRenderer
 import org.fmod.FMOD
 
-class GeometryDashActivity : ComponentActivity() {
+class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
 
@@ -58,7 +58,7 @@ class GeometryDashActivity : ComponentActivity() {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = {
-                    Cocos2dxGLSurfaceView(this).apply {
+                        Cocos2dxGLSurfaceView(this).apply {
                             setEGLConfigChooser(5, 6, 5, 0, 16, 8)
                             initView()
                             setCocos2dxRenderer(Cocos2dxRenderer())
@@ -78,9 +78,10 @@ class GeometryDashActivity : ComponentActivity() {
             }
         }
 
+        Cocos2dxHelper.init(this, this)
 
         JniToCpp.setupHSSAssets(
-            applicationInfo.sourceDir,
+            gdPackageInfo.applicationInfo.sourceDir,
             Environment.getExternalStorageDirectory().absolutePath
         )
         Cocos2dxHelper.nativeSetApkPath(gdPackageInfo.applicationInfo.sourceDir)
@@ -106,5 +107,24 @@ class GeometryDashActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         FMOD.close()
+    }
+
+    override fun runOnGLThread(pRunnable: Runnable) {
+        TODO("Not yet implemented")
+    }
+
+    override fun showDialog(pTitle: String, pMessage: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun showEditTextDialog(
+        pTitle: String,
+        pMessage: String,
+        pInputMode: Int,
+        pInputFlag: Int,
+        pReturnType: Int,
+        pMaxLength: Int
+    ) {
+        TODO("Not yet implemented")
     }
 }
