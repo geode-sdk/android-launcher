@@ -23,7 +23,6 @@ import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.robtopx.geometryjump.GJConstants
 import com.robtopx.geometryjump.LaunchUtils
-import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -51,10 +50,8 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
 
-        LaunchUtils.addDirectoryToClassPath(gdNativeLibraryPath, classLoader)
-
-        System.loadLibrary(GJConstants.FMOD_LIB_NAME)
-        System.loadLibrary(GJConstants.COCOS_LIB_NAME)
+        System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
+        System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
 
         val loadSuccess = try {
             System.loadLibrary(GJConstants.MOD_CORE_LIB_NAME)
