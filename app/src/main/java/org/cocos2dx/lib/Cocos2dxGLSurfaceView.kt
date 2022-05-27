@@ -222,7 +222,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         mCocos2dxEditText = pCocos2dxEditText
         if (sCocos2dxTextInputWrapper != null) {
             mCocos2dxEditText?.setOnEditorActionListener(sCocos2dxTextInputWrapper)
-            mCocos2dxEditText?.setCocos2dxGLSurfaceView(this)
+            mCocos2dxEditText?.cocos2dxGLSurfaceView = this
             requestFocus()
         }
     }
