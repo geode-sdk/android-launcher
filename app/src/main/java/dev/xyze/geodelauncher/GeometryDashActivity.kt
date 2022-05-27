@@ -2,6 +2,7 @@ package dev.xyze.geodelauncher
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import androidx.activity.ComponentActivity
@@ -41,6 +42,8 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         val gdPackageInfo = packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
         val gdNativeLibraryPath = "${gdPackageInfo.applicationInfo.nativeLibraryDir}/"
+
+        LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
 
         LaunchUtils.addDirectoryToClassPath(gdNativeLibraryPath, classLoader)
 

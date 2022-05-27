@@ -1,6 +1,8 @@
 package com.robtopx.geometryjump
 
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.res.AssetManager
 import dalvik.system.BaseDexClassLoader
 import java.io.File
 
@@ -49,5 +51,13 @@ object LaunchUtils {
         } catch (e: PackageManager.NameNotFoundException) {
             false
         }
+    }
+
+    fun addAssetsFromPackage(assetManager: AssetManager, packageInfo: PackageInfo) {
+        // this method is officially marked as deprecated but it is the only method we are allowed to reflect
+        // (the source recommends replacing with AssetManager.setApkAssets(ApkAssets[], boolean) lol)
+        val clazz = assetManager.javaClass
+        val aspMethod = clazz.getDeclaredMethod("addAssetPath", String::class.java)
+        aspMethod.invoke(assetManager, packageInfo.applicationInfo.sourceDir)
     }
 }
