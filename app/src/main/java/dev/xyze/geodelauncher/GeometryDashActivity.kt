@@ -4,6 +4,8 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.Environment
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +24,17 @@ import com.customRobTop.JniToCpp
 import com.robtopx.geometryjump.GJConstants
 import com.robtopx.geometryjump.LaunchUtils
 import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
+import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
 import org.cocos2dx.lib.Cocos2dxRenderer
 import org.fmod.FMOD
 
+
 class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
+
+    private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
 
@@ -66,11 +73,26 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = {
-                    Cocos2dxGLSurfaceView(this).apply {
-                        setEGLConfigChooser(5, 6, 5, 0, 16, 8)
-                        initView()
-                        setCocos2dxRenderer(Cocos2dxRenderer())
-                    }
+                    val frameLayoutParams = ViewGroup.LayoutParams(-1, -1)
+                    val frameLayout = FrameLayout(this)
+                    frameLayout.layoutParams = frameLayoutParams
+                    val editTextLayoutParams = ViewGroup.LayoutParams(-1, -2)
+                    val editText = Cocos2dxEditText(this)
+                    editText.layoutParams = editTextLayoutParams
+                    frameLayout.addView(editText)
+
+                    val glSurfaceView = Cocos2dxGLSurfaceView(this)
+
+                    this.mGLSurfaceView = glSurfaceView
+                    frameLayout.addView(this.mGLSurfaceView)
+                    glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
+                    glSurfaceView.initView()
+                    glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
+
+                    editText.inputType = 145
+                    glSurfaceView.setCocos2dxEditText(editText)
+
+                    frameLayout
                 }
             )
             SnackbarHost(

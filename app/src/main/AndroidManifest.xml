@@ -32,7 +32,7 @@
             android:exported="true"
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:theme="@style/Theme.NoActionBar.Fullscreen"
             android:windowSoftInputMode="stateAlwaysHidden">
             <meta-data
                 android:name="android.app.lib_name"

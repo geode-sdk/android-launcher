@@ -13,10 +13,28 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
         }
 
         @JvmStatic
-        private external fun nativeRender()
+        private external fun nativeDeleteBackward()
+
+        @JvmStatic
+        private external fun nativeGetContentText(): String
+
+        @JvmStatic
+        private external fun nativeInsertText(pText: String)
 
         @JvmStatic
         private external fun nativeKeyDown(pKeyCode: Int): Boolean
+
+        @JvmStatic
+        private external fun nativeOnPause()
+
+        @JvmStatic
+        private external fun nativeOnResume()
+
+        @JvmStatic
+        private external fun nativeRender()
+
+        @JvmStatic
+        private external fun nativeTextClosed()
 
         @JvmStatic
         private external fun nativeTouchesBegin(pID: Int, pX: Float, pY: Float)
@@ -74,5 +92,29 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
 
     fun handleKeyDown(pKeyCode: Int) {
         nativeKeyDown(pKeyCode)
+    }
+
+    fun handleOnPause() {
+        nativeOnPause()
+    }
+
+    fun handleOnResume() {
+        nativeOnResume()
+    }
+
+    fun handleInsertText(pText: String) {
+        nativeInsertText(pText)
+    }
+
+    fun handleDeleteBackward() {
+        nativeDeleteBackward()
+    }
+
+    fun handleTextClosed() {
+        nativeTextClosed()
+    }
+
+    fun getContentText(): String {
+        return nativeGetContentText()
     }
 }

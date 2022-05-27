@@ -6,18 +6,39 @@ import android.opengl.GLSurfaceView
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.inputmethod.InputMethodManager
 import com.customRobTop.BaseRobTopActivity
 
+private const val HANDLER_OPEN_IME_KEYBOARD = 2
+private const val HANDLER_CLOSE_IME_KEYBOARD = 3
 
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     companion object {
         lateinit var mCocos2dxGLSurfaceView: Cocos2dxGLSurfaceView
-        private var sHandler: Handler? = null
+        private lateinit var sHandler: Handler
+        private lateinit var sCocos2dxTextInputWrapper: Cocos2dxTextInputWrapper
+
+        @JvmStatic
+        fun openIMEKeyboard() {
+            val msg = Message()
+            msg.what = HANDLER_OPEN_IME_KEYBOARD
+            msg.obj = mCocos2dxGLSurfaceView.getContentText()
+            sHandler.sendMessage(msg)
+        }
+
+        @JvmStatic
+        fun closeIMEKeyboard() {
+            val msg = Message()
+            msg.what = HANDLER_CLOSE_IME_KEYBOARD
+            sHandler.sendMessage(msg)
+        }
     }
 
     private lateinit var mCocos2dxRenderer: Cocos2dxRenderer
+    var mCocos2dxEditText: Cocos2dxEditText? = null
 
     fun initView() {
         setEGLContextClientVersion(2)
@@ -26,26 +47,27 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         preserveEGLContextOnPause = true
 //        }
         mCocos2dxGLSurfaceView = this
-//        sCocos2dxTextInputWraper = Cocos2dxTextInputWraper(this)
+        sCocos2dxTextInputWrapper = Cocos2dxTextInputWrapper(this)
         sHandler = @SuppressLint("HandlerLeak")
         object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
-/*                when (msg.what) {
-                    2 -> {
-                        if (this@Cocos2dxGLSurfaceView.mCocos2dxEditText != null && this@Cocos2dxGLSurfaceView.mCocos2dxEditText.requestFocus()) {
-                            this@Cocos2dxGLSurfaceView.mCocos2dxEditText.removeTextChangedListener(
-                                Cocos2dxGLSurfaceView.sCocos2dxTextInputWraper
-                            )
-                            this@Cocos2dxGLSurfaceView.mCocos2dxEditText.setText("")
-                            val text = msg.obj as String
-                            this@Cocos2dxGLSurfaceView.mCocos2dxEditText.append(text)
-                            Cocos2dxGLSurfaceView.sCocos2dxTextInputWraper.setOriginText(text)
-                            this@Cocos2dxGLSurfaceView.mCocos2dxEditText.addTextChangedListener(
-                                Cocos2dxGLSurfaceView.sCocos2dxTextInputWraper
-                            )
-                            (Cocos2dxGLSurfaceView.mCocos2dxGLSurfaceView.getContext()
-                                .getSystemService("input_method") as InputMethodManager).showSoftInput(
-                                this@Cocos2dxGLSurfaceView.mCocos2dxEditText,
+                when (msg.what) {
+                    HANDLER_OPEN_IME_KEYBOARD -> {
+                        if (mCocos2dxEditText?.requestFocus() == true) {
+                            mCocos2dxEditText?.apply {
+                                removeTextChangedListener(
+                                    sCocos2dxTextInputWrapper
+                                )
+                                setText("")
+                                val text = msg.obj as String
+                                append(text)
+                                sCocos2dxTextInputWrapper.setOriginText(text)
+                                addTextChangedListener(
+                                    sCocos2dxTextInputWrapper
+                                )
+                            }
+                            (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
+                                mCocos2dxEditText,
                                 0
                             )
                             Log.d("GLSurfaceView", "showSoftInput")
@@ -53,30 +75,27 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                         }
                         return
                     }
-                    3 -> {
-                        if (this@Cocos2dxGLSurfaceView.mCocos2dxEditText != null) {
-                            this@Cocos2dxGLSurfaceView.mCocos2dxEditText.removeTextChangedListener(
-                                Cocos2dxGLSurfaceView.sCocos2dxTextInputWraper
+                    HANDLER_CLOSE_IME_KEYBOARD -> {
+                        mCocos2dxEditText?.apply {
+                            removeTextChangedListener(
+                                sCocos2dxTextInputWrapper
                             )
-                            (Cocos2dxGLSurfaceView.mCocos2dxGLSurfaceView.getContext()
-                                .getSystemService("input_method") as InputMethodManager).hideSoftInputFromWindow(
-                                this@Cocos2dxGLSurfaceView.mCocos2dxEditText.getWindowToken(),
+                            (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+                                windowToken,
                                 0
                             )
-                            this@Cocos2dxGLSurfaceView.requestFocus()
-                            Log.d("GLSurfaceView", "HideSoftInput")
-                            this@Cocos2dxGLSurfaceView.mCocos2dxRenderer.handleTextClosed()
-                            return
                         }
+
+                        requestFocus()
+                        Log.d("GLSurfaceView", "HideSoftInput")
+                        mCocos2dxRenderer.handleTextClosed()
                         return
                     }
                     else -> return
                 }
- */
             }
         }
     }
-
 
     override fun onTouchEvent(pMotionEvent: MotionEvent): Boolean {
         val pointerNumber = pMotionEvent.pointerCount
@@ -188,5 +207,31 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     fun setCocos2dxRenderer(renderer: Cocos2dxRenderer) {
         this.mCocos2dxRenderer = renderer
         setRenderer(this.mCocos2dxRenderer)
+    }
+
+    private fun getContentText(): String {
+        return mCocos2dxRenderer.getContentText()
+    }
+
+
+    fun getCocos2dxEditText(): Cocos2dxEditText? {
+        return mCocos2dxEditText
+    }
+
+    fun setCocos2dxEditText(pCocos2dxEditText: Cocos2dxEditText) {
+        mCocos2dxEditText = pCocos2dxEditText
+        if (sCocos2dxTextInputWrapper != null) {
+            mCocos2dxEditText?.setOnEditorActionListener(sCocos2dxTextInputWrapper)
+            mCocos2dxEditText?.setCocos2dxGLSurfaceView(this)
+            requestFocus()
+        }
+    }
+
+    fun insertText(pText: String) {
+        queueEvent { mCocos2dxRenderer.handleInsertText(pText) }
+    }
+
+    fun deleteBackward() {
+        queueEvent { mCocos2dxRenderer.handleDeleteBackward() }
     }
 }
