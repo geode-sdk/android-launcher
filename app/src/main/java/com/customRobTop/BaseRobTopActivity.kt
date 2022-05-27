@@ -2,9 +2,8 @@ package com.customRobTop
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
+import android.app.KeyguardManager
+import android.content.*
 import android.content.pm.ActivityInfo
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -16,6 +15,9 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.customRobTop.JniToCpp.resumeSound
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.openIMEKeyboard
 import java.util.*
 
 
@@ -23,13 +25,24 @@ import java.util.*
 open class BaseRobTopActivity : DefaultRobTopActivity() {
     companion object {
         private var isLoaded_ = false
-        lateinit var me: Activity
         var blockBackButton_ = false
         private var keyboardActive_ = false
+
+        private var isPaused_ = false
+
+        lateinit var me: Activity
+        private var receiver_: BroadcastReceiver? = null
+        private var shouldResumeSound_ = true
 
         fun setCurrentActivity(currentActivity: Activity) {
             me = currentActivity
         }
+
+        @JvmStatic
+        fun onNativePause() {}
+
+        @JvmStatic
+        fun onNativeResume() {}
 
         @SuppressLint("HardwareIds")
         @JvmStatic
@@ -92,6 +105,10 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
             }
         }
 
+        @JvmStatic
+        fun shouldResumeSound(): Boolean {
+            return shouldResumeSound_
+        }
 
         @JvmStatic
         fun setKeyboardState(value: Boolean) {
@@ -101,6 +118,17 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         @JvmStatic
         fun setBlockBackButton(value: Boolean) {
             blockBackButton_ = value
+        }
+
+        @JvmStatic
+        fun onToggleKeyboard() {
+            me.runOnUiThread {
+                if (keyboardActive_) {
+                    openIMEKeyboard()
+                } else {
+                    closeIMEKeyboard()
+                }
+            }
         }
 
         @JvmStatic
@@ -140,6 +168,21 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         hideSystemUi()
     }
 
+    open fun registerReceiver() {
+        if (receiver_ != null) {
+            me.unregisterReceiver(receiver_)
+            receiver_ = null
+        }
+        try {
+            val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+            filter.addAction(Intent.ACTION_SCREEN_OFF)
+            filter.addAction(Intent.ACTION_USER_PRESENT)
+            receiver_ = ReceiverScreen()
+            registerReceiver(receiver_, filter)
+        } catch (e: Exception) {
+        }
+    }
+
     private fun hideSystemUi() {
         val windowInsetsController =
             ViewCompat.getWindowInsetsController(window.decorView) ?: return
@@ -147,5 +190,41 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         windowInsetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    class ReceiverScreen : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                Intent.ACTION_SCREEN_ON -> {
+                    Log.d("TAG", "ACTION_SCREEN_ON")
+                    if (!(me.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked) {
+                        shouldResumeSound_ = true
+                    }
+                    if (!isPaused_ && shouldResumeSound_) {
+                        resumeSound()
+                    }
+                }
+                Intent.ACTION_SCREEN_OFF -> {
+                    shouldResumeSound_ = false
+                }
+                Intent.ACTION_USER_PRESENT -> {
+                    shouldResumeSound_ = true
+                    if (!isPaused_) {
+                        resumeSound()
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isPaused_ = false
+    }
+
+    /* access modifiers changed from: protected */
+    override fun onPause() {
+        super.onPause()
+        isPaused_ = true
     }
 }

@@ -35,7 +35,10 @@ import org.fmod.FMOD
 
 class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
-    private var sTag = GeometryDashActivity::class.simpleName
+    private val sTag = GeometryDashActivity::class.simpleName
+    private var mIsRunning = false
+    private var mIsOnPause = false
+    private var mHasWindowFocus = false
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,6 +130,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         Cocos2dxHelper.nativeSetApkPath(gdPackageInfo.applicationInfo.sourceDir)
 
         BaseRobTopActivity.setCurrentActivity(this)
+        (BaseRobTopActivity.me as? BaseRobTopActivity)?.registerReceiver()
     }
 
     private fun setupUIState() {
@@ -147,6 +151,42 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onDestroy() {
         super.onDestroy()
         FMOD.close()
+    }
+
+    private fun resumeGame() {
+        mIsRunning = true
+//        Cocos2dxHelper.onResume()
+        mGLSurfaceView?.onResume()
+    }
+
+    private fun pauseGame() {
+        mIsRunning = false
+//        Cocos2dxHelper.onPause()
+        mGLSurfaceView?.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mIsOnPause = false
+        if (mHasWindowFocus && !this.mIsRunning) {
+            resumeGame()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mIsOnPause = true
+        if (mIsRunning) {
+            pauseGame()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        mHasWindowFocus = hasWindowFocus
+        if (hasWindowFocus && !mIsOnPause) {
+            resumeGame()
+        }
     }
 
     override fun runOnGLThread(pRunnable: Runnable) {
