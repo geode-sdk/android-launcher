@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Geode</string>
     <string name="title_activity_geometry_dash">GeometryDash</string>
+    <string name="failed_mod_core">Failed to load mod core.</string>
 </resources>

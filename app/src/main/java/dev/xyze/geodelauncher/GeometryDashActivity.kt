@@ -52,7 +52,11 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val gdPackageInfo = packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
         val gdNativeLibraryPath = "${gdPackageInfo.applicationInfo.nativeLibraryDir}/"
 
-        LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
+        try {
+            LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
+        } catch (e: NoSuchMethodException) {
+            e.printStackTrace()
+        }
 
         System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
@@ -110,7 +114,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             if (!loadSuccess) {
                 LaunchedEffect(snackbarHostState) {
-                    snackbarHostState.showSnackbar("Failed to load mod core.")
+                    snackbarHostState.showSnackbar(getString(R.string.failed_mod_core))
                 }
             }
         }
