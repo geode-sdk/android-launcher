@@ -1,9 +1,12 @@
 package dev.xyze.geodelauncher
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
@@ -31,9 +34,10 @@ import org.fmod.FMOD
 
 
 class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
-
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
+    private var sTag = GeometryDashActivity::class.simpleName
 
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
 
@@ -82,9 +86,16 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
                     this.mGLSurfaceView = glSurfaceView
                     frameLayout.addView(this.mGLSurfaceView)
+
                     glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
+
+                    if (isAndroidEmulator()) {
+                        glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+                    }
+
                     glSurfaceView.initView()
                     glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
+
 
                     editText.inputType = 145
                     glSurfaceView.setCocos2dxEditText(editText)
@@ -152,5 +163,18 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         pMaxLength: Int
     ) {
         TODO("Not yet implemented")
+    }
+
+
+    private fun isAndroidEmulator(): Boolean {
+        Log.d(sTag, "model=" + Build.MODEL)
+        val product = Build.PRODUCT
+        Log.d(sTag, "product=$product")
+        var isEmulator = false
+        if (product != null) {
+            isEmulator = product == "sdk" || product.contains("_sdk") || product.contains("sdk_")
+        }
+        Log.d(sTag, "isEmulator=$isEmulator")
+        return isEmulator
     }
 }
