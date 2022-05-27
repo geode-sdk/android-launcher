@@ -2,12 +2,17 @@ package com.customRobTop
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -53,6 +58,40 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
             return false
         }
+
+        @JvmStatic
+        fun openURL(url: String) {
+            Log.d("MAIN", "Open URL")
+            me.runOnUiThread {
+                me.startActivity(
+                    Intent(
+                        "android.intent.action.VIEW",
+                        Uri.parse(url)
+                    )
+                )
+            }
+        }
+
+        @JvmStatic
+        fun sendMail(subject: String, body: String, to: String) {
+            me.runOnUiThread {
+                val i = Intent("android.intent.action.SEND")
+                i.type = "message/rfc822"
+                i.putExtra("android.intent.extra.EMAIL", arrayOf(to))
+                i.putExtra("android.intent.extra.SUBJECT", subject)
+                i.putExtra("android.intent.extra.TEXT", body)
+                try {
+                    me.startActivity(Intent.createChooser(i, "Send mail..."))
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(
+                        me,
+                        "There are no email clients installed.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+        }
+
 
         @JvmStatic
         fun setKeyboardState(value: Boolean) {
