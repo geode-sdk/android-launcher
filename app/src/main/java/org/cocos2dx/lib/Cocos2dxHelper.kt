@@ -3,6 +3,7 @@ package org.cocos2dx.lib
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.os.Process
 
 
 @Suppress("unused")
@@ -45,6 +46,11 @@ class Cocos2dxHelper {
 //        Cocos2dxHelper.sAssetManager = pContext.getAssets()
             Cocos2dxBitmap.setContext(pContext)
 //            Cocos2dxETCLoader.setContext(pContext)
+        }
+
+        @JvmStatic
+        fun terminateProcess() {
+            Process.killProcess(Process.myPid())
         }
     }
 
