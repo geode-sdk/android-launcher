@@ -2,7 +2,6 @@ package dev.xyze.geodelauncher
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import androidx.activity.ComponentActivity
@@ -64,22 +63,20 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }
 
-            GeodeLauncherTheme {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = {
-                        Cocos2dxGLSurfaceView(this).apply {
-                            setEGLConfigChooser(5, 6, 5, 0, 16, 8)
-                            initView()
-                            setCocos2dxRenderer(Cocos2dxRenderer())
-                        }
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = {
+                    Cocos2dxGLSurfaceView(this).apply {
+                        setEGLConfigChooser(5, 6, 5, 0, 16, 8)
+                        initView()
+                        setCocos2dxRenderer(Cocos2dxRenderer())
                     }
-                )
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+                }
+            )
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             if (!loadSuccess) {
                 LaunchedEffect(snackbarHostState) {
