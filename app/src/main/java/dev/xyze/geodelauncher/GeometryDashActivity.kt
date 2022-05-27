@@ -100,9 +100,8 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
                     glSurfaceView.initView()
                     glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
 
-
                     editText.inputType = 145
-                    glSurfaceView.setCocos2dxEditText(editText)
+                    glSurfaceView.cocos2dxEditText = editText
 
                     frameLayout
                 }

@@ -13,7 +13,7 @@ class Cocos2dxTextInputWrapper(private val mCocos2dxGLSurfaceView: Cocos2dxGLSur
     private var mText: String? = null
 
     private val isFullScreenEdit: Boolean
-        get() = (mCocos2dxGLSurfaceView.mCocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).isFullscreenMode
+        get() = (mCocos2dxGLSurfaceView.cocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).isFullscreenMode
 
     fun setOriginText(pOriginText: String?) {
         mOriginText = pOriginText
@@ -47,7 +47,7 @@ class Cocos2dxTextInputWrapper(private val mCocos2dxGLSurfaceView: Cocos2dxGLSur
 
     override fun onTextChanged(pCharSequence: CharSequence, start: Int, before: Int, count: Int) {}
     override fun onEditorAction(pTextView: TextView, pActionID: Int, pKeyEvent: KeyEvent?): Boolean {
-        if (mCocos2dxGLSurfaceView.getCocos2dxEditText() == pTextView && isFullScreenEdit) {
+        if (mCocos2dxGLSurfaceView.cocos2dxEditText == pTextView && isFullScreenEdit) {
             for (i in mOriginText!!.length downTo 1) {
                 mCocos2dxGLSurfaceView.deleteBackward()
             }
