@@ -1,6 +1,6 @@
 package com.customRobTop
 
-@Suppress("unused")
+@Suppress("unused", "KotlinJniMissingFunction")
 object JniToCpp {
     @JvmStatic
     external fun didCacheInterstitial(str: String?)
