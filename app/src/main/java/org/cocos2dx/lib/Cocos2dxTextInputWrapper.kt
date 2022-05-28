@@ -8,62 +8,62 @@ import android.view.KeyEvent
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 
-class Cocos2dxTextInputWrapper(private val mCocos2dxGLSurfaceView: Cocos2dxGLSurfaceView) : TextWatcher, OnEditorActionListener {
-    private var mOriginText: String? = null
-    private var mText: String? = null
+class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurfaceView) : TextWatcher, OnEditorActionListener {
+    private var originText: String? = null
+    private var text: String? = null
 
     private val isFullScreenEdit: Boolean
-        get() = (mCocos2dxGLSurfaceView.cocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).isFullscreenMode
+        get() = (cocos2dxGLSurfaceView.cocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).isFullscreenMode
 
-    fun setOriginText(pOriginText: String?) {
-        mOriginText = pOriginText
+    fun setOriginText(originText: String?) {
+        this.originText = originText
     }
 
     override fun afterTextChanged(s: Editable) {
         if (!isFullScreenEdit) {
-            var nModified = s.length - mText!!.length
+            var nModified = s.length - text!!.length
             if (nModified > 0) {
-                mCocos2dxGLSurfaceView.insertText(
-                    s.subSequence(mText!!.length, s.length).toString()
+                cocos2dxGLSurfaceView.insertText(
+                    s.subSequence(text!!.length, s.length).toString()
                 )
             } else {
                 while (nModified < 0) {
-                    mCocos2dxGLSurfaceView.deleteBackward()
+                    cocos2dxGLSurfaceView.deleteBackward()
                     nModified++
                 }
             }
-            mText = s.toString()
+            text = s.toString()
         }
     }
 
     override fun beforeTextChanged(
-        pCharSequence: CharSequence,
+        charSequence: CharSequence,
         start: Int,
         count: Int,
         after: Int
     ) {
-        mText = pCharSequence.toString()
+        text = charSequence.toString()
     }
 
     override fun onTextChanged(pCharSequence: CharSequence, start: Int, before: Int, count: Int) {}
-    override fun onEditorAction(pTextView: TextView, pActionID: Int, pKeyEvent: KeyEvent?): Boolean {
-        if (mCocos2dxGLSurfaceView.cocos2dxEditText == pTextView && isFullScreenEdit) {
-            for (i in mOriginText!!.length downTo 1) {
-                mCocos2dxGLSurfaceView.deleteBackward()
+    override fun onEditorAction(textView: TextView, actionID: Int, keyEvent: KeyEvent?): Boolean {
+        if (cocos2dxGLSurfaceView.cocos2dxEditText == textView && isFullScreenEdit) {
+            for (i in originText!!.length downTo 1) {
+                cocos2dxGLSurfaceView.deleteBackward()
             }
-            var text = pTextView.text.toString()
+            var text = textView.text.toString()
             if (text.compareTo("") == 0) {
                 text = "\n"
             }
             if (10 != text[text.length - 1].code) {
                 text += 10.toChar()
             }
-            mCocos2dxGLSurfaceView.insertText(text)
+            cocos2dxGLSurfaceView.insertText(text)
         }
-        if (pActionID != 6) {
+        if (actionID != 6) {
             return false
         }
-        mCocos2dxGLSurfaceView.requestFocus()
+        cocos2dxGLSurfaceView.requestFocus()
         Cocos2dxGLSurfaceView.closeIMEKeyboard()
         return false
     }

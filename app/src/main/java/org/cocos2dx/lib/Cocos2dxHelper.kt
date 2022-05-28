@@ -12,21 +12,21 @@ object Cocos2dxHelper {
 //    private val sAssetManager: AssetManager? = null
 //    private val sCocos2dxAccelerometer: Cocos2dxAccelerometer? = null
 //    private val sAccelerometerEnabled = false
-    private var sPackageName: String? = null
-    private var sFileDirectory: String? = null
+    private var packageName: String? = null
+    private var fileDirectory: String? = null
 
 //    private var sContext: Context? = null
-    private var sCocos2dxHelperListener: Cocos2dxHelperListener? = null
+    private var cocos2dxHelperListener: Cocos2dxHelperListener? = null
 
     @JvmStatic
-    external fun nativeSetApkPath(pApkPath: String)
+    external fun nativeSetApkPath(apkPath: String)
 
     @JvmStatic
-    private external fun nativeSetEditTextDialogResult(pBytes: ByteArray)
+    private external fun nativeSetEditTextDialogResult(bytes: ByteArray)
 
     @JvmStatic
     fun getCocos2dxWritablePath(): String? {
-        return sFileDirectory
+        return fileDirectory
     }
 
     @JvmStatic
@@ -34,12 +34,12 @@ object Cocos2dxHelper {
         Process.killProcess(Process.myPid())
     }
 
-    fun init(pContext: Context, pCocos2dxHelperListener: Cocos2dxHelperListener) {
-        val applicationInfo: ApplicationInfo = pContext.applicationInfo
+    fun init(context: Context, cocos2dxHelperListener: Cocos2dxHelperListener) {
+        val applicationInfo: ApplicationInfo = context.applicationInfo
 //        sContext = pContext
-        sCocos2dxHelperListener = pCocos2dxHelperListener
-        sPackageName = applicationInfo.packageName
-        sFileDirectory = pContext.filesDir.absolutePath
+        this.cocos2dxHelperListener = cocos2dxHelperListener
+        packageName = applicationInfo.packageName
+        fileDirectory = context.filesDir.absolutePath
 
         nativeSetApkPath(applicationInfo.sourceDir)
 //        Cocos2dxHelper.sCocos2dxAccelerometer = Cocos2dxAccelerometer(pContext)
@@ -50,22 +50,22 @@ object Cocos2dxHelper {
 //        }
 //        Cocos2dxHelper.sCocos2dSound = Cocos2dxSound(pContext, simultaneousStreams)
 //        Cocos2dxHelper.sAssetManager = pContext.getAssets()
-        Cocos2dxBitmap.setContext(pContext)
+        Cocos2dxBitmap.setContext(context)
 //            Cocos2dxETCLoader.setContext(pContext)
     }
 
     interface Cocos2dxHelperListener {
-        fun runOnGLThread(pRunnable: Runnable)
+        fun runOnGLThread(runnable: Runnable)
 
-        fun showDialog(pTitle: String, pMessage: String)
+        fun showDialog(title: String, message: String)
 
         fun showEditTextDialog(
-            pTitle: String,
-            pMessage: String,
-            pInputMode: Int,
-            pInputFlag: Int,
-            pReturnType: Int,
-            pMaxLength: Int
+            title: String,
+            message: String,
+            inputMode: Int,
+            inputFlag: Int,
+            returnType: Int,
+            maxLength: Int
         )
     }
 }

@@ -218,21 +218,21 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
     }
 
-    override fun runOnGLThread(pRunnable: Runnable) {
+    override fun runOnGLThread(runnable: Runnable) {
         TODO("Not yet implemented")
     }
 
-    override fun showDialog(pTitle: String, pMessage: String) {
+    override fun showDialog(title: String, message: String) {
         TODO("Not yet implemented")
     }
 
     override fun showEditTextDialog(
-        pTitle: String,
-        pMessage: String,
-        pInputMode: Int,
-        pInputFlag: Int,
-        pReturnType: Int,
-        pMaxLength: Int
+        title: String,
+        message: String,
+        inputMode: Int,
+        inputFlag: Int,
+        returnType: Int,
+        maxLength: Int
     ) {
         TODO("Not yet implemented")
     }

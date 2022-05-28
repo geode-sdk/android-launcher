@@ -1,6 +1,5 @@
 package org.cocos2dx.lib
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Handler
@@ -17,33 +16,33 @@ private const val HANDLER_CLOSE_IME_KEYBOARD = 3
 
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     companion object {
-        lateinit var mCocos2dxGLSurfaceView: Cocos2dxGLSurfaceView
-        private lateinit var sHandler: Handler
-        private lateinit var sCocos2dxTextInputWrapper: Cocos2dxTextInputWrapper
+        lateinit var cocos2dxGLSurfaceView: Cocos2dxGLSurfaceView
+        private lateinit var handler: Handler
+        private lateinit var cocos2dxTextInputWrapper: Cocos2dxTextInputWrapper
 
         @JvmStatic
         fun openIMEKeyboard() {
             val msg = Message()
             msg.what = HANDLER_OPEN_IME_KEYBOARD
-            msg.obj = mCocos2dxGLSurfaceView.getContentText()
-            sHandler.sendMessage(msg)
+            msg.obj = cocos2dxGLSurfaceView.getContentText()
+            handler.sendMessage(msg)
         }
 
         @JvmStatic
         fun closeIMEKeyboard() {
             val msg = Message()
             msg.what = HANDLER_CLOSE_IME_KEYBOARD
-            sHandler.sendMessage(msg)
+            handler.sendMessage(msg)
         }
     }
 
-    private lateinit var mCocos2dxRenderer: Cocos2dxRenderer
+    private lateinit var cocos2dxRenderer: Cocos2dxRenderer
 
     var cocos2dxEditText: Cocos2dxEditText? = null
         set(value) {
             field = value
 
-            field?.setOnEditorActionListener(sCocos2dxTextInputWrapper)
+            field?.setOnEditorActionListener(cocos2dxTextInputWrapper)
             field?.cocos2dxGLSurfaceView = this
             requestFocus()
         }
@@ -54,24 +53,23 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 //        if (Build.VERSION.SDK_INT >= 11) {
         preserveEGLContextOnPause = true
 //        }
-        mCocos2dxGLSurfaceView = this
-        sCocos2dxTextInputWrapper = Cocos2dxTextInputWrapper(this)
-        sHandler = @SuppressLint("HandlerLeak")
-        object : Handler(Looper.getMainLooper()) {
+        cocos2dxGLSurfaceView = this
+        cocos2dxTextInputWrapper = Cocos2dxTextInputWrapper(this)
+        Cocos2dxGLSurfaceView.handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
                     HANDLER_OPEN_IME_KEYBOARD -> {
                         if (cocos2dxEditText?.requestFocus() == true) {
                             cocos2dxEditText?.apply {
                                 removeTextChangedListener(
-                                    sCocos2dxTextInputWrapper
+                                    cocos2dxTextInputWrapper
                                 )
                                 setText("")
                                 val text = msg.obj as String
                                 append(text)
-                                sCocos2dxTextInputWrapper.setOriginText(text)
+                                cocos2dxTextInputWrapper.setOriginText(text)
                                 addTextChangedListener(
-                                    sCocos2dxTextInputWrapper
+                                    cocos2dxTextInputWrapper
                                 )
                             }
                             (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
@@ -86,7 +84,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                     HANDLER_CLOSE_IME_KEYBOARD -> {
                         cocos2dxEditText?.apply {
                             removeTextChangedListener(
-                                sCocos2dxTextInputWrapper
+                                cocos2dxTextInputWrapper
                             )
                             (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
                                 windowToken,
@@ -96,7 +94,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
                         requestFocus()
                         Log.d("GLSurfaceView", "HideSoftInput")
-                        mCocos2dxRenderer.handleTextClosed()
+                        cocos2dxRenderer.handleTextClosed()
                         return
                     }
                     else -> return
@@ -106,32 +104,32 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onPause() {
-        queueEvent { mCocos2dxRenderer.handleOnPause() }
+        queueEvent { cocos2dxRenderer.handleOnPause() }
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        queueEvent { mCocos2dxRenderer.handleOnResume() }
+        queueEvent { cocos2dxRenderer.handleOnResume() }
     }
 
-    override fun onTouchEvent(pMotionEvent: MotionEvent): Boolean {
-        val pointerNumber = pMotionEvent.pointerCount
+    override fun onTouchEvent(motionEvent: MotionEvent): Boolean {
+        val pointerNumber = motionEvent.pointerCount
         val ids = IntArray(pointerNumber)
         val xs = FloatArray(pointerNumber)
         val ys = FloatArray(pointerNumber)
         for (i in 0 until pointerNumber) {
-            ids[i] = pMotionEvent.getPointerId(i)
-            xs[i] = pMotionEvent.getX(i)
-            ys[i] = pMotionEvent.getY(i)
+            ids[i] = motionEvent.getPointerId(i)
+            xs[i] = motionEvent.getX(i)
+            ys[i] = motionEvent.getY(i)
         }
-        return when (pMotionEvent.action and MotionEvent.ACTION_MASK) {
+        return when (motionEvent.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                val idDown = pMotionEvent.getPointerId(0)
+                val idDown = motionEvent.getPointerId(0)
                 val xDown = xs[0]
                 val f = ys[0]
                 queueEvent {
-                    mCocos2dxRenderer.handleActionDown(
+                    cocos2dxRenderer.handleActionDown(
                         idDown,
                         xDown,
                         f
@@ -140,15 +138,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 true
             }
             MotionEvent.ACTION_UP -> {
-                val idUp = pMotionEvent.getPointerId(0)
+                val idUp = motionEvent.getPointerId(0)
                 val f2 = xs[0]
                 val f3 = ys[0]
-                queueEvent { mCocos2dxRenderer.handleActionUp(idUp, f2, f3) }
+                queueEvent { cocos2dxRenderer.handleActionUp(idUp, f2, f3) }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
                 queueEvent {
-                    mCocos2dxRenderer.handleActionMove(
+                    cocos2dxRenderer.handleActionMove(
                         ids,
                         xs,
                         ys
@@ -158,7 +156,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             }
             MotionEvent.ACTION_CANCEL -> {
                 queueEvent {
-                    mCocos2dxRenderer.handleActionCancel(
+                    cocos2dxRenderer.handleActionCancel(
                         ids,
                         xs,
                         ys
@@ -167,12 +165,12 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 true
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
-                val indexPointerDown = pMotionEvent.action shr 8
-                val idPointerDown = pMotionEvent.getPointerId(indexPointerDown)
-                val xPointerDown = pMotionEvent.getX(indexPointerDown)
-                val y = pMotionEvent.getY(indexPointerDown)
+                val indexPointerDown = motionEvent.action shr 8
+                val idPointerDown = motionEvent.getPointerId(indexPointerDown)
+                val xPointerDown = motionEvent.getX(indexPointerDown)
+                val y = motionEvent.getY(indexPointerDown)
                 queueEvent {
-                    mCocos2dxRenderer.handleActionDown(
+                    cocos2dxRenderer.handleActionDown(
                         idPointerDown,
                         xPointerDown,
                         y
@@ -181,12 +179,12 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 true
             }
             MotionEvent.ACTION_POINTER_UP -> {
-                val indexPointUp = pMotionEvent.action shr 8
-                val idPointerUp = pMotionEvent.getPointerId(indexPointUp)
-                val xPointerUp = pMotionEvent.getX(indexPointUp)
-                val y2 = pMotionEvent.getY(indexPointUp)
+                val indexPointUp = motionEvent.action shr 8
+                val idPointerUp = motionEvent.getPointerId(indexPointUp)
+                val xPointerUp = motionEvent.getX(indexPointUp)
+                val y2 = motionEvent.getY(indexPointUp)
                 queueEvent {
-                    mCocos2dxRenderer.handleActionUp(
+                    cocos2dxRenderer.handleActionUp(
                         idPointerUp,
                         xPointerUp,
                         y2
@@ -199,43 +197,43 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onSizeChanged(
-        pNewSurfaceWidth: Int,
-        pNewSurfaceHeight: Int,
-        pOldSurfaceWidth: Int,
-        pOldSurfaceHeight: Int
+        newSurfaceWidth: Int,
+        newSurfaceHeight: Int,
+        oldSurfaceWidth: Int,
+        oldSurfaceHeight: Int
     ) {
         if (!isInEditMode) {
-            mCocos2dxRenderer.setScreenWidthAndHeight(pNewSurfaceWidth, pNewSurfaceHeight)
+            cocos2dxRenderer.setScreenWidthAndHeight(newSurfaceWidth, newSurfaceHeight)
         }
     }
 
-    override fun onKeyDown(pKeyCode: Int, pKeyEvent: KeyEvent): Boolean {
-        return when (pKeyCode) {
+    override fun onKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
+        return when (keyCode) {
             KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
-                if (pKeyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
+                if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
                     return true
                 }
-                queueEvent { mCocos2dxRenderer.handleKeyDown(pKeyCode) }
+                queueEvent { cocos2dxRenderer.handleKeyDown(keyCode) }
                 true
             }
-            else -> super.onKeyDown(pKeyCode, pKeyEvent)
+            else -> super.onKeyDown(keyCode, keyEvent)
         }
     }
 
     fun setCocos2dxRenderer(renderer: Cocos2dxRenderer) {
-        this.mCocos2dxRenderer = renderer
-        setRenderer(this.mCocos2dxRenderer)
+        this.cocos2dxRenderer = renderer
+        setRenderer(this.cocos2dxRenderer)
     }
 
     private fun getContentText(): String {
-        return mCocos2dxRenderer.getContentText()
+        return cocos2dxRenderer.getContentText()
     }
 
-    fun insertText(pText: String) {
-        queueEvent { mCocos2dxRenderer.handleInsertText(pText) }
+    fun insertText(text: String) {
+        queueEvent { cocos2dxRenderer.handleInsertText(text) }
     }
 
     fun deleteBackward() {
-        queueEvent { mCocos2dxRenderer.handleDeleteBackward() }
+        queueEvent { cocos2dxRenderer.handleDeleteBackward() }
     }
 }

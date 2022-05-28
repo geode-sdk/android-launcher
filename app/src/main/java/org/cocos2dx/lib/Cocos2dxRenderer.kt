@@ -8,7 +8,7 @@ import javax.microedition.khronos.opengles.GL10
 class Cocos2dxRenderer : GLSurfaceView.Renderer {
     companion object {
         @JvmStatic
-        fun setAnimationInterval(@Suppress("UNUSED_PARAMETER") pAnimationInterval: Double) {
+        fun setAnimationInterval(@Suppress("UNUSED_PARAMETER") animationInterval: Double) {
             // this function is useless for gd
         }
 
@@ -19,10 +19,10 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
         private external fun nativeGetContentText(): String
 
         @JvmStatic
-        private external fun nativeInsertText(pText: String)
+        private external fun nativeInsertText(text: String)
 
         @JvmStatic
-        private external fun nativeKeyDown(pKeyCode: Int): Boolean
+        private external fun nativeKeyDown(keyCode: Int): Boolean
 
         @JvmStatic
         private external fun nativeOnPause()
@@ -37,63 +37,63 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
         private external fun nativeTextClosed()
 
         @JvmStatic
-        private external fun nativeTouchesBegin(pID: Int, pX: Float, pY: Float)
+        private external fun nativeTouchesBegin(id: Int, x: Float, y: Float)
 
         @JvmStatic
         private external fun nativeTouchesCancel(
-            pIDs: IntArray,
-            pXs: FloatArray,
-            pYs: FloatArray
+            ids: IntArray,
+            xs: FloatArray,
+            ys: FloatArray
         )
 
         @JvmStatic
-        private external fun nativeTouchesEnd(pID: Int, pX: Float, pY: Float)
+        private external fun nativeTouchesEnd(id: Int, x: Float, y: Float)
 
         @JvmStatic
-        private external fun nativeTouchesMove(pIDs: IntArray, pXs: FloatArray, pYs: FloatArray)
+        private external fun nativeTouchesMove(ids: IntArray, xs: FloatArray, ys: FloatArray)
 
         @JvmStatic
-        private external fun nativeInit(pWidth: Int, pHeight: Int)
+        private external fun nativeInit(width: Int, height: Int)
     }
 
-    private var mLastTickInNanoSeconds: Long = 0
-    private var mScreenWidth = 0
-    private var mScreenHeight = 0
+    private var lastTickInNanoSeconds: Long = 0
+    private var screenWidth = 0
+    private var screenHeight = 0
 
-    fun setScreenWidthAndHeight(pSurfaceWidth: Int, pSurfaceHeight: Int) {
-        mScreenWidth = pSurfaceWidth
-        mScreenHeight = pSurfaceHeight
+    fun setScreenWidthAndHeight(surfaceWidth: Int, surfaceHeight: Int) {
+        screenWidth = surfaceWidth
+        screenHeight = surfaceHeight
     }
 
-    override fun onSurfaceCreated(pGL10: GL10?, pEGLConfig: EGLConfig?) {
-        nativeInit(this.mScreenWidth, this.mScreenHeight)
-        this.mLastTickInNanoSeconds = System.nanoTime()
+    override fun onSurfaceCreated(gl10: GL10?, eglConfig: EGLConfig?) {
+        nativeInit(screenWidth, screenHeight)
+        lastTickInNanoSeconds = System.nanoTime()
     }
 
-    override fun onSurfaceChanged(pGL10: GL10?, pWidth: Int, pHeight: Int) {}
+    override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {}
 
     override fun onDrawFrame(gl: GL10?) {
         nativeRender()
     }
 
-    fun handleActionDown(pID: Int, pX: Float, pY: Float) {
-        nativeTouchesBegin(pID, pX, pY)
+    fun handleActionDown(id: Int, x: Float, y: Float) {
+        nativeTouchesBegin(id, x, y)
     }
 
-    fun handleActionUp(pID: Int, pX: Float, pY: Float) {
-        nativeTouchesEnd(pID, pX, pY)
+    fun handleActionUp(id: Int, x: Float, y: Float) {
+        nativeTouchesEnd(id, x, y)
     }
 
-    fun handleActionCancel(pIDs: IntArray, pXs: FloatArray, pYs: FloatArray) {
-        nativeTouchesCancel(pIDs, pXs, pYs)
+    fun handleActionCancel(ids: IntArray, xs: FloatArray, ys: FloatArray) {
+        nativeTouchesCancel(ids, xs, ys)
     }
 
-    fun handleActionMove(pIDs: IntArray, pXs: FloatArray, pYs: FloatArray) {
-        nativeTouchesMove(pIDs, pXs, pYs)
+    fun handleActionMove(ids: IntArray, xs: FloatArray, ys: FloatArray) {
+        nativeTouchesMove(ids, xs, ys)
     }
 
-    fun handleKeyDown(pKeyCode: Int) {
-        nativeKeyDown(pKeyCode)
+    fun handleKeyDown(keyCode: Int) {
+        nativeKeyDown(keyCode)
     }
 
     fun handleOnPause() {
@@ -104,8 +104,8 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
         nativeOnResume()
     }
 
-    fun handleInsertText(pText: String) {
-        nativeInsertText(pText)
+    fun handleInsertText(text: String) {
+        nativeInsertText(text)
     }
 
     fun handleDeleteBackward() {

@@ -16,33 +16,34 @@ import kotlin.math.ceil
 
 @Suppress("KotlinJniMissingFunction")
 object Cocos2dxBitmap {
-    private lateinit var sContext: WeakReference<Context>
+    private lateinit var context: WeakReference<Context>
 
     @JvmStatic
     private external fun nativeInitBitmapDC(pWidth: Int, pHeight: Int, pPixels: ByteArray)
 
-    fun setContext(pContext: Context) {
-        sContext = WeakReference(pContext)
+    fun setContext(context: Context) {
+        this.context = WeakReference(context)
     }
 
+/*
     fun createTextBitmap(
-        pString: String,
-        pFontName: String,
-        pFontSize: Int,
-        pAlignment: Int,
-        pWidth: Int,
-        pHeight: Int
+        string: String,
+        fontName: String,
+        fontSize: Int,
+        alignment: Int,
+        width: Int,
+        height: Int
     ) {
         createTextBitmapShadowStroke(
-            pString,
-            pFontName,
-            pFontSize,
+            string,
+            fontName,
+            fontSize,
             1.0f,
             1.0f,
             1.0f,
-            pAlignment,
-            pWidth,
-            pHeight,
+            alignment,
+            width,
+            height,
             false,
             0.0f,
             0.0f,
@@ -54,19 +55,20 @@ object Cocos2dxBitmap {
             1.0f
         )
     }
+*/
 
     @JvmStatic
     @Suppress("unused")
     fun createTextBitmapShadowStroke(
-        pString: String,
-        pFontName: String,
-        pFontSize: Int,
+        string: String,
+        fontName: String,
+        fontSize: Int,
         fontTintR: Float,
         fontTintG: Float,
         fontTintB: Float,
-        pAlignment: Int,
-        pWidth: Int,
-        pHeight: Int,
+        alignment: Int,
+        width: Int,
+        height: Int,
         shadow: Boolean,
         shadowDX: Float,
         shadowDY: Float,
@@ -78,21 +80,21 @@ object Cocos2dxBitmap {
         strokeSize: Float
     ) {
         val bitmapTotalHeight: Int
-        val horizontalAlignment = pAlignment and 15
-        val verticalAlignment = pAlignment shr 4 and 15
-        val pString2 = refactorString(pString)
-        val paint = newPaint(pFontName, pFontSize, horizontalAlignment)
+        val horizontalAlignment = alignment and 15
+        val verticalAlignment = alignment shr 4 and 15
+        val pString2 = refactorString(string)
+        val paint = newPaint(fontName, fontSize, horizontalAlignment)
         paint.setARGB(
             MotionEvent.ACTION_MASK,
             (255.0 * fontTintR.toDouble()).toInt(),
             (255.0 * fontTintG.toDouble()).toInt(),
             (255.0 * fontTintB.toDouble()).toInt()
         )
-        val textProperty = computeTextProperty(pString2, pWidth, pHeight, paint)
-        bitmapTotalHeight = if (pHeight == 0) {
-            textProperty.mTotalHeight
+        val textProperty = computeTextProperty(pString2, width, height, paint)
+        bitmapTotalHeight = if (height == 0) {
+            textProperty.totalHeight
         } else {
-            pHeight
+            height
         }
         var bitmapPaddingX = 0.0f
         var bitmapPaddingY = 0.0f
@@ -110,14 +112,14 @@ object Cocos2dxBitmap {
             }
         }
         val bitmap = Bitmap.createBitmap(
-            textProperty.mMaxWidth + bitmapPaddingX.toInt(),
+            textProperty.maxWidth + bitmapPaddingX.toInt(),
             bitmapPaddingY.toInt() + bitmapTotalHeight,
             Bitmap.Config.ARGB_8888
         )
         val canvas = Canvas(bitmap)
         val fontMetricsInt = paint.fontMetricsInt
-        var y = computeY(fontMetricsInt, pHeight, textProperty.mTotalHeight, verticalAlignment)
-        val lines = textProperty.mLines
+        var y = computeY(fontMetricsInt, height, textProperty.totalHeight, verticalAlignment)
+        val lines = textProperty.lines
         val length = lines.size
         for (i in 0 until length) {
             val line = lines[i]
@@ -125,16 +127,16 @@ object Cocos2dxBitmap {
                 line!!,
                 computeX(
                     line,
-                    textProperty.mMaxWidth,
+                    textProperty.maxWidth,
                     horizontalAlignment
                 ).toFloat() + renderTextDeltaX,
                 y.toFloat() + renderTextDeltaY,
                 paint
             )
-            y += textProperty.mHeightPerLine
+            y += textProperty.heightPerLine
         }
         if (stroke) {
-            val paintStroke = newPaint(pFontName, pFontSize, horizontalAlignment)
+            val paintStroke = newPaint(fontName, fontSize, horizontalAlignment)
             paintStroke.style = Paint.Style.STROKE
             paintStroke.strokeWidth = 0.5f * strokeSize
             paintStroke.setARGB(
@@ -143,8 +145,8 @@ object Cocos2dxBitmap {
                 strokeG.toInt() * MotionEvent.ACTION_MASK,
                 strokeB.toInt() * MotionEvent.ACTION_MASK
             )
-            var y2 = computeY(fontMetricsInt, pHeight, textProperty.mTotalHeight, verticalAlignment)
-            val lines2 = textProperty.mLines
+            var y2 = computeY(fontMetricsInt, height, textProperty.totalHeight, verticalAlignment)
+            val lines2 = textProperty.lines
             val length2 = lines2.size
             for (i2 in 0 until length2) {
                 val line2 = lines2[i2]
@@ -152,36 +154,36 @@ object Cocos2dxBitmap {
                     line2!!,
                     computeX(
                         line2,
-                        textProperty.mMaxWidth,
+                        textProperty.maxWidth,
                         horizontalAlignment
                     ).toFloat() + renderTextDeltaX,
                     y2.toFloat() + renderTextDeltaY,
                     paintStroke
                 )
-                y2 += textProperty.mHeightPerLine
+                y2 += textProperty.heightPerLine
             }
         }
         initNativeObject(bitmap)
     }
 
-    private fun newPaint(pFontName: String, pFontSize: Int, pHorizontalAlignment: Int): Paint {
+    private fun newPaint(fontName: String, fontSize: Int, horizontalAlignment: Int): Paint {
         val paint = Paint()
         paint.color = -1
-        paint.textSize = pFontSize.toFloat()
+        paint.textSize = fontSize.toFloat()
         paint.isAntiAlias = true
-        if (pFontName.endsWith(".ttf")) {
+        if (fontName.endsWith(".ttf")) {
             try {
-                sContext.get()?.apply {
-                    paint.typeface = Cocos2dxTypefaces[this, pFontName]
+                context.get()?.apply {
+                    paint.typeface = Cocos2dxTypefaces[this, fontName]
                 }
             } catch (e: Exception) {
-                Log.e("Cocos2dxBitmap", "error to create ttf type face: $pFontName")
-                paint.typeface = Typeface.create(pFontName, Typeface.NORMAL)
+                Log.e("Cocos2dxBitmap", "error to create ttf type face: $fontName")
+                paint.typeface = Typeface.create(fontName, Typeface.NORMAL)
             }
         } else {
-            paint.typeface = Typeface.create(pFontName, Typeface.NORMAL)
+            paint.typeface = Typeface.create(fontName, Typeface.NORMAL)
         }
-        when (pHorizontalAlignment) {
+        when (horizontalAlignment) {
             2 -> paint.textAlign = Paint.Align.RIGHT
             3 -> paint.textAlign = Paint.Align.CENTER
             else -> paint.textAlign = Paint.Align.LEFT
@@ -190,20 +192,20 @@ object Cocos2dxBitmap {
     }
 
     private fun computeTextProperty(
-        pString: String,
-        pWidth: Int,
-        pHeight: Int,
-        pPaint: Paint
+        string: String,
+        width: Int,
+        height: Int,
+        paint: Paint
     ): TextProperty {
-        val fm = pPaint.fontMetricsInt
+        val fm = paint.fontMetricsInt
         val h = ceil((fm.bottom - fm.top).toDouble()).toInt()
         var maxContentWidth = 0
-        val lines = splitString(pString, pWidth, pHeight, pPaint)
-        if (pWidth != 0) {
-            maxContentWidth = pWidth
+        val lines = splitString(string, width, height, paint)
+        if (width != 0) {
+            maxContentWidth = width
         } else {
             for (line in lines) {
-                val temp = ceil(pPaint.measureText(line, 0, line!!.length).toDouble()).toInt()
+                val temp = ceil(paint.measureText(line, 0, line!!.length).toDouble()).toInt()
                 if (temp > maxContentWidth) {
                     maxContentWidth = temp
                 }
@@ -212,45 +214,45 @@ object Cocos2dxBitmap {
         return TextProperty(maxContentWidth, h, lines)
     }
 
-    private fun computeX(@Suppress("UNUSED_PARAMETER") pText: String?, pMaxWidth: Int, pHorizontalAlignment: Int): Int {
-        return when (pHorizontalAlignment) {
-            2 -> pMaxWidth
-            3 -> pMaxWidth / 2
+    private fun computeX(@Suppress("UNUSED_PARAMETER") text: String?, maxWidth: Int, horizontalAlignment: Int): Int {
+        return when (horizontalAlignment) {
+            2 -> maxWidth
+            3 -> maxWidth / 2
             else -> 0
         }
     }
 
     private fun computeY(
-        pFontMetricsInt: FontMetricsInt,
-        pConstrainHeight: Int,
-        pTotalHeight: Int,
-        pVerticalAlignment: Int
+        fontMetricsInt: FontMetricsInt,
+        constrainHeight: Int,
+        totalHeight: Int,
+        verticalAlignment: Int
     ): Int {
-        val y = -pFontMetricsInt.top
-        return if (pConstrainHeight <= pTotalHeight) {
+        val y = -fontMetricsInt.top
+        return if (constrainHeight <= totalHeight) {
             y
-        } else when (pVerticalAlignment) {
-            1 -> -pFontMetricsInt.top
-            2 -> -pFontMetricsInt.top + (pConstrainHeight - pTotalHeight)
-            3 -> -pFontMetricsInt.top + (pConstrainHeight - pTotalHeight) / 2
+        } else when (verticalAlignment) {
+            1 -> -fontMetricsInt.top
+            2 -> -fontMetricsInt.top + (constrainHeight - totalHeight)
+            3 -> -fontMetricsInt.top + (constrainHeight - totalHeight) / 2
             else -> y
         }
     }
 
     private fun splitString(
-        pString: String,
-        pMaxWidth: Int,
-        pMaxHeight: Int,
-        pPaint: Paint
+        string: String,
+        maxWidth: Int,
+        maxHeight: Int,
+        paint: Paint
     ): Array<String?> {
-        val lines: Array<String?> = pString.split("\\n").toTypedArray()
-        val fm = pPaint.fontMetricsInt
-        val maxLines = pMaxHeight / ceil((fm.bottom - fm.top).toDouble()).toInt()
-        return if (pMaxWidth != 0) {
+        val lines: Array<String?> = string.split("\\n").toTypedArray()
+        val fm = paint.fontMetricsInt
+        val maxLines = maxHeight / ceil((fm.bottom - fm.top).toDouble()).toInt()
+        return if (maxWidth != 0) {
             val strList = LinkedList<String?>()
             for (line in lines) {
-                if (ceil(pPaint.measureText(line).toDouble()).toInt() > pMaxWidth) {
-                    strList.addAll(divideStringWithMaxWidth(line, pMaxWidth, pPaint))
+                if (ceil(paint.measureText(line).toDouble()).toInt() > maxWidth) {
+                    strList.addAll(divideStringWithMaxWidth(line, maxWidth, paint))
                 } else {
                     strList.add(line)
                 }
@@ -266,7 +268,7 @@ object Cocos2dxBitmap {
             val ret = arrayOfNulls<String>(strList.size)
             strList.toArray(ret)
             ret
-        } else if (pMaxHeight == 0 || lines.size <= maxLines) {
+        } else if (maxHeight == 0 || lines.size <= maxLines) {
             lines
         } else {
             val strList2 = LinkedList<String?>()
@@ -280,28 +282,28 @@ object Cocos2dxBitmap {
     }
 
     private fun divideStringWithMaxWidth(
-        pString: String?,
-        pMaxWidth: Int,
-        pPaint: Paint
+        string: String?,
+        maxWidth: Int,
+        paint: Paint
     ): LinkedList<String?> {
-        val charLength = pString!!.length
+        val charLength = string!!.length
         var start = 0
         val strList = LinkedList<String?>()
         var i = 1
         while (i <= charLength) {
-            val tempWidth = ceil(pPaint.measureText(pString, start, i).toDouble()).toInt()
-            if (tempWidth >= pMaxWidth) {
-                val lastIndexOfSpace = pString.substring(0, i).lastIndexOf(" ")
+            val tempWidth = ceil(paint.measureText(string, start, i).toDouble()).toInt()
+            if (tempWidth >= maxWidth) {
+                val lastIndexOfSpace = string.substring(0, i).lastIndexOf(" ")
                 if (lastIndexOfSpace != -1 && lastIndexOfSpace > start) {
-                    strList.add(pString.substring(start, lastIndexOfSpace))
+                    strList.add(string.substring(start, lastIndexOfSpace))
                     i = lastIndexOfSpace + 1
-                } else if (tempWidth > pMaxWidth) {
-                    strList.add(pString.substring(start, i - 1))
+                } else if (tempWidth > maxWidth) {
+                    strList.add(string.substring(start, i - 1))
                     i--
                 } else {
-                    strList.add(pString.substring(start, i))
+                    strList.add(string.substring(start, i))
                 }
-                while (i < charLength && pString[i] == ' ') {
+                while (i < charLength && string[i] == ' ') {
                     i++
                 }
                 start = i
@@ -309,7 +311,7 @@ object Cocos2dxBitmap {
             i++
         }
         if (start < charLength) {
-            strList.add(pString.substring(start))
+            strList.add(string.substring(start))
         }
         return strList
     }
@@ -376,29 +378,27 @@ object Cocos2dxBitmap {
 
     @Suppress("unused")
     @JvmStatic
-    private fun getStringWithEllipsis(pString: String, width: Float, fontSize: Float): String {
-        if (TextUtils.isEmpty(pString)) {
+    private fun getStringWithEllipsis(string: String, width: Float, fontSize: Float): String {
+        if (TextUtils.isEmpty(string)) {
             return ""
         }
         val paint = TextPaint()
         paint.typeface = Typeface.DEFAULT
         paint.textSize = fontSize
-        return TextUtils.ellipsize(pString, paint, width, TextUtils.TruncateAt.END).toString()
+        return TextUtils.ellipsize(string, paint, width, TextUtils.TruncateAt.END).toString()
     }
 
-    private class TextProperty constructor(/* access modifiers changed from: private */
-        val mMaxWidth: Int, /* access modifiers changed from: private */
-        val mHeightPerLine: Int, pLines: Array<String?>
+    private class TextProperty constructor(
+        val maxWidth: Int,
+        val heightPerLine: Int, pLines: Array<String?>
     ) {
-        /* access modifiers changed from: private */
-        val mLines: Array<String?>
+        val lines: Array<String?>
 
-        /* access modifiers changed from: private */
-        val mTotalHeight: Int
+        val totalHeight: Int
 
         init {
-            mTotalHeight = pLines.size * mHeightPerLine
-            mLines = pLines
+            totalHeight = pLines.size * heightPerLine
+            lines = pLines
         }
     }
 }
