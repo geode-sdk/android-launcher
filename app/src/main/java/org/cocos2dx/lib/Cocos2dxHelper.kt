@@ -3,6 +3,7 @@ package org.cocos2dx.lib
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Process
+import com.customRobTop.BaseRobTopActivity
 
 
 @Suppress("unused", "KotlinJniMissingFunction")
@@ -32,6 +33,11 @@ object Cocos2dxHelper {
     @JvmStatic
     fun terminateProcess() {
         Process.killProcess(Process.myPid())
+    }
+
+    @JvmStatic
+    fun getDPI(): Int {
+        return BaseRobTopActivity.me.get()?.resources?.configuration?.densityDpi ?: -1
     }
 
     fun init(context: Context, cocos2dxHelperListener: Cocos2dxHelperListener) {
