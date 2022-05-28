@@ -14,6 +14,7 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.ceil
 
+@Suppress("KotlinJniMissingFunction")
 object Cocos2dxBitmap {
     private lateinit var sContext: WeakReference<Context>
 

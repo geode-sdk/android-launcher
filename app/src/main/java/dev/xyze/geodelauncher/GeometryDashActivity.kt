@@ -61,6 +61,15 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
             e.printStackTrace()
         }
 
+        try {
+            // fixes bugs specific to the new app directory, such as package name
+            LauncherFix.loadLibrary()
+            LauncherFix.setOriginalDataPath(GJConstants.GJ_DATA_DIR)
+            LauncherFix.setDataPath(filesDir.path)
+        } catch (e: UnsatisfiedLinkError) {
+            e.printStackTrace()
+        }
+
         System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
 

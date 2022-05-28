@@ -4,7 +4,7 @@ import android.opengl.GLSurfaceView
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-@Suppress("unused")
+@Suppress("unused", "KotlinJniMissingFunction")
 class Cocos2dxRenderer : GLSurfaceView.Renderer {
     companion object {
         @JvmStatic
