@@ -1,7 +1,9 @@
 package dev.xyze.geodelauncher
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -39,6 +41,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mIsRunning = false
     private var mIsOnPause = false
     private var mHasWindowFocus = false
+    private var mReceiver: BroadcastReceiver? = null
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,7 +142,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         Cocos2dxHelper.nativeSetApkPath(gdPackageInfo.applicationInfo.sourceDir)
 
         BaseRobTopActivity.setCurrentActivity(this)
-        (BaseRobTopActivity.me as? BaseRobTopActivity)?.registerReceiver()
+        registerReceiver()
     }
 
     private fun setupUIState() {
@@ -177,6 +180,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onResume() {
         super.onResume()
         mIsOnPause = false
+        BaseRobTopActivity.isPaused = false
         if (mHasWindowFocus && !this.mIsRunning) {
             resumeGame()
         }
@@ -185,8 +189,24 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onPause() {
         super.onPause()
         mIsOnPause = true
+        BaseRobTopActivity.isPaused = true
         if (mIsRunning) {
             pauseGame()
+        }
+    }
+
+    private fun registerReceiver() {
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver)
+            mReceiver = null
+        }
+        try {
+            val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+            filter.addAction(Intent.ACTION_SCREEN_OFF)
+            filter.addAction(Intent.ACTION_USER_PRESENT)
+            mReceiver = BaseRobTopActivity.ReceiverScreen()
+            registerReceiver(mReceiver, filter)
+        } catch (e: Exception) {
         }
     }
 

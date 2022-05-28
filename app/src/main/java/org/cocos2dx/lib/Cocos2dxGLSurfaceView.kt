@@ -212,7 +212,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     override fun onKeyDown(pKeyCode: Int, pKeyEvent: KeyEvent): Boolean {
         return when (pKeyCode) {
             KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
-                if (pKeyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton_) {
+                if (pKeyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
                     return true
                 }
                 queueEvent { mCocos2dxRenderer.handleKeyDown(pKeyCode) }
