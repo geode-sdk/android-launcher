@@ -4,9 +4,6 @@ project(launcherfix)
 
 add_library(launcherfix SHARED launcher-fix.cpp)
 
-find_library(log-lib log)
-target_link_libraries(launcherfix ${log-lib})
-
 include(FetchContent)
 
 FetchContent_Declare(dobby

@@ -1,5 +1,4 @@
 #include <dlfcn.h>
-#include <android/log.h>
 #include <string>
 #include <dobby.h>
 #include <jni.h>
