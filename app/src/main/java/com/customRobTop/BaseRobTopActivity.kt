@@ -77,12 +77,20 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         fun openURL(url: String) {
             Log.d("MAIN", "Open URL")
             me.get()?.runOnUiThread {
-                me.get()?.startActivity(
-                    Intent(
-                        "android.intent.action.VIEW",
-                        Uri.parse(url)
+                try {
+                    me.get()?.startActivity(
+                        Intent(
+                            "android.intent.action.VIEW",
+                            Uri.parse(url)
+                        )
                     )
-                )
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(
+                        me.get(),
+                        "No activity found to open this URL.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
         }
 
@@ -154,10 +162,49 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         }
 
         @JvmStatic
-        fun stopRecording() { }
+        fun stopRecording() {}
 
         @JvmStatic
         fun unlockAchievement(id: String) {}
+
+        @JvmStatic
+        fun enableBanner() {}
+
+        @JvmStatic
+        fun disableBanner() {}
+
+        @JvmStatic
+        fun showInterstitial() {}
+
+        @JvmStatic
+        fun cacheInterstitial() {}
+
+        @JvmStatic
+        fun hasCachedInterstitial(): Boolean {
+            return false
+        }
+
+        @JvmStatic
+        fun showRewardedVideo() {}
+
+        @JvmStatic
+        fun cacheRewardedVideo() {}
+
+        @JvmStatic
+        fun hasCachedRewardedVideo(): Boolean {
+            return false
+        }
+
+        @JvmStatic
+        fun queueRefreshBanner() {}
+
+        @JvmStatic
+        fun enableBannerNoRefresh() {}
+
+        @JvmStatic
+        fun openAppPage() {
+            // todo: should this open to the rate dialog?
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
