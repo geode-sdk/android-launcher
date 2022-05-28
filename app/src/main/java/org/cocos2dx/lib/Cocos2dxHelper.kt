@@ -24,6 +24,9 @@ class Cocos2dxHelper {
         external fun nativeSetApkPath(pApkPath: String)
 
         @JvmStatic
+        private external fun nativeSetEditTextDialogResult(pBytes: ByteArray)
+
+        @JvmStatic
         fun getCocos2dxWritablePath(): String? {
             return sFileDirectory
         }

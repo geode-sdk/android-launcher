@@ -51,12 +51,14 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
 
         @JvmStatic
         private external fun nativeTouchesMove(pIDs: IntArray, pXs: FloatArray, pYs: FloatArray)
+
+        @JvmStatic
+        private external fun nativeInit(pWidth: Int, pHeight: Int)
     }
 
     private var mLastTickInNanoSeconds: Long = 0
     private var mScreenWidth = 0
     private var mScreenHeight = 0
-    private external fun nativeInit(pWidth: Int, pHeight: Int)
 
     fun setScreenWidthAndHeight(pSurfaceWidth: Int, pSurfaceHeight: Int) {
         mScreenWidth = pSurfaceWidth

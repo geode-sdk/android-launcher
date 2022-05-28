@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.JniToCpp.resumeSound
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.openIMEKeyboard
+import java.lang.ref.WeakReference
 import java.util.*
 
 
@@ -30,12 +31,12 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
         private var isPaused_ = false
 
-        lateinit var me: Activity
+        lateinit var me: WeakReference<Activity>
         private var receiver_: BroadcastReceiver? = null
         private var shouldResumeSound_ = true
 
         fun setCurrentActivity(currentActivity: Activity) {
-            me = currentActivity
+            me = WeakReference(currentActivity)
         }
 
         @JvmStatic
@@ -48,7 +49,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         @JvmStatic
         fun getUserID(): String {
             // this is how RobTop does it in 2.2, based on the meltdown leaks
-            val androidId = Settings.Secure.getString(me.contentResolver, Settings.Secure.ANDROID_ID)
+            val androidId = Settings.Secure.getString(me.get()?.contentResolver, Settings.Secure.ANDROID_ID)
             return if ("9774d56d682e549c" != androidId) {
                 UUID.nameUUIDFromBytes(androidId.toByteArray()).toString()
             } else return UUID.randomUUID().toString()
@@ -56,7 +57,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
         @JvmStatic
         fun isNetworkAvailable(): Boolean {
-            val connectivityManager = me.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager = me.get()?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
             val activeNetwork = connectivityManager.activeNetwork
             val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
@@ -75,8 +76,8 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
         @JvmStatic
         fun openURL(url: String) {
             Log.d("MAIN", "Open URL")
-            me.runOnUiThread {
-                me.startActivity(
+            me.get()?.runOnUiThread {
+                me.get()?.startActivity(
                     Intent(
                         "android.intent.action.VIEW",
                         Uri.parse(url)
@@ -87,17 +88,17 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
         @JvmStatic
         fun sendMail(subject: String, body: String, to: String) {
-            me.runOnUiThread {
+            me.get()?.runOnUiThread {
                 val i = Intent("android.intent.action.SEND")
                 i.type = "message/rfc822"
                 i.putExtra("android.intent.extra.EMAIL", arrayOf(to))
                 i.putExtra("android.intent.extra.SUBJECT", subject)
                 i.putExtra("android.intent.extra.TEXT", body)
                 try {
-                    me.startActivity(Intent.createChooser(i, "Send mail..."))
+                    me.get()?.startActivity(Intent.createChooser(i, "Send mail..."))
                 } catch (e: ActivityNotFoundException) {
                     Toast.makeText(
-                        me,
+                        me.get(),
                         "There are no email clients installed.",
                         Toast.LENGTH_SHORT,
                     ).show()
@@ -122,7 +123,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
         @JvmStatic
         fun onToggleKeyboard() {
-            me.runOnUiThread {
+            me.get()?.runOnUiThread {
                 if (keyboardActive_) {
                     openIMEKeyboard()
                 } else {
@@ -161,7 +162,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        me = this
+        me = WeakReference(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
@@ -170,7 +171,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
 
     open fun registerReceiver() {
         if (receiver_ != null) {
-            me.unregisterReceiver(receiver_)
+            me.get()?.unregisterReceiver(receiver_)
             receiver_ = null
         }
         try {
@@ -197,7 +198,7 @@ open class BaseRobTopActivity : DefaultRobTopActivity() {
             when (intent.action) {
                 Intent.ACTION_SCREEN_ON -> {
                     Log.d("TAG", "ACTION_SCREEN_ON")
-                    if (!(me.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked) {
+                    if (!(me.get()?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked) {
                         shouldResumeSound_ = true
                     }
                     if (!isPaused_ && shouldResumeSound_) {

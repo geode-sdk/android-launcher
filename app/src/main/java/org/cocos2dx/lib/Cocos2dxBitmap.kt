@@ -1,6 +1,5 @@
 package org.cocos2dx.lib
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.graphics.Paint.FontMetricsInt
@@ -8,19 +7,21 @@ import android.text.TextPaint
 import android.text.TextUtils
 import android.util.Log
 import android.view.MotionEvent
+import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.ceil
 
-@Suppress("unused")
-@SuppressLint("StaticFieldLeak")
 object Cocos2dxBitmap {
-    private lateinit var sContext: Context
-    private external fun nativeInitBitmapDC(i: Int, i2: Int, bArr: ByteArray)
+    private lateinit var sContext: WeakReference<Context>
+
+    @JvmStatic
+    private external fun nativeInitBitmapDC(pWidth: Int, pHeight: Int, pPixels: ByteArray)
+
     fun setContext(pContext: Context) {
-        sContext = pContext
+        sContext = WeakReference(pContext)
     }
 
     fun createTextBitmap(
@@ -54,6 +55,7 @@ object Cocos2dxBitmap {
     }
 
     @JvmStatic
+    @Suppress("unused")
     fun createTextBitmapShadowStroke(
         pString: String,
         pFontName: String,
@@ -168,7 +170,9 @@ object Cocos2dxBitmap {
         paint.isAntiAlias = true
         if (pFontName.endsWith(".ttf")) {
             try {
-                paint.typeface = Cocos2dxTypefaces[sContext, pFontName]
+                sContext.get()?.apply {
+                    paint.typeface = Cocos2dxTypefaces[this, pFontName]
+                }
             } catch (e: Exception) {
                 Log.e("Cocos2dxBitmap", "error to create ttf type face: $pFontName")
                 paint.typeface = Typeface.create(pFontName, Typeface.NORMAL)
@@ -349,6 +353,8 @@ object Cocos2dxBitmap {
         return pixels
     }
 
+    @Suppress("unused")
+    @JvmStatic
     private fun getFontSizeAccordingHeight(height: Int): Int {
         val paint = Paint()
         val bounds = Rect()
@@ -367,6 +373,8 @@ object Cocos2dxBitmap {
         return incrTextSize
     }
 
+    @Suppress("unused")
+    @JvmStatic
     private fun getStringWithEllipsis(pString: String, width: Float, fontSize: Float): String {
         if (TextUtils.isEmpty(pString)) {
             return ""

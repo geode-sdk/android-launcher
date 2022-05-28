@@ -1,5 +1,6 @@
 package com.customRobTop
 
+@Suppress("unused")
 object JniToCpp {
     @JvmStatic
     external fun didCacheInterstitial(str: String?)
