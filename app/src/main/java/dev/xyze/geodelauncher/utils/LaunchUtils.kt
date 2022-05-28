@@ -1,4 +1,4 @@
-package com.robtopx.geometryjump
+package dev.xyze.geodelauncher.utils
 
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager

@@ -24,8 +24,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
-import com.robtopx.geometryjump.GJConstants
-import com.robtopx.geometryjump.LaunchUtils
+import dev.xyze.geodelauncher.utils.GJConstants
+import dev.xyze.geodelauncher.utils.LaunchUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper

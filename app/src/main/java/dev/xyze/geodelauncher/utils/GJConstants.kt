@@ -1,4 +1,4 @@
-package com.robtopx.geometryjump
+package dev.xyze.geodelauncher.utils
 
 object GJConstants {
     const val PACKAGE_NAME = "com.robtopx.geometryjump"

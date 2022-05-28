@@ -19,7 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.robtopx.geometryjump.LaunchUtils
+import dev.xyze.geodelauncher.utils.LaunchUtils
 import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
 
 
