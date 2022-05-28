@@ -240,6 +240,13 @@ object BaseRobTopActivity {
     @JvmStatic
     fun openAppPage() {}
 
+    @JvmStatic
+    @Deprecated(
+        message = "This method is not found on newer versions of the game.",
+        level = DeprecationLevel.HIDDEN
+    )
+    fun logEvent(event: String) {}
+
     class ReceiverScreen : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
