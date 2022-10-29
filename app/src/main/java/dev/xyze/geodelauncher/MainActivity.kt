@@ -185,7 +185,7 @@ fun TestingUtils() {
                     onCheckedChange = null
                 )
                 Text(
-                    text = "Load testing libraries",
+                    text = "Load files in /test",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 16.dp)
                 )

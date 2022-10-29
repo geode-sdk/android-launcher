@@ -2,12 +2,14 @@ package dev.xyze.geodelauncher
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.FileUtils
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +27,11 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
 import org.cocos2dx.lib.Cocos2dxRenderer
 import org.fmod.FMOD
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
@@ -68,10 +75,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
 
-        try {
-            System.loadLibrary(GJConstants.MOD_CORE_LIB_NAME)
-        } catch (e: UnsatisfiedLinkError) {
-            e.printStackTrace()
+        if (getLoadTesting()) {
+            loadTestingLibraries()
         }
 
         FMOD.init(this)
@@ -248,5 +253,58 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
         Log.d(sTag, "isEmulator=$isEmulator")
         return isEmulator
+    }
+
+    private fun getLoadTesting(): Boolean {
+        val preferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+
+        return preferences.getBoolean(getString(R.string.preference_load_testing), false)
+    }
+
+    private fun loadTestingLibraries() {
+        // clear data dir
+        val testDirPath = File(filesDir.path + File.separator + "testlib" + File.separator)
+        if (testDirPath.exists()) {
+            testDirPath.deleteRecursively()
+        }
+        testDirPath.mkdir()
+
+        getExternalFilesDir(null)?.let { dir ->
+            val testingPath = dir.path + File.separator + "test" + File.separator
+
+            File(testingPath).walk().forEach {
+                if (it.isFile) {
+                    // welcome to the world of Android classloader permissions
+                    val outputFile = File(testDirPath.path + File.separator + it.name)
+                    copyFile(FileInputStream(it), FileOutputStream(outputFile))
+
+                    try {
+                        println("Loading test library ${outputFile.name}")
+                        System.load(outputFile.path)
+                    } catch (e: UnsatisfiedLinkError) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
+        // gotta love copying
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            FileUtils.copy(inputStream, outputStream)
+        } else {
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    val buffer = ByteArray(4 * 1024)
+                    while (true) {
+                        val byteCount = input.read(buffer)
+                        if (byteCount < 0) break
+                        output.write(buffer, 0, byteCount)
+                    }
+                    output.flush()
+                }
+            }
+        }
     }
 }
