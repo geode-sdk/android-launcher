@@ -64,7 +64,7 @@ FILE* fopen_hook(const char* pathname, const char* mode) {
 
     DobbyHook(
         fopen_addr,
-        reinterpret_cast<void*>(&fopen_hook),
-        reinterpret_cast<void**>(&fopen_original)
+        reinterpret_cast<dobby_dummy_func_t>(&fopen_hook),
+        reinterpret_cast<dobby_dummy_func_t*>(&fopen_original)
     );
 }

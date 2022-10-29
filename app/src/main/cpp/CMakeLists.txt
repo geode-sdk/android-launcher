@@ -8,12 +8,14 @@ include(FetchContent)
 
 FetchContent_Declare(dobby
         GIT_REPOSITORY https://github.com/jmpews/Dobby
-        GIT_TAG 223aabced0431525c7d45196f9409fc505d58ac8)
+        GIT_TAG 6a80a61ea062424d1595613058a174c64454fa57)
 
 FetchContent_GetProperties(dobby)
 if(NOT dobby_POPULATED)
     FetchContent_Populate(dobby)
 
+    # fixes Dobby build
+    # add_compile_definitions(typeof=__typeof__)
     set(DOBBY_DEBUG OFF CACHE INTERNAL "" FORCE)
     set(DOBBY_GENERATE_SHARED OFF CACHE INTERNAL "" FORCE)
 
