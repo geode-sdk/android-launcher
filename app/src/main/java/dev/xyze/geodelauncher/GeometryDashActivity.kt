@@ -14,11 +14,6 @@ import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
@@ -76,11 +71,10 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
 
-        val loadSuccess = try {
+        try {
             System.loadLibrary(GJConstants.MOD_CORE_LIB_NAME)
-            true
         } catch (e: UnsatisfiedLinkError) {
-            false
+            e.printStackTrace()
         }
 
         FMOD.init(this)
@@ -88,8 +82,6 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         super.onCreate(savedInstanceState)
 
         setContent {
-            val snackbarHostState = remember { SnackbarHostState() }
-
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = {
@@ -121,16 +113,6 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
                     frameLayout
                 }
             )
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (!loadSuccess) {
-                LaunchedEffect(snackbarHostState) {
-                    snackbarHostState.showSnackbar(getString(R.string.failed_mod_core))
-                }
-            }
         }
 
         Cocos2dxHelper.init(this, this)
