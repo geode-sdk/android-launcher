@@ -9,14 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.ViewCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
@@ -30,7 +27,7 @@ import org.cocos2dx.lib.Cocos2dxRenderer
 import org.fmod.FMOD
 
 
-class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
+class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private val sTag = GeometryDashActivity::class.simpleName
     private var mIsRunning = false
@@ -81,39 +78,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         super.onCreate(savedInstanceState)
 
-        setContent {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = {
-                    val frameLayoutParams = ViewGroup.LayoutParams(-1, -1)
-                    val frameLayout = FrameLayout(this)
-                    frameLayout.layoutParams = frameLayoutParams
-                    val editTextLayoutParams = ViewGroup.LayoutParams(-1, -2)
-                    val editText = Cocos2dxEditText(this)
-                    editText.layoutParams = editTextLayoutParams
-                    frameLayout.addView(editText)
-
-                    val glSurfaceView = Cocos2dxGLSurfaceView(this)
-
-                    this.mGLSurfaceView = glSurfaceView
-                    frameLayout.addView(this.mGLSurfaceView)
-
-                    glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
-
-                    if (isAndroidEmulator()) {
-                        glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-                    }
-
-                    glSurfaceView.initView()
-                    glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
-
-                    editText.inputType = 145
-                    glSurfaceView.cocos2dxEditText = editText
-
-                    frameLayout
-                }
-            )
-        }
+        setContentView(createView())
 
         Cocos2dxHelper.init(this, this)
 
@@ -127,6 +92,35 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
         registerReceiver()
     }
 
+    private fun createView(): FrameLayout {
+        val frameLayoutParams = ViewGroup.LayoutParams(-1, -1)
+        val frameLayout = FrameLayout(this)
+        frameLayout.layoutParams = frameLayoutParams
+        val editTextLayoutParams = ViewGroup.LayoutParams(-1, -2)
+        val editText = Cocos2dxEditText(this)
+        editText.layoutParams = editTextLayoutParams
+        frameLayout.addView(editText)
+
+        val glSurfaceView = Cocos2dxGLSurfaceView(this)
+
+        this.mGLSurfaceView = glSurfaceView
+        frameLayout.addView(this.mGLSurfaceView)
+
+        glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
+
+        if (isAndroidEmulator()) {
+            glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+        }
+
+        glSurfaceView.initView()
+        glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
+
+        editText.inputType = 145
+        glSurfaceView.cocos2dxEditText = editText
+
+        return frameLayout
+    }
+
     private fun setupUIState() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
@@ -134,16 +128,37 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun hideSystemUi() {
-        val windowInsetsController =
-            ViewCompat.getWindowInsetsController(window.decorView) ?: return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            // window compat is dumb!!
+            setLegacyVisibility()
+            window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                    setLegacyVisibility()
+                }
+            }
+        }
 
-        windowInsetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    private fun setLegacyVisibility() {
+        // setDecorFitsSystemWindows doesn't hide anything
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceivers()
         FMOD.close()
     }
 
@@ -178,10 +193,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun registerReceiver() {
-        if (mReceiver != null) {
-            unregisterReceiver(mReceiver)
-            mReceiver = null
-        }
+        unregisterReceivers()
         try {
             val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
             filter.addAction(Intent.ACTION_SCREEN_OFF)
@@ -189,6 +201,13 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
             mReceiver = BaseRobTopActivity.ReceiverScreen()
             registerReceiver(mReceiver, filter)
         } catch (e: Exception) {
+        }
+    }
+
+    private fun unregisterReceivers() {
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver)
+            mReceiver = null
         }
     }
 
@@ -201,7 +220,7 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     override fun runOnGLThread(runnable: Runnable) {
-        TODO("Not yet implemented")
+        mGLSurfaceView?.queueEvent(runnable)
     }
 
     override fun showDialog(title: String, message: String) {
@@ -218,7 +237,6 @@ class GeometryDashActivity : ComponentActivity(), Cocos2dxHelper.Cocos2dxHelperL
     ) {
         TODO("Not yet implemented")
     }
-
 
     private fun isAndroidEmulator(): Boolean {
         Log.d(sTag, "model=" + Build.MODEL)
