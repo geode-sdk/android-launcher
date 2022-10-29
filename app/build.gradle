@@ -21,6 +21,8 @@ android {
                 arguments "-DDOBBY_DEBUG=OFF"
             }
         }
+        // support only armv7 as GD only supports armv7
+        ndkConfig.abiFilters "armeabi-v7a"
     }
 
     buildTypes {
