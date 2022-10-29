@@ -1,4 +1,4 @@
-package dev.xyze.geodelauncher
+package com.geode.geodelauncher
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -20,8 +20,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
-import dev.xyze.geodelauncher.utils.GJConstants
-import dev.xyze.geodelauncher.utils.LaunchUtils
+import com.geode.geodelauncher.utils.GJConstants
+import com.geode.geodelauncher.utils.LaunchUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -205,7 +205,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             filter.addAction(Intent.ACTION_USER_PRESENT)
             mReceiver = BaseRobTopActivity.ReceiverScreen()
             registerReceiver(mReceiver, filter)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
     }
 
@@ -261,6 +261,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         return preferences.getBoolean(getString(R.string.preference_load_testing), false)
     }
 
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun loadTestingLibraries() {
         // clear data dir
         val testDirPath = File(filesDir.path + File.separator + "testlib" + File.separator)

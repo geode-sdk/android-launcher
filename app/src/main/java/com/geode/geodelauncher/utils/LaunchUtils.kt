@@ -1,4 +1,4 @@
-package dev.xyze.geodelauncher.utils
+package com.geode.geodelauncher.utils
 
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager

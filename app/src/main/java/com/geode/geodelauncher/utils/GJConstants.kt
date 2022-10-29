@@ -1,4 +1,4 @@
-package dev.xyze.geodelauncher.utils
+package com.geode.geodelauncher.utils
 
 import android.annotation.SuppressLint
 

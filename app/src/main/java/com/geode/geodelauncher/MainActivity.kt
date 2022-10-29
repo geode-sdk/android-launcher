@@ -1,4 +1,4 @@
-package dev.xyze.geodelauncher
+package com.geode.geodelauncher
 
 import android.content.Context
 import android.content.Intent
@@ -26,8 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
-import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
-import dev.xyze.geodelauncher.utils.LaunchUtils
+import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
+import com.geode.geodelauncher.utils.LaunchUtils
 import java.io.File
 
 
@@ -198,7 +198,7 @@ fun TestingUtils() {
                     contentDescription = "Folder Icon"
                 )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Open Geode folder")
+                Text("Open external folder")
             }
         }
     }

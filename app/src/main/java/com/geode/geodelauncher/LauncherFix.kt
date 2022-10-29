@@ -1,6 +1,6 @@
-package dev.xyze.geodelauncher
+package com.geode.geodelauncher
 
-import dev.xyze.geodelauncher.utils.GJConstants
+import com.geode.geodelauncher.utils.GJConstants
 
 object LauncherFix {
     fun loadLibrary() {
