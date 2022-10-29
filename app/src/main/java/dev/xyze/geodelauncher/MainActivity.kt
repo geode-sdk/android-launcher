@@ -8,14 +8,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,6 +109,59 @@ fun MainScreen(gdInstalled: Boolean = true) {
                 Text("Settings")
             }
  */
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        val isLoadTesting = remember { mutableStateOf(true) }
+
+        Card(
+            elevation = CardDefaults.elevatedCardElevation(),
+            colors = CardDefaults.elevatedCardColors(),
+        ) {
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Row() {
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = "Warning Icon"
+                    )
+                    Spacer(Modifier.size(4.dp))
+                    Text("Testing Utils")
+                }
+                Row(
+                    Modifier
+                        .height(56.dp)
+                        .toggleable(
+                            value = isLoadTesting.value,
+                            onValueChange = { isLoadTesting.value = !isLoadTesting.value },
+                            role = Role.Checkbox
+                        )
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isLoadTesting.value,
+                        onCheckedChange = null
+                    )
+                    Text(
+                        text = "Load testing libraries",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+                Button(onClick = { /* TODO: add geode folder open */ }) {
+                    Icon(
+                        Icons.Filled.ExitToApp,
+                        contentDescription = "Folder Icon"
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text("Open Geode folder")
+                }
+            }
         }
     }
 }
