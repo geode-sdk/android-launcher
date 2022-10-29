@@ -25,8 +25,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.xyze.geodelauncher.utils.LaunchUtils
+import androidx.core.content.edit
 import dev.xyze.geodelauncher.ui.theme.GeodeLauncherTheme
+import dev.xyze.geodelauncher.utils.LaunchUtils
+import java.io.File
 
 
 class MainActivity : ComponentActivity() {
@@ -54,6 +56,33 @@ fun onLaunch(context: Context) {
 
 fun onSettings(context: Context) {
     Toast.makeText(context, "Settings are not implemented yet!", Toast.LENGTH_SHORT).show()
+}
+
+fun onOpenFolder(context: Context) {
+    context.getExternalFilesDir(null)?.let { file ->
+        val geodePath = file.path + File.separator + "geode" + File.separator
+    }
+}
+
+fun toggleLoadTesting(context: Context): Boolean {
+    val preferences = context.getSharedPreferences(
+        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+
+    val current = preferences.getBoolean(
+        context.getString(R.string.preference_load_testing), false)
+    preferences.edit {
+        putBoolean(context.getString(R.string.preference_load_testing), !current)
+        commit()
+    }
+
+    return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
+}
+
+fun getLoadTesting(context: Context): Boolean {
+    val preferences = context.getSharedPreferences(
+        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+
+    return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
 }
 
 @Composable
@@ -113,54 +142,63 @@ fun MainScreen(gdInstalled: Boolean = true) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        val isLoadTesting = remember { mutableStateOf(true) }
+        TestingUtils()
+    }
+}
 
-        Card(
-            elevation = CardDefaults.elevatedCardElevation(),
-            colors = CardDefaults.elevatedCardColors(),
+@Composable
+fun TestingUtils() {
+    val context = LocalContext.current
+
+    val isLoadTesting = remember { mutableStateOf(getLoadTesting(context)) }
+
+    Card(
+        elevation = CardDefaults.elevatedCardElevation(),
+        colors = CardDefaults.elevatedCardColors(),
+    ) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            Row {
+                Icon(
+                    Icons.Filled.Warning,
+                    contentDescription = "Warning Icon"
+                )
+                Spacer(Modifier.size(4.dp))
+                Text("Testing Utils")
+            }
+            Row(
+                Modifier
+                    .height(48.dp)
+                    .toggleable(
+                        value = isLoadTesting.value,
+                        onValueChange = { isLoadTesting.value = toggleLoadTesting(context) },
+                        role = Role.Checkbox
+                    )
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    Icon(
-                        Icons.Filled.Warning,
-                        contentDescription = "Warning Icon"
-                    )
-                    Spacer(Modifier.size(4.dp))
-                    Text("Testing Utils")
-                }
-                Row(
-                    Modifier
-                        .height(48.dp)
-                        .toggleable(
-                            value = isLoadTesting.value,
-                            onValueChange = { isLoadTesting.value = !isLoadTesting.value },
-                            role = Role.Checkbox
-                        )
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = isLoadTesting.value,
-                        onCheckedChange = null
-                    )
-                    Text(
-                        text = "Load testing libraries",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
-                }
-                Button(onClick = { /* TODO: add geode folder open */ }) {
-                    Icon(
-                        Icons.Filled.ExitToApp,
-                        contentDescription = "Folder Icon"
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text("Open Geode folder")
-                }
+                Checkbox(
+                    checked = isLoadTesting.value,
+                    onCheckedChange = null
+                )
+                Text(
+                    text = "Load testing libraries",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+            Button(
+                onClick = { onOpenFolder(context) }
+            ) {
+                Icon(
+                    Icons.Filled.ExitToApp,
+                    contentDescription = "Folder Icon"
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text("Open Geode folder")
             }
         }
     }
