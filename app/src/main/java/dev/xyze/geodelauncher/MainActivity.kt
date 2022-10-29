@@ -124,7 +124,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row() {
+                Row {
                     Icon(
                         Icons.Filled.Warning,
                         contentDescription = "Warning Icon"
@@ -134,7 +134,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
                 }
                 Row(
                     Modifier
-                        .height(56.dp)
+                        .height(48.dp)
                         .toggleable(
                             value = isLoadTesting.value,
                             onValueChange = { isLoadTesting.value = !isLoadTesting.value },
