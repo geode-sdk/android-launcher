@@ -1,7 +1,10 @@
 package com.geode.geodelauncher
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -10,7 +13,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -60,7 +63,11 @@ fun onSettings(context: Context) {
 
 fun onOpenFolder(context: Context) {
     context.getExternalFilesDir(null)?.let { file ->
-        val geodePath = file.path + File.separator + "geode" + File.separator
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Launcher External Folder", file.path))
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+        }
     }
 }
 
@@ -194,11 +201,11 @@ fun TestingUtils() {
                 onClick = { onOpenFolder(context) }
             ) {
                 Icon(
-                    Icons.Filled.ExitToApp,
+                    Icons.Filled.Edit,
                     contentDescription = "Folder Icon"
                 )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Open external folder")
+                Text("Copy external folder path")
             }
         }
     }
