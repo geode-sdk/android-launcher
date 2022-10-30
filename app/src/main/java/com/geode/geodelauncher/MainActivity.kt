@@ -41,7 +41,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             GeodeLauncherTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     MainScreen(gdInstalled)
                 }
             }
@@ -62,8 +65,14 @@ fun onSettings(context: Context) {
 
 fun onOpenFolder(context: Context) {
     context.getExternalFilesDir(null)?.let { file ->
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Launcher External Folder", file.path))
+        val clipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText(
+                "Launcher External Folder",
+                file.path
+            )
+        )
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
             Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
         }
@@ -72,10 +81,12 @@ fun onOpenFolder(context: Context) {
 
 fun toggleLoadTesting(context: Context): Boolean {
     val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
+    )
 
     val current = preferences.getBoolean(
-        context.getString(R.string.preference_load_testing), false)
+        context.getString(R.string.preference_load_testing), false
+    )
     preferences.edit {
         putBoolean(context.getString(R.string.preference_load_testing), !current)
         commit()
@@ -86,7 +97,8 @@ fun toggleLoadTesting(context: Context): Boolean {
 
 fun getLoadTesting(context: Context): Boolean {
     val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
+    )
 
     return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
 }
@@ -235,6 +247,6 @@ fun MainScreenDarkPreview() {
 @Composable
 fun MainScreenNoGeometryDashPreview() {
     GeodeLauncherTheme {
-            MainScreen(gdInstalled = false)
+        MainScreen(gdInstalled = false)
     }
 }
