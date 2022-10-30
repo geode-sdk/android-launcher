@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
 import com.geode.geodelauncher.utils.LaunchUtils
-import java.io.File
 
 
 class MainActivity : ComponentActivity() {
@@ -197,7 +196,7 @@ fun TestingUtils() {
                     modifier = Modifier.padding(start = 16.dp)
                 )
             }
-            Button(
+            OutlinedButton(
                 onClick = { onOpenFolder(context) }
             ) {
                 Icon(
