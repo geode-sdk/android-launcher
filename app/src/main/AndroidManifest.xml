@@ -27,6 +27,15 @@
         android:theme="@style/Theme.GeodeLauncher"
         tools:targetApi="31">
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.GeodeLauncher">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".GeometryDashActivity"
             android:exported="true"
             android:hardwareAccelerated="true"
@@ -39,10 +48,11 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.GeodeLauncher"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.GeodeLauncher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

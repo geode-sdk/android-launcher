@@ -11,24 +11,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.edit
 import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
 import com.geode.geodelauncher.utils.LaunchUtils
 
@@ -60,7 +54,8 @@ fun onLaunch(context: Context) {
 }
 
 fun onSettings(context: Context) {
-    Toast.makeText(context, "Settings are not implemented yet!", Toast.LENGTH_SHORT).show()
+    val launchIntent = Intent(context, SettingsActivity::class.java)
+    context.startActivity(launchIntent)
 }
 
 fun onOpenFolder(context: Context) {
@@ -77,30 +72,6 @@ fun onOpenFolder(context: Context) {
             Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
         }
     }
-}
-
-fun toggleLoadTesting(context: Context): Boolean {
-    val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
-    )
-
-    val current = preferences.getBoolean(
-        context.getString(R.string.preference_load_testing), false
-    )
-    preferences.edit {
-        putBoolean(context.getString(R.string.preference_load_testing), !current)
-        commit()
-    }
-
-    return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
-}
-
-fun getLoadTesting(context: Context): Boolean {
-    val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
-    )
-
-    return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
 }
 
 @Composable
@@ -132,21 +103,18 @@ fun MainScreen(gdInstalled: Boolean = true) {
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text("Launch")
                 }
-/*
                 IconButton(onClick = { onSettings(context) }) {
                     Icon(
                         Icons.Filled.Settings,
                         contentDescription = "Settings Icon"
                     )
                 }
- */
             }
         } else {
             Text(
                 "Geometry Dash could not be found.",
                 modifier = Modifier.padding(12.dp)
             )
-/*
             Button(onClick = { onSettings(context) }) {
                 Icon(
                     Icons.Filled.Settings,
@@ -154,69 +122,6 @@ fun MainScreen(gdInstalled: Boolean = true) {
                 )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                 Text("Settings")
-            }
- */
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TestingUtils()
-    }
-}
-
-@Composable
-fun TestingUtils() {
-    val context = LocalContext.current
-
-    val isLoadTesting = remember { mutableStateOf(getLoadTesting(context)) }
-
-    Card(
-        elevation = CardDefaults.elevatedCardElevation(),
-        colors = CardDefaults.elevatedCardColors(),
-    ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row {
-                Icon(
-                    Icons.Filled.Warning,
-                    contentDescription = "Warning Icon"
-                )
-                Spacer(Modifier.size(4.dp))
-                Text("Testing Utils")
-            }
-            Row(
-                Modifier
-                    .height(48.dp)
-                    .toggleable(
-                        value = isLoadTesting.value,
-                        onValueChange = { isLoadTesting.value = toggleLoadTesting(context) },
-                        role = Role.Checkbox
-                    )
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = isLoadTesting.value,
-                    onCheckedChange = null
-                )
-                Text(
-                    text = "Load files in /test",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
-            OutlinedButton(
-                onClick = { onOpenFolder(context) }
-            ) {
-                Icon(
-                    Icons.Filled.Edit,
-                    contentDescription = "Folder Icon"
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Copy external folder path")
             }
         }
     }

@@ -5,4 +5,6 @@
     <string name="no_activity_found">No activity found for this action.</string>
     <string name="preference_file_key">GeodeLauncherPreferencesFileKey</string>
     <string name="preference_load_testing">PreferenceLoadTesting</string>
+    <string name="preference_load_testing_name">Load files from /test</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 </resources>
