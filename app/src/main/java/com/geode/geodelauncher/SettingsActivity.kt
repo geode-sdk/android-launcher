@@ -143,7 +143,7 @@ fun toggleSetting(context: Context, @StringRes preferenceId: Int): Boolean {
         commit()
     }
 
-    return preferences.getBoolean(context.getString(R.string.preference_load_testing), false)
+    return preferences.getBoolean(context.getString(preferenceId), false)
 }
 
 fun getSetting(context: Context, @StringRes preferenceId: Int): Boolean {

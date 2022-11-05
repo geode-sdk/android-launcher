@@ -3,13 +3,17 @@
     <string name="title_activity_geometry_dash">GeometryDash</string>
     <string name="failed_mod_core">Failed to load mod core.</string>
     <string name="no_activity_found">No activity found for this action.</string>
+    <plurals name="automatically_load_countdown">
+        <item quantity="one">Automatically launching game in %1$d second.</item>
+        <item quantity="other">Automatically launching game in %1$d seconds.</item>
+    </plurals>
     <string name="preference_file_key">GeodeLauncherPreferencesFileKey</string>
     <string name="preference_category_testing">General</string>
     <string name="preference_load_testing">PreferenceLoadTesting</string>
     <string name="preference_load_testing_name">Load files from /test</string>
     <string name="preference_load_automatically">PreferenceLoadAutomatically</string>
     <string name="preference_load_automatically_name">Automatically launch</string>
-    <string name="preference_load_automatically_description">Launches the game after a second-long delay.</string>
+    <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
     <string name="title_activity_settings">SettingsActivity</string>
 </resources>

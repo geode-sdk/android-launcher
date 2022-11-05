@@ -20,7 +20,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
+import com.geode.geodelauncher.ui.theme.Typography
 import com.geode.geodelauncher.utils.LaunchUtils
+import com.geode.geodelauncher.utils.countdownTimerWatcher
+import com.geode.geodelauncher.utils.preferenceWatcher
 
 
 class MainActivity : ComponentActivity() {
@@ -58,6 +61,11 @@ fun onSettings(context: Context) {
 fun MainScreen(gdInstalled: Boolean = true) {
     val context = LocalContext.current
 
+    val shouldAutomaticallyLaunch = preferenceWatcher(
+        preferenceFileKey = R.string.preference_file_key,
+        preferenceId = R.string.preference_load_automatically
+    )
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -74,6 +82,29 @@ fun MainScreen(gdInstalled: Boolean = true) {
             modifier = Modifier.padding(12.dp)
         )
         if (gdInstalled) {
+            if (shouldAutomaticallyLaunch.value) {
+                val countdownTimer = countdownTimerWatcher(
+                    time = 3000,
+                    onCountdownFinish = {
+                        // just in case this changed async
+                        if (shouldAutomaticallyLaunch.value) {
+                            onLaunch(context)
+                        }
+                    }
+                )
+
+                if (countdownTimer.value != 0) {
+                    Text(
+                        context.resources.getQuantityString(
+                            R.plurals.automatically_load_countdown, countdownTimer.value, countdownTimer.value
+                        ),
+                        style = Typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Spacer(Modifier.size(12.dp))
+                }
+            }
+
             Row {
                 Button(onClick = { onLaunch(context) }, enabled = gdInstalled) {
                     Icon(
