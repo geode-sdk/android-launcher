@@ -73,11 +73,11 @@ fun MainScreen(gdInstalled: Boolean = true) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.geode_logo),
-            contentDescription = "Geode Logo",
+            contentDescription = context.getString(R.string.launcher_logo_alt),
             modifier = Modifier.size(136.dp, 136.dp)
         )
         Text(
-            "Geode",
+            context.getString(R.string.launcher_title),
             fontSize = 32.sp,
             modifier = Modifier.padding(12.dp)
         )
@@ -106,34 +106,34 @@ fun MainScreen(gdInstalled: Boolean = true) {
             }
 
             Row {
-                Button(onClick = { onLaunch(context) }, enabled = gdInstalled) {
+                Button(onClick = { onLaunch(context) }) {
                     Icon(
                         Icons.Filled.PlayArrow,
-                        contentDescription = "Play Icon"
+                        contentDescription = context.getString(R.string.launcher_launch_icon_alt)
                     )
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text("Launch")
+                    Text(context.getString(R.string.launcher_launch))
                 }
                 Spacer(Modifier.size(2.dp))
                 IconButton(onClick = { onSettings(context) }) {
                     Icon(
                         Icons.Filled.Settings,
-                        contentDescription = "Settings Icon"
+                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
                     )
                 }
             }
         } else {
             Text(
-                "Geometry Dash could not be found.",
+                context.getString(R.string.game_not_found),
                 modifier = Modifier.padding(12.dp)
             )
             OutlinedButton(onClick = { onSettings(context) }) {
                 Icon(
                     Icons.Filled.Settings,
-                    contentDescription = "Settings Icon"
+                    contentDescription = context.getString(R.string.launcher_settings_icon_alt)
                 )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Settings")
+                Text(context.getString(R.string.launcher_settings))
             }
         }
     }

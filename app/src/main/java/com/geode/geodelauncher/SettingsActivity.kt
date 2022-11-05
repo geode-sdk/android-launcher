@@ -48,6 +48,7 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
+/*
 fun onExportSaveData(context: Context) {
     Toast.makeText(
         context,
@@ -55,6 +56,7 @@ fun onExportSaveData(context: Context) {
         Toast.LENGTH_SHORT
     ).show()
 }
+*/
 
 fun onOpenFolder(context: Context) {
     context.getExternalFilesDir(null)?.let { file ->
@@ -62,12 +64,16 @@ fun onOpenFolder(context: Context) {
             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.setPrimaryClip(
             ClipData.newPlainText(
-                "Launcher External Folder",
+                context.getString(R.string.export_folder_tag),
                 file.path
             )
         )
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.export_folder_copied),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
@@ -84,13 +90,13 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = context.getString(R.string.settings_back_icon_alt)
                         )
                     }
                 },
                 title = {
                     Text(
-                        "Settings",
+                        context.getString(R.string.title_activity_settings),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -119,12 +125,14 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         onClick = { onOpenFolder(context) }
                     )
                 }
+/*
                 OptionsGroup("Data") {
                     OptionsButton(
                         title = "Export save data",
                         onClick = { onExportSaveData(context) }
                     )
                 }
+ */
             }
         }
     )
@@ -236,7 +244,7 @@ fun OptionsCardPreview() {
             )
             SettingsCard(
                 title = "Testing option 2",
-                preferenceId = R.string.preference_load_testing
+                preferenceId = R.string.preference_load_automatically
             )
         }
     }
