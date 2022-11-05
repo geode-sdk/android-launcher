@@ -58,22 +58,6 @@ fun onSettings(context: Context) {
     context.startActivity(launchIntent)
 }
 
-fun onOpenFolder(context: Context) {
-    context.getExternalFilesDir(null)?.let { file ->
-        val clipboardManager =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.setPrimaryClip(
-            ClipData.newPlainText(
-                "Launcher External Folder",
-                file.path
-            )
-        )
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
-        }
-    }
-}
-
 @Composable
 fun MainScreen(gdInstalled: Boolean = true) {
     val context = LocalContext.current

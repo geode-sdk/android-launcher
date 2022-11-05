@@ -1,6 +1,9 @@
 package com.geode.geodelauncher
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -53,6 +56,22 @@ fun onExportSaveData(context: Context) {
     ).show()
 }
 
+fun onOpenFolder(context: Context) {
+    context.getExternalFilesDir(null)?.let { file ->
+        val clipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText(
+                "Launcher External Folder",
+                file.path
+            )
+        )
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
@@ -95,11 +114,16 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         description = context.getString(R.string.preference_load_automatically_description),
                         preferenceId = R.string.preference_load_automatically
                     )
+                    OptionsButton(
+                        title = context.getString(R.string.preferences_copy_external_button),
+                        onClick = { onOpenFolder(context) }
+                    )
                 }
                 OptionsGroup("Data") {
-                    OptionsButton(onClick = { onExportSaveData(context) }) {
-                        Text("Export save data")
-                    }
+                    OptionsButton(
+                        title = "Export save data",
+                        onClick = { onExportSaveData(context) }
+                    )
                 }
             }
         }
@@ -143,9 +167,11 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun OptionsButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+fun OptionsButton(title: String, onClick: () -> Unit) {
     OptionsCard(
-        title = content,
+        title = {
+            Text(title)
+        },
         modifier = Modifier
             .clickable(onClick = onClick, role = Role.Button)
     ) { }
