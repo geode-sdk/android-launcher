@@ -2,14 +2,17 @@ package com.geode.geodelauncher
 
 import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +44,14 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
+}
+
+fun onExportSaveData(context: Context) {
+    Toast.makeText(
+        context,
+        "This function is not implemented yet!",
+        Toast.LENGTH_SHORT
+    ).show()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +91,11 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         title = context.getString(R.string.preference_load_testing_name),
                         preferenceId = R.string.preference_load_testing
                     )
+                }
+                OptionsGroup("Data") {
+                    OptionsButton(onClick = { onExportSaveData(context) }) {
+                        Text("Export save data")
+                    }
                 }
             }
         }
@@ -123,13 +139,24 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
+fun OptionsButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+    OptionsCard(
+        title = content,
+        modifier = Modifier
+            .clickable(onClick = onClick, role = Role.Button)
+    ) { }
+}
+
+@Composable
 fun SettingsCard(title: String, @StringRes preferenceId: Int) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceId)) }
 
     OptionsCard(
-        title = title,
+        title = {
+            Text(title)
+        },
         modifier = Modifier.toggleable(
             value = settingEnabled.value,
             onValueChange = { settingEnabled.value = toggleSetting(context, preferenceId) },
@@ -141,7 +168,7 @@ fun SettingsCard(title: String, @StringRes preferenceId: Int) {
 }
 
 @Composable
-fun OptionsCard(title: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun OptionsCard(modifier: Modifier = Modifier, title: @Composable () -> Unit, content: @Composable () -> Unit) {
     Row(
         modifier
             .fillMaxWidth()
@@ -150,7 +177,7 @@ fun OptionsCard(title: String, modifier: Modifier = Modifier, content: @Composab
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,
     ) {
-        Text(title)
+        title()
         content()
     }
 }
