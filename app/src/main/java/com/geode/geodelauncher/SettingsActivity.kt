@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
+import com.geode.geodelauncher.ui.theme.Typography
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +46,8 @@ class SettingsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -72,7 +75,12 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OptionsCard(R.string.preference_load_testing_name, R.string.preference_load_testing)
+                OptionsGroup(context.getString(R.string.preference_category_testing)) {
+                    SettingsCard(
+                        title = context.getString(R.string.preference_load_testing_name),
+                        preferenceId = R.string.preference_load_testing
+                    )
+                }
             }
         }
     )
@@ -102,26 +110,48 @@ fun getSetting(context: Context, @StringRes preferenceId: Int): Boolean {
     return preferences.getBoolean(context.getString(preferenceId), false)
 }
 
+@Composable
+fun OptionsGroup(title: String, content: @Composable () -> Unit) {
+    Column {
+        Text(
+            title,
+            style = Typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        content()
+    }
+}
 
 @Composable
-fun OptionsCard(@StringRes title: Int, @StringRes preferenceId: Int) {
+fun SettingsCard(title: String, @StringRes preferenceId: Int) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceId)) }
+
+    OptionsCard(
+        title = title,
+        modifier = Modifier.toggleable(
+            value = settingEnabled.value,
+            onValueChange = { settingEnabled.value = toggleSetting(context, preferenceId) },
+            role = Role.Switch,
+        )
+    ) {
+        Switch(checked = settingEnabled.value, onCheckedChange = null)
+    }
+}
+
+@Composable
+fun OptionsCard(title: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Row(
-        Modifier.fillMaxWidth()
+        modifier
+            .fillMaxWidth()
             .height(64.dp)
-            .toggleable(
-                value = settingEnabled.value,
-                onValueChange = { settingEnabled.value = toggleSetting(context, preferenceId) },
-                role = Role.Switch,
-            )
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,
     ) {
-        Text(context.getString(title))
-        Switch(checked = settingEnabled.value, onCheckedChange = null)
+        Text(title)
+        content()
     }
 }
 
@@ -129,7 +159,7 @@ fun OptionsCard(@StringRes title: Int, @StringRes preferenceId: Int) {
 @Composable
 fun OptionsCardPreview() {
     GeodeLauncherTheme {
-        OptionsCard(R.string.preference_load_testing_name, R.string.preference_load_testing)
+        SettingsCard("Load files from /test", R.string.preference_load_testing)
     }
 }
 
