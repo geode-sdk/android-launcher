@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +90,11 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         title = context.getString(R.string.preference_load_testing_name),
                         preferenceId = R.string.preference_load_testing
                     )
+                    SettingsCard(
+                        title = context.getString(R.string.preference_load_automatically_name),
+                        description = context.getString(R.string.preference_load_automatically_description),
+                        preferenceId = R.string.preference_load_automatically
+                    )
                 }
                 OptionsGroup("Data") {
                     OptionsButton(onClick = { onExportSaveData(context) }) {
@@ -132,7 +136,7 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
         Text(
             title,
             style = Typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
         content()
     }
@@ -148,14 +152,26 @@ fun OptionsButton(onClick: () -> Unit, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun SettingsCard(title: String, @StringRes preferenceId: Int) {
+fun SettingsCard(title: String, description: String? = null, @StringRes preferenceId: Int) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceId)) }
 
     OptionsCard(
         title = {
-            Text(title)
+            Column(
+                Modifier.fillMaxWidth(0.75f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(title)
+                if (!description.isNullOrEmpty()) {
+                    Text(
+                        description,
+                        style = Typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
         },
         modifier = Modifier.toggleable(
             value = settingEnabled.value,
@@ -186,7 +202,17 @@ fun OptionsCard(modifier: Modifier = Modifier, title: @Composable () -> Unit, co
 @Composable
 fun OptionsCardPreview() {
     GeodeLauncherTheme {
-        SettingsCard("Load files from /test", R.string.preference_load_testing)
+        OptionsGroup(title = "Preview Group") {
+            SettingsCard(
+                title = "Load files from /test",
+                description = "Very long testing description goes here. It is incredibly long, it should wrap onto a new line.",
+                preferenceId = R.string.preference_load_testing
+            )
+            SettingsCard(
+                title = "Testing option 2",
+                preferenceId = R.string.preference_load_testing
+            )
+        }
     }
 }
 
