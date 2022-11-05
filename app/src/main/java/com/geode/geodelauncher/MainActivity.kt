@@ -103,6 +103,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text("Launch")
                 }
+                Spacer(Modifier.size(2.dp))
                 IconButton(onClick = { onSettings(context) }) {
                     Icon(
                         Icons.Filled.Settings,
@@ -115,7 +116,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
                 "Geometry Dash could not be found.",
                 modifier = Modifier.padding(12.dp)
             )
-            Button(onClick = { onSettings(context) }) {
+            OutlinedButton(onClick = { onSettings(context) }) {
                 Icon(
                     Icons.Filled.Settings,
                     contentDescription = "Settings Icon"
