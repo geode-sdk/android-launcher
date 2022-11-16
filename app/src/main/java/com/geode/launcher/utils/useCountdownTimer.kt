@@ -10,7 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 const val MS_TO_SEC = 1000
 
 @Composable
-fun countdownTimerWatcher(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, time: Int, onCountdownFinish: () -> Unit): MutableState<Int> {
+fun useCountdownTimer(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, time: Int, onCountdownFinish: () -> Unit): MutableState<Int> {
     val timeData = remember {
         mutableStateOf(time / MS_TO_SEC % MS_TO_SEC)
     }

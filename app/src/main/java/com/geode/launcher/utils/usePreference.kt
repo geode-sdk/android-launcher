@@ -12,7 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 
 
 @Composable
-fun preferenceWatcher(@StringRes preferenceFileKey: Int, @StringRes preferenceId: Int, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
+fun usePreference(@StringRes preferenceFileKey: Int, @StringRes preferenceId: Int, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
     val context = LocalContext.current
     val preferences = context.getSharedPreferences(
         context.getString(preferenceFileKey), Context.MODE_PRIVATE

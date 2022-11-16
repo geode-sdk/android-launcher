@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LaunchUtils
-import com.geode.launcher.utils.countdownTimerWatcher
-import com.geode.launcher.utils.preferenceWatcher
+import com.geode.launcher.utils.useCountdownTimer
+import com.geode.launcher.utils.usePreference
 
 
 class MainActivity : ComponentActivity() {
@@ -61,7 +61,7 @@ fun onSettings(context: Context) {
 fun MainScreen(gdInstalled: Boolean = true) {
     val context = LocalContext.current
 
-    val shouldAutomaticallyLaunch = preferenceWatcher(
+    val shouldAutomaticallyLaunch = usePreference(
         preferenceFileKey = R.string.preference_file_key,
         preferenceId = R.string.preference_load_automatically
     )
@@ -83,7 +83,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
         )
         if (gdInstalled) {
             if (shouldAutomaticallyLaunch.value) {
-                val countdownTimer = countdownTimerWatcher(
+                val countdownTimer = useCountdownTimer(
                     time = 3000,
                     onCountdownFinish = {
                         // just in case this changed async
