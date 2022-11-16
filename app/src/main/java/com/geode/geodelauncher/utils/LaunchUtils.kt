@@ -7,7 +7,7 @@ import android.content.res.AssetManager
 object LaunchUtils {
     fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
         return try {
-            packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
+            packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false

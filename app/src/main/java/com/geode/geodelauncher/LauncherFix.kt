@@ -1,10 +1,10 @@
 package com.geode.geodelauncher
 
-import com.geode.geodelauncher.utils.GJConstants
+import com.geode.geodelauncher.utils.Constants
 
 object LauncherFix {
     fun loadLibrary() {
-        System.loadLibrary(GJConstants.LAUNCHER_FIX_LIB_NAME)
+        System.loadLibrary(Constants.LAUNCHER_FIX_LIB_NAME)
     }
 
     external fun setDataPath(dataPath: String)

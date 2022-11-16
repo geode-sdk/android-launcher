@@ -20,7 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
-import com.geode.geodelauncher.utils.GJConstants
+import com.geode.geodelauncher.utils.Constants
 import com.geode.geodelauncher.utils.LaunchUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
@@ -54,7 +54,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             startActivity(launchIntent)
         }
 
-        val gdPackageInfo = packageManager.getPackageInfo(GJConstants.PACKAGE_NAME, 0)
+        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
         val gdNativeLibraryPath = "${gdPackageInfo.applicationInfo.nativeLibraryDir}/"
 
         try {
@@ -66,14 +66,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         try {
             // fixes bugs specific to the new app directory, such as package name
             LauncherFix.loadLibrary()
-            LauncherFix.setOriginalDataPath(GJConstants.GJ_DATA_DIR)
+            LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
             LauncherFix.setDataPath(filesDir.path)
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
         }
 
-        System.load("$gdNativeLibraryPath/lib${GJConstants.FMOD_LIB_NAME}.so")
-        System.load("$gdNativeLibraryPath/lib${GJConstants.COCOS_LIB_NAME}.so")
+        System.load("$gdNativeLibraryPath/lib${Constants.FMOD_LIB_NAME}.so")
+        System.load("$gdNativeLibraryPath/lib${Constants.COCOS_LIB_NAME}.so")
 
         if (getLoadTesting()) {
             loadTestingLibraries()

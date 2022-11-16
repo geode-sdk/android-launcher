@@ -2,7 +2,7 @@ package com.geode.geodelauncher.utils
 
 import android.annotation.SuppressLint
 
-object GJConstants {
+object Constants {
     const val PACKAGE_NAME = "com.robtopx.geometryjump"
 
     const val COCOS_LIB_NAME = "cocos2dcpp"
