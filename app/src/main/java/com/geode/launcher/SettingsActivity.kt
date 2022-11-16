@@ -122,6 +122,7 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     )
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
+                        description = context.getExternalFilesDir(null)?.path,
                         onClick = { onOpenFolder(context) }
                     )
                 }
@@ -175,10 +176,13 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun OptionsButton(title: String, onClick: () -> Unit) {
+fun OptionsButton(title: String, description: String? = null, onClick: () -> Unit) {
     OptionsCard(
         title = {
-            Text(title)
+            OptionsTitle(
+                title = title,
+                description = description
+            )
         },
         modifier = Modifier
             .clickable(onClick = onClick, role = Role.Button)
@@ -193,19 +197,11 @@ fun SettingsCard(title: String, description: String? = null, @StringRes preferen
 
     OptionsCard(
         title = {
-            Column(
+            OptionsTitle(
                 Modifier.fillMaxWidth(0.75f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(title)
-                if (!description.isNullOrEmpty()) {
-                    Text(
-                        description,
-                        style = Typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
+                title = title,
+                description = description
+            )
         },
         modifier = Modifier.toggleable(
             value = settingEnabled.value,
@@ -214,6 +210,23 @@ fun SettingsCard(title: String, description: String? = null, @StringRes preferen
         )
     ) {
         Switch(checked = settingEnabled.value, onCheckedChange = null)
+    }
+}
+
+@Composable
+fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: String? = null) {
+    Column(
+        modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(title)
+        if (!description.isNullOrEmpty()) {
+            Text(
+                description,
+                style = Typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }
 
