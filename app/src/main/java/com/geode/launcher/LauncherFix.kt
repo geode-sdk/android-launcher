@@ -1,6 +1,6 @@
-package com.geode.geodelauncher
+package com.geode.launcher
 
-import com.geode.geodelauncher.utils.Constants
+import com.geode.launcher.utils.Constants
 
 object LauncherFix {
     fun loadLibrary() {

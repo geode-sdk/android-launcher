@@ -1,4 +1,4 @@
-package com.geode.geodelauncher
+package com.geode.launcher
 
 import android.content.Context
 import android.content.Intent
@@ -19,11 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
-import com.geode.geodelauncher.ui.theme.Typography
-import com.geode.geodelauncher.utils.LaunchUtils
-import com.geode.geodelauncher.utils.countdownTimerWatcher
-import com.geode.geodelauncher.utils.preferenceWatcher
+import com.geode.launcher.ui.theme.GeodeLauncherTheme
+import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.countdownTimerWatcher
+import com.geode.launcher.utils.preferenceWatcher
 
 
 class MainActivity : ComponentActivity() {

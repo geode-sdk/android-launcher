@@ -7,7 +7,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.geode.geodelauncher"
+        applicationId "com.geode.launcher"
         minSdk 23
         targetSdk 33
         versionCode 1
@@ -55,7 +55,7 @@ android {
             version '3.22.1'
         }
     }
-    namespace 'com.geode.geodelauncher'
+    namespace 'com.geode.launcher'
     ndkVersion '25.1.8937393'
 }
 

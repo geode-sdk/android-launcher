@@ -1,4 +1,4 @@
-package com.geode.geodelauncher.ui.theme
+package com.geode.launcher.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

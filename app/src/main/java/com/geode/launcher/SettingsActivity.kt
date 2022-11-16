@@ -1,4 +1,4 @@
-package com.geode.geodelauncher
+package com.geode.launcher
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -27,8 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import com.geode.geodelauncher.ui.theme.GeodeLauncherTheme
-import com.geode.geodelauncher.ui.theme.Typography
+import com.geode.launcher.ui.theme.GeodeLauncherTheme
+import com.geode.launcher.ui.theme.Typography
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
