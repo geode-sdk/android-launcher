@@ -6,6 +6,7 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@android:drawable/screen_background_dark</item>
     </style>
 
     <style name="Theme.GeodeLauncher" parent="android:Theme.Material.Light.NoActionBar" />
