@@ -46,8 +46,6 @@ object Cocos2dxHelper {
         this.cocos2dxHelperListener = cocos2dxHelperListener
         packageName = applicationInfo.packageName
         fileDirectory = context.filesDir.absolutePath
-
-        nativeSetApkPath(applicationInfo.sourceDir)
 //        Cocos2dxHelper.sCocos2dxAccelerometer = Cocos2dxAccelerometer(pContext)
 //        Cocos2dxHelper.sCocos2dMusic = Cocos2dxMusic(pContext)
 //        var simultaneousStreams: Int = Cocos2dxSound.MAX_SIMULTANEOUS_STREAMS_DEFAULT

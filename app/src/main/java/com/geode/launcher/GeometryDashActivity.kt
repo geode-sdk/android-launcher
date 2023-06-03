@@ -72,6 +72,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             e.printStackTrace()
         }
 
+        Cocos2dxHelper.init(this, this)
+
         System.load("$gdNativeLibraryPath/lib${Constants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${Constants.COCOS_LIB_NAME}.so")
 
@@ -85,8 +87,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         setContentView(createView())
 
-        Cocos2dxHelper.init(this, this)
-
+        // call native functions after native libraries init
         JniToCpp.setupHSSAssets(
             gdPackageInfo.applicationInfo.sourceDir,
             Environment.getExternalStorageDirectory().absolutePath
