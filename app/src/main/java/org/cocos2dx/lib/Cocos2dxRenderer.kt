@@ -68,12 +68,6 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(gl10: GL10?, eglConfig: EGLConfig?) {
         nativeInit(screenWidth, screenHeight)
-
-        if (Native.isGeodeLoaded && !Native.isInitRun) {
-            Native.postGameInit()
-            Native.isInitRun = true
-        }
-
         lastTickInNanoSeconds = System.nanoTime()
     }
 
