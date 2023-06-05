@@ -40,6 +40,11 @@ object Cocos2dxHelper {
         return BaseRobTopActivity.me.get()?.resources?.configuration?.densityDpi ?: -1
     }
 
+    @JvmStatic
+    fun showDialog(title: String, message: String) {
+        cocos2dxHelperListener?.showDialog(title, message)
+    }
+
     fun init(context: Context, cocos2dxHelperListener: Cocos2dxHelperListener) {
         val applicationInfo: ApplicationInfo = context.applicationInfo
 //        sContext = pContext
