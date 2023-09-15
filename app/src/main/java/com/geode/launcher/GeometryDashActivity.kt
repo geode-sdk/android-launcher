@@ -97,6 +97,30 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         BaseRobTopActivity.setCurrentActivity(this)
         registerReceiver()
+
+        if (!loadGeodeLibrary()) {
+            Log.w("GeodeLauncher", "could not load Geode object!")
+        }
+    }
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    private fun loadGeodeLibrary(): Boolean {
+        // Load Geode if exists
+        // bundling the object with the application allows for nicer backtraces
+        try {
+            // put libgeode.so in jniLibs/armeabi-v7a to get this
+            System.loadLibrary("geode")
+            return true
+        } catch (e: UnsatisfiedLinkError) {
+            // but users may prefer it stored with data
+            val geodePath = File(filesDir.path, "launcher/Geode.so")
+            if (geodePath.exists()) {
+                System.load(geodePath.path)
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun createView(): FrameLayout {
