@@ -118,6 +118,35 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 System.load(geodePath.path)
                 return true
             }
+            else {
+                // you know zmx i have 0 clue what this does so im 
+                // just gonna like copy the binary from external
+                // also i get 20 million permission denied errors
+                getExternalFilesDir(null)?.let { dir ->
+                    val externalGeodePath = File(dir.path, "Geode.so")
+
+                    val copiedPath = File(filesDir.path, "copied")
+                    if (copiedPath.exists()) {
+                        copiedPath.deleteRecursively()
+                    }
+                    copiedPath.mkdir()
+
+                    val geodePath = File(copiedPath.path, "Geode.so")
+
+                    if (externalGeodePath.exists()) {
+                        copyFile(FileInputStream(externalGeodePath), FileOutputStream(geodePath))
+
+                        if (geodePath.exists()) {
+                            try {
+                                println("Loading Geode from ${externalGeodePath.name}")
+                                System.load(geodePath.path)
+                            } catch (e: UnsatisfiedLinkError) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return false
