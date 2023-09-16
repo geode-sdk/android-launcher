@@ -36,11 +36,8 @@ jobs:
     - name: Build project
       run: ./gradlew app:assembleDebug
 
-    - name: i am lazy
-      run: find ./ -name "*.apk"
-
     - name: Upload development build
       uses: actions/upload-artifact@v3
       with:
-        name: geode-launcher-${{github.sha}}.apk
-        path: ${{github.workspace}}/app/build/outputs/apk/release/app-release
+        name: geode-launcher-debug-${{github.sha}}.apk
+        path: ${{github.workspace}}/app/build/outputs/apk/debug/app-debug.apk
