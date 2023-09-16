@@ -1,0 +1,43 @@
+name: Build launcher
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v3.9.0
+      with:
+        java-version: 19
+        distribution: temurin
+        cache: gradle
+
+    - name: Generate keystore file
+      run: echo ${{secrets.KEYSTORE_FILE}} | base64 -d > ~/release.keystore
+
+    - name: Generate keystore properties
+      run: |
+            touch ${{github.workspace}}/app/signing.properties
+            echo "storeFile=$HOME/release.keystore
+            storePassword=${{secrets.KEYSTORE_PASSWORD}}
+            keyAlias=${{secrets.KEY_ALIAS}}
+            keyPassword=${{secrets.KEY_PASSWORD}}" > ${{github.workspace}}/app/signing.properties
+
+    - name: Fix gradle permissions
+      run: chmod +x ./gradlew
+
+    - name: Build project
+      run: ./gradlew assembleLauncherRelease assembleLauncherDevelopment
+
+    - name: Upload development build
+      uses: actions/upload-artifact@v3
+      with:
+        name: geode-launcher-${{github.sha}}.apk
+        path: ${{github.workspace}}/app/build/outputs/apk/release/app-release
