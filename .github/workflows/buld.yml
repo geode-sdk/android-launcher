@@ -39,5 +39,5 @@ jobs:
     - name: Upload development build
       uses: actions/upload-artifact@v3
       with:
-        name: geode-launcher-debug-${{github.sha}}.apk
+        name: geode-launcher-debug
         path: ${{github.workspace}}/app/build/outputs/apk/debug/app-debug.apk
