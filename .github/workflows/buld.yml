@@ -36,6 +36,9 @@ jobs:
     - name: Build project
       run: ./gradlew assembleRelease
 
+    - name: i am lazy
+      run: ls -R app
+
     - name: Upload development build
       uses: actions/upload-artifact@v3
       with:
