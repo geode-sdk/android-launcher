@@ -34,10 +34,10 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Build project
-      run: ./gradlew assembleRelease
+      run: ./gradlew app:assembleDebug
 
     - name: i am lazy
-      run: ls -R app
+      run: find ./ -name "*.apk"
 
     - name: Upload development build
       uses: actions/upload-artifact@v3
