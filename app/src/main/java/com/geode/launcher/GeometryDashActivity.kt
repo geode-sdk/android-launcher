@@ -64,14 +64,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             e.printStackTrace()
         }
 
-        try {
-            // fixes bugs specific to the new app directory, such as package name
-            LauncherFix.loadLibrary()
-            LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
-            LauncherFix.setDataPath(filesDir.path)
-        } catch (e: UnsatisfiedLinkError) {
-            e.printStackTrace()
-        }
+        fixLauncherPath()
 
         Cocos2dxHelper.init(this, this)
 
@@ -100,6 +93,22 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         if (!loadGeodeLibrary()) {
             Log.w("GeodeLauncher", "could not load Geode object!")
+        }
+    }
+
+    private fun fixLauncherPath() {
+        try {
+            // fixes bugs specific to the new app directory, such as package name
+            LauncherFix.loadLibrary()
+            getExternalFilesDir(null)?.let { dir ->
+                val externalPath = dir.path + File.separator + "save"
+
+                LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
+                LauncherFix.setDataPath(externalPath)
+            }
+            
+        } catch (e: UnsatisfiedLinkError) {
+            e.printStackTrace()
         }
     }
 
