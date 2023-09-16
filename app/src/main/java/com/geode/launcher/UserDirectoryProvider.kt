@@ -63,7 +63,7 @@ class UserDirectoryProvider : DocumentsProvider() {
     override fun queryDocument(documentId: String?, projection: Array<out String>?): Cursor {
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             val file = getFileForDocumentId(documentId ?: ROOT)
-            addDocument(this, file)
+            appendDocument(this, file)
         }
     }
 
@@ -74,7 +74,7 @@ class UserDirectoryProvider : DocumentsProvider() {
     ): Cursor {
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             val parent = getFileForDocumentId(parentDocumentId ?: ROOT)
-            parent.listFiles()?.forEach { file -> addDocument(this, file) }
+            parent.listFiles()?.forEach { file -> appendDocument(this, file) }
         }
     }
 
@@ -97,6 +97,49 @@ class UserDirectoryProvider : DocumentsProvider() {
         }
     }
 
+    private fun appendDocument(cursor: MatrixCursor, file: File) {
+        var flags = 0
+        if (file.canWrite()) {
+            flags = if (file.isDirectory) {
+                DocumentsContract.Document.FLAG_DIR_SUPPORTS_CREATE
+            } else {
+                DocumentsContract.Document.FLAG_SUPPORTS_WRITE
+            }
+            flags = flags or DocumentsContract.Document.FLAG_SUPPORTS_DELETE
+            flags = flags or DocumentsContract.Document.FLAG_SUPPORTS_RENAME
+            // The system will handle copy + move for us
+        }
+
+        val name = if (file == rootDir) {
+            context!!.getString(R.string.app_name)
+        } else {
+            file.name
+        }
+        cursor.newRow().apply {
+            add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, getDocumentIdForFile(file))
+            add(DocumentsContract.Document.COLUMN_MIME_TYPE, typeForFile(file))
+            add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, name)
+            add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified())
+            add(DocumentsContract.Document.COLUMN_FLAGS, flags)
+            add(DocumentsContract.Document.COLUMN_SIZE, file.length())
+            if (file == rootDir) {
+                add(DocumentsContract.Document.COLUMN_ICON, R.drawable.geode_logo)
+            }
+        }
+    }
+
+     override fun deleteDocument(documentId: String) {
+        val file = getFileForDocumentId(documentId)
+        file.deleteRecursively()
+    }
+
+    override fun renameDocument(documentId: String, displayName: String): String? {
+        val file = getFileForDocumentId(documentId)
+        val dest = findFileNameForNewFile(File(file.parentFile, displayName))
+        file.renameTo(dest)
+        return getDocumentIdForFile(dest)
+    }
+
     private fun typeForFile(file: File): String {
         if (file.isDirectory) {
             return DocumentsContract.Document.MIME_TYPE_DIR
@@ -112,5 +155,17 @@ class UserDirectoryProvider : DocumentsProvider() {
 
     private fun getDocumentIdForFile(file: File): String {
         return ROOT + file.toRelativeString(rootDir)
+    }
+
+    private fun findFileNameForNewFile(file: File): File {
+        var unusedFile = file
+        var i = 1
+        while (unusedFile.exists()) {
+            val pathWithoutExtension = unusedFile.absolutePath.substringBeforeLast('.')
+            val extension = unusedFile.absolutePath.substringAfterLast('.')
+            unusedFile = File("$pathWithoutExtension.$i.$extension")
+            i++
+        }
+        return unusedFile
     }
 }
