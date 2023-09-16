@@ -34,7 +34,10 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Build project
-      run: ./gradlew tasks --all
+      run: ./gradlew assembleRelease
+
+    - name: i am lazy
+      run: ls -R app
 
     - name: Upload development build
       uses: actions/upload-artifact@v3
