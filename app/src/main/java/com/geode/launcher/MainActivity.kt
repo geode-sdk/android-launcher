@@ -42,6 +42,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        if (gdInstalled) {
+            intent.getBooleanExtra("restarted", false).let {
+                if (it) {
+                    onLaunch(this)
+                }
+            }
+        }
     }
 }
 

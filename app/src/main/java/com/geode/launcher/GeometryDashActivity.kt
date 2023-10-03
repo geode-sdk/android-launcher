@@ -23,6 +23,7 @@ import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.GeodeUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -74,6 +75,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         Cocos2dxHelper.init(this, this)
+        GeodeUtils.setContext(this)
 
         System.load("$gdNativeLibraryPath/lib${Constants.FMOD_LIB_NAME}.so")
         System.load("$gdNativeLibraryPath/lib${Constants.COCOS_LIB_NAME}.so")
