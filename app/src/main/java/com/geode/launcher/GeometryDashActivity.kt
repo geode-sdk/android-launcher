@@ -74,6 +74,15 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             e.printStackTrace()
         }
 
+        // request read and write permissions
+        requestPermissions(
+            arrayOf(
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ),
+            0
+        )
+
         Cocos2dxHelper.init(this, this)
         GeodeUtils.setContext(this)
 
