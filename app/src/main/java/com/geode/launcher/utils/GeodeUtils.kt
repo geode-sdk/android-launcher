@@ -162,7 +162,7 @@ object GeodeUtils {
             intent.setType("*/*")
 
             if (intent.resolveActivity(packageManager) != null) {
-                fileResultLauncher.launch(intent)
+                filesResultLauncher.launch(intent)
                 return true
             }
         }
@@ -200,7 +200,7 @@ object GeodeUtils {
             intent.setType("*/*")
 
             if (intent.resolveActivity(packageManager) != null) {
-                filesResultLauncher.launch(intent)
+                fileResultLauncher.launch(intent)
                 return true
             }
         }
