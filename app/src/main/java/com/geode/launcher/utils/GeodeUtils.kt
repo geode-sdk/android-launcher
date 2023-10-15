@@ -71,7 +71,7 @@ object GeodeUtils {
     }
 
     @JvmStatic
-    fun getLogcatCrashBuffer(path: String): String {
+    fun getLogcatCrashBuffer(): String {
         try {
             val logcatProcess = Runtime.getRuntime().exec("logcat -v brief -b crash -d")
 
