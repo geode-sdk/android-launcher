@@ -71,7 +71,7 @@ object GeodeUtils {
     }
 
     @JvmStatic
-    fun clearLogcatCrashBuffer(path: String): Boolean {
+    fun clearLogcatCrashBuffer(): Boolean {
         try {
             val logcatProcess = Runtime.getRuntime().exec("logcat -c -b crash")
 
