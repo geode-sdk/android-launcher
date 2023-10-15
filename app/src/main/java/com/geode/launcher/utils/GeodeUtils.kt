@@ -71,6 +71,27 @@ object GeodeUtils {
     }
 
     @JvmStatic
+    fun writeLogcatCrashBuffer(path: String): Boolean {
+        try {
+            val logcatProcess = Runtime.getRuntime().exec("logcat -v brief -b crash -d")
+
+            val logcatFile = File(path)
+
+            logcatFile.outputStream().use { output ->
+                logcatProcess.inputStream.use { input ->
+                    input.copyTo(output)
+                }
+            }
+
+            return true
+        }
+        catch (e: Exception) {
+            Log.e("Geode", "Failed to write logcat crash buffer", e)
+            return false
+        }
+    }
+
+    @JvmStatic
     fun writeClipboard(text: String) {
         activity.get()?.run {
             val manager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

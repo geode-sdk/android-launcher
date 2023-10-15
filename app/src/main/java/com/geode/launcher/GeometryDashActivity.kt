@@ -134,7 +134,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 // just gonna like copy the binary from external
                 // also i get 20 million permission denied errors
                 getExternalFilesDir(null)?.let { dir ->
-                    val externalGeodePath = File(dir.path, "Geode.so")
+                    val externalGeodePath = LaunchUtils.getInstalledGeodePath(this)
+                    if (externalGeodePath == null) {
+                        return false
+                    }
 
                     val copiedPath = File(filesDir.path, "copied")
                     if (copiedPath.exists()) {

@@ -23,6 +23,11 @@ object LaunchUtils {
             return internalGeodePath
         }
         context.getExternalFilesDir(null)?.let { dir->
+            val updateGeodePath = File(dir.path, "game/geode/update/Geode.so")
+            if (updateGeodePath.exists()) {
+                return updateGeodePath
+            }
+
             val externalGeodePath = File(dir.path, "Geode.so")
             if (externalGeodePath.exists()) {
                 return externalGeodePath
