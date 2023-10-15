@@ -13,5 +13,5 @@ object Constants {
     @SuppressLint("SdCardPath")
     const val GJ_DATA_DIR = "/data/data/${PACKAGE_NAME}"
 
-    const val GEODE_DOWNLOAD_LINK = "https://nightly.link/geode-sdk/geode/actions/artifacts/978429662.zip"
+    const val GEODE_DOWNLOAD_LINK = "https://nightly.link/geode-sdk/geode/workflows/build/1.4.0-dev/geode-android.zip"
 }
