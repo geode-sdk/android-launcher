@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.useCountdownTimer
 import com.geode.launcher.utils.usePreference
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)
+        val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
         setContent {
             GeodeLauncherTheme {
@@ -38,18 +40,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(gdInstalled)
+                    MainScreen(gdInstalled, geodeInstalled)
                 }
             }
         }
-        if (gdInstalled) {
+        if (gdInstalled && geodeInstalled) {
             intent.getBooleanExtra("restarted", false).let {
                 if (it) {
                     onLaunch(this)
                 }
             }
         }
+
+        if (gdInstalled && !geodeInstalled) {
+            downloadGeode(this)
+        }
     }
+}
+
+fun downloadGeode(context: Context) {
+    // download geode in the background and update the screen when it's done
+    DownloadGeode(context).execute(Constants.GEODE_DOWNLOAD_LINK)
 }
 
 fun onLaunch(context: Context) {
@@ -65,7 +76,7 @@ fun onSettings(context: Context) {
 }
 
 @Composable
-fun MainScreen(gdInstalled: Boolean = true) {
+fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
     val context = LocalContext.current
 
     val shouldAutomaticallyLaunch = usePreference(
@@ -88,7 +99,7 @@ fun MainScreen(gdInstalled: Boolean = true) {
             fontSize = 32.sp,
             modifier = Modifier.padding(12.dp)
         )
-        if (gdInstalled) {
+        if (gdInstalled && geodeInstalled) {
             if (shouldAutomaticallyLaunch.value) {
                 val countdownTimer = useCountdownTimer(
                     time = 3000,
@@ -128,6 +139,19 @@ fun MainScreen(gdInstalled: Boolean = true) {
                         contentDescription = context.getString(R.string.launcher_settings_icon_alt)
                     )
                 }
+            }
+        } else if (gdInstalled && !geodeInstalled) {
+            Text(
+                context.getString(R.string.geode_download_title),
+                modifier = Modifier.padding(12.dp)
+            )
+            OutlinedButton(onClick = { onSettings(context) }) {
+                Icon(
+                    Icons.Filled.Settings,
+                    contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(context.getString(R.string.launcher_settings))
             }
         } else {
             Text(

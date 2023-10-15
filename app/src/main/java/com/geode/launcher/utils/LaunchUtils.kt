@@ -3,6 +3,9 @@ package com.geode.launcher.utils
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
+import android.content.Context
+import com.geode.launcher.utils.Constants
+import java.io.File
 
 object LaunchUtils {
     fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
@@ -12,6 +15,24 @@ object LaunchUtils {
         } catch (e: PackageManager.NameNotFoundException) {
             false
         }
+    }
+
+    fun getInstalledGeodePath(context: Context): File? {
+        val internalGeodePath = File(context.filesDir.path, "launcher/Geode.so")
+        if (internalGeodePath.exists()) {
+            return internalGeodePath
+        }
+        context.getExternalFilesDir(null)?.let { dir->
+            val externalGeodePath = File(dir.path, "Geode.so")
+            if (externalGeodePath.exists()) {
+                return externalGeodePath
+            }
+        }
+        return null
+    }
+
+    fun isGeodeInstalled(context: Context): Boolean {
+        return getInstalledGeodePath(context) != null
     }
 
     fun addAssetsFromPackage(assetManager: AssetManager, packageInfo: PackageInfo) {
