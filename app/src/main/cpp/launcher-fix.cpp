@@ -1,7 +1,10 @@
 #include <dlfcn.h>
 #include <string>
-#include <dobby.h>
 #include <jni.h>
+
+#ifndef DISABLE_LAUNCHER_FIX
+#include <dobby.h>
+#endif
 
 class DataPaths {
 public:
@@ -60,6 +63,7 @@ FILE* fopen_hook(const char* pathname, const char* mode) {
 }
 
 [[gnu::constructor]] [[gnu::used]] void setup_hooks() {
+    #ifndef DISABLE_LAUNCHER_FIX
     auto fopen_addr = dlsym(RTLD_NEXT, "fopen");
 
     DobbyHook(
@@ -67,4 +71,5 @@ FILE* fopen_hook(const char* pathname, const char* mode) {
         reinterpret_cast<dobby_dummy_func_t>(&fopen_hook),
         reinterpret_cast<dobby_dummy_func_t*>(&fopen_original)
     );
+    #endif
 }
