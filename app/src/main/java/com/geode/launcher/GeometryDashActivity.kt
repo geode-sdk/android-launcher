@@ -123,19 +123,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
     }
 
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun loadLibraryFromAssets(libraryName: String) {
-        // loads a library loaded in assets
-        // this currently requires copying the library to a non-compressed directory
-        // ideally a better solution would be found, but i'm out of ideas
-
-        val libraryCopy = File(cacheDir, "lib$libraryName.so")
-        if (libraryCopy.exists()) {
-            // don't force a copy on each load
-            // (you will have to clear cache if the library updates, so maybe remove this check)
-            System.load(libraryCopy.path)
-            return
-        }
+        // loads a library loaded in assets (which points to the apk + an offset)
+        // these libraries are available to the application after merging
 
         // find the first instance of the library in preferred abi order
         val libraryFd = Build.SUPPORTED_ABIS.asSequence()
@@ -148,14 +138,17 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
             .firstOrNull() ?: throw UnsatisfiedLinkError("Could not find library lib$libraryName.so")
 
-        // copy the library to a path we can access
-        // there doesn't seem to be a way to load a library from a file descriptor
-        val libraryOutput = libraryCopy.outputStream()
-        copyFile(libraryFd.createInputStream(), libraryOutput)
+        val fdOffset = libraryFd.startOffset
+        val fdDescriptor = libraryFd.parcelFileDescriptor.detachFd()
 
-        System.load(libraryCopy.path)
+        if (!LauncherFix.loadLibraryFromOffset("lib$libraryName.so", fdDescriptor, fdOffset)) {
+            throw UnsatisfiedLinkError("Failed to load asset lib$libraryName.so")
+        }
 
-        return
+        // after the library is opened in native code, it should be available for loading
+        // you can read more about the behavior:
+        // https://android.googlesource.com/platform/libcore/+/7f3eb2e0ac87bdea471bc577380cf50025aebde5/ojluni/src/main/java/java/lang/Runtime.java#1060
+        System.loadLibrary(libraryName)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
