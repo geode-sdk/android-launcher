@@ -23,3 +23,5 @@ if(NOT dobby_POPULATED)
     target_include_directories(launcherfix PRIVATE ${dobby_SOURCE_DIR}/include)
     target_link_libraries(launcherfix dobby)
 endif()
+
+target_link_libraries(launcherfix log)

@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId "com.geode.launcher"
         minSdk 23
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "0.6.0-alpha.1"
 
@@ -21,8 +21,8 @@ android {
                 arguments "-DDOBBY_DEBUG=OFF"
             }
         }
-        // support only armv7 as GD only supports armv7
-        ndkConfig.abiFilters "armeabi-v7a"
+
+        ndkConfig.abiFilters "arm64-v8a", "armeabi-v7a"
     }
 
     buildTypes {
@@ -62,14 +62,13 @@ android {
 dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation "androidx.compose.ui:ui:$compose_version"
-    implementation 'androidx.compose.material3:material3:1.1.1'
+    implementation 'androidx.compose.material3:material3:1.1.2'
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-    implementation 'androidx.activity:activity-compose:1.7.2'
-    implementation 'androidx.activity:activity-ktx:1.7.2'
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation 'androidx.activity:activity-ktx:1.8.2'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation files('../libs/fmod.jar')
+    implementation 'com.google.android.material:material:1.11.0'
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 }

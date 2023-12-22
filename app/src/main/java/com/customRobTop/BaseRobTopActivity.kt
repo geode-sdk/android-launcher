@@ -9,6 +9,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import com.customRobTop.JniToCpp.resumeSound
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
@@ -125,6 +126,11 @@ object BaseRobTopActivity {
     @JvmStatic
     fun loadingFinished() {
         isLoaded = true
+    }
+
+    @JvmStatic
+    fun getDeviceRefreshRate(): Float {
+        return (me.get()?.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.refreshRate
     }
 
     // Everyplay doesn't even exist anymore lol

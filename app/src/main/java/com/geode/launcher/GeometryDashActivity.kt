@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -44,7 +45,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mHasWindowFocus = false
     private var mReceiver: BroadcastReceiver? = null
 
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
 
@@ -57,7 +57,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-        val gdNativeLibraryPath = "${gdPackageInfo.applicationInfo.nativeLibraryDir}/"
 
         try {
             LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
@@ -86,8 +85,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         Cocos2dxHelper.init(this, this)
         GeodeUtils.setContext(this)
 
-        System.load("$gdNativeLibraryPath/lib${Constants.FMOD_LIB_NAME}.so")
-        System.load("$gdNativeLibraryPath/lib${Constants.COCOS_LIB_NAME}.so")
+        tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
+        tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
 
         if (getLoadTesting()) {
             loadTestingLibraries()
@@ -112,6 +111,44 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         if (!loadGeodeLibrary()) {
             Log.w("GeodeLauncher", "could not load Geode object!")
         }
+    }
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
+        try {
+            val nativeDir = packageInfo.applicationInfo.nativeLibraryDir
+            System.load("$nativeDir/lib$libraryName.so")
+        } catch (ule: UnsatisfiedLinkError) {
+            loadLibraryFromAssets(libraryName)
+        }
+    }
+
+    private fun loadLibraryFromAssets(libraryName: String) {
+        // loads a library loaded in assets (which points to the apk + an offset)
+        // these libraries are available to the application after merging
+
+        // find the first instance of the library in preferred abi order
+        val libraryFd = Build.SUPPORTED_ABIS.asSequence()
+            .mapNotNull {
+                try {
+                    assets.openNonAssetFd("lib/$it/lib$libraryName.so")
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            .firstOrNull() ?: throw UnsatisfiedLinkError("Could not find library lib$libraryName.so")
+
+        val fdOffset = libraryFd.startOffset
+        val fdDescriptor = libraryFd.parcelFileDescriptor.detachFd()
+
+        if (!LauncherFix.loadLibraryFromOffset("lib$libraryName.so", fdDescriptor, fdOffset)) {
+            throw UnsatisfiedLinkError("Failed to load asset lib$libraryName.so")
+        }
+
+        // after the library is opened in native code, it should be available for loading
+        // you can read more about the behavior:
+        // https://android.googlesource.com/platform/libcore/+/7f3eb2e0ac87bdea471bc577380cf50025aebde5/ojluni/src/main/java/java/lang/Runtime.java#1060
+        System.loadLibrary(libraryName)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")

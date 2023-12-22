@@ -3,7 +3,7 @@ name: Build launcher
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: '*'
 
 jobs:
   build:

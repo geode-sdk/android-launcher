@@ -4,7 +4,6 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.content.Context
-import com.geode.launcher.utils.Constants
 import java.io.File
 
 object LaunchUtils {
@@ -45,6 +44,10 @@ object LaunchUtils {
         // (the source recommends replacing with AssetManager.setApkAssets(ApkAssets[], boolean) lol)
         val clazz = assetManager.javaClass
         val aspMethod = clazz.getDeclaredMethod("addAssetPath", String::class.java)
+
         aspMethod.invoke(assetManager, packageInfo.applicationInfo.sourceDir)
+        packageInfo.applicationInfo.splitSourceDirs?.forEach {
+            aspMethod.invoke(assetManager, it)
+        }
     }
 }
