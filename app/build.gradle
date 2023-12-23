@@ -22,7 +22,7 @@ android {
             }
         }
 
-        ndkConfig.abiFilters "arm64-v8a", "armeabi-v7a"
+        ndkConfig.abiFilters /* "arm64-v8a", */ "armeabi-v7a"
     }
 
     buildTypes {
