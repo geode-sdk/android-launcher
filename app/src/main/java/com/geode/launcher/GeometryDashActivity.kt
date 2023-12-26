@@ -46,6 +46,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         setupUIState()
 
         // return back to main if Geometry Dash isn't found
@@ -93,8 +95,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         FMOD.init(this)
-
-        super.onCreate(savedInstanceState)
 
         setContentView(createView())
 
