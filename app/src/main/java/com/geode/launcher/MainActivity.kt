@@ -52,9 +52,11 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+/*
         if (gdInstalled && !geodeInstalled) {
             downloadGeode(this)
         }
+ */
     }
 }
 

@@ -10,7 +10,7 @@
     <string name="launcher_logo_alt">geode logo</string>
     <string name="launcher_launch_icon_alt">play icon</string>
     <string name="launcher_settings_icon_alt">settings icon</string>
-    <string name="geode_download_title">Downloading Geode</string>
+    <string name="geode_download_title">Geode is not installed</string>
     <string name="geode_download_description">Geode is downloading. Please wait.</string>
     <plurals name="automatically_load_countdown">
         <item quantity="one">Automatically launching game in %1$d second.</item>
