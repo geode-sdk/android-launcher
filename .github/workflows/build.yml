@@ -22,19 +22,16 @@ jobs:
     - name: Generate keystore file
       run: echo ${{secrets.KEYSTORE_FILE}} | base64 -d > ~/release.keystore
 
-    - name: Generate keystore properties
-      run: |
-            touch ${{github.workspace}}/app/signing.properties
-            echo "storeFile=$HOME/release.keystore
-            storePassword=${{secrets.KEYSTORE_PASSWORD}}
-            keyAlias=${{secrets.KEY_ALIAS}}
-            keyPassword=${{secrets.KEY_PASSWORD}}" > ${{github.workspace}}/app/signing.properties
-
     - name: Fix gradle permissions
       run: chmod +x ./gradlew
 
     - name: Build project
-      run: ./gradlew app:assembleDebug
+      run: |
+        ./gradlew app:assembleDebug \
+          -Pandroid.injected.signing.store.file=$HOME/release.keystore \
+          -Pandroid.injected.signing.store.password=${{secrets.KEYSTORE_PASSWORD}} \
+          -Pandroid.injected.signing.key.alias=${{secrets.KEY_ALIAS}} \
+          -Pandroid.injected.signing.key.password=${{secrets.KEY_PASSWORD}}
 
     - name: Upload development build
       uses: actions/upload-artifact@v3
