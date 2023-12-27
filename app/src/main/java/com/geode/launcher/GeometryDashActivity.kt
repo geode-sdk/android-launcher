@@ -128,15 +128,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // these libraries are available to the application after merging
 
         // find the first instance of the library in preferred abi order
-        val libraryFd = Build.SUPPORTED_ABIS.asSequence()
-            .mapNotNull {
-                try {
-                    assets.openNonAssetFd("lib/$it/lib$libraryName.so")
-                } catch (_: Exception) {
-                    null
-                }
-            }
-            .firstOrNull() ?: throw UnsatisfiedLinkError("Could not find library lib$libraryName.so")
+        val arch = LaunchUtils.getApplicationArchitecture()
+
+        val libraryFd = try {
+            assets.openNonAssetFd("lib/$arch/lib$libraryName.so")
+        } catch (_: Exception) {
+            throw UnsatisfiedLinkError("Could not find library lib$libraryName.so for abi $arch")
+        }
 
         val fdOffset = libraryFd.startOffset
         val fdDescriptor = libraryFd.parcelFileDescriptor.detachFd()
@@ -166,38 +164,35 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 System.load(geodePath.path)
                 return true
             }
-            else {
-                // you know zmx i have 0 clue what this does so im 
-                // just gonna like copy the binary from external
-                // also i get 20 million permission denied errors
-                getExternalFilesDir(null)?.let { dir ->
-                    val externalGeodePath = LaunchUtils.getInstalledGeodePath(this)
-                    if (externalGeodePath == null) {
-                        return false
-                    }
 
-                    val copiedPath = File(filesDir.path, "copied")
-                    if (copiedPath.exists()) {
-                        copiedPath.deleteRecursively()
-                    }
-                    copiedPath.mkdir()
+            // you know zmx i have 0 clue what this does so im
+            // just gonna like copy the binary from external
+            // also i get 20 million permission denied errors
+            getExternalFilesDir(null)?.let { dir ->
+                val externalGeodePath = LaunchUtils.getInstalledGeodePath(this) ?: return false
 
-                    val geodePath = File(copiedPath.path, "Geode.so")
+                val copiedPath = File(filesDir.path, "copied")
+                if (copiedPath.exists()) {
+                    copiedPath.deleteRecursively()
+                }
+                copiedPath.mkdir()
 
-                    if (externalGeodePath.exists()) {
-                        copyFile(FileInputStream(externalGeodePath), FileOutputStream(geodePath))
+                val geodePath = File(copiedPath.path, "Geode.so")
 
-                        if (geodePath.exists()) {
-                            try {
-                                println("Loading Geode from ${externalGeodePath.name}")
-                                System.load(geodePath.path)
-                            } catch (e: UnsatisfiedLinkError) {
-                                e.printStackTrace()
-                            }
+                if (externalGeodePath.exists()) {
+                    copyFile(FileInputStream(externalGeodePath), FileOutputStream(geodePath))
+
+                    if (geodePath.exists()) {
+                        try {
+                            println("Loading Geode from ${externalGeodePath.name}")
+                            System.load(geodePath.path)
+                        } catch (e: UnsatisfiedLinkError) {
+                            e.printStackTrace()
                         }
                     }
                 }
             }
+
         }
 
         return false

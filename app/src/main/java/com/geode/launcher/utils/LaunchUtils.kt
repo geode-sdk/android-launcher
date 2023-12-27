@@ -1,9 +1,11 @@
 package com.geode.launcher.utils
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.content.Context
+import android.os.Build
 import java.io.File
 
 object LaunchUtils {
@@ -16,18 +18,28 @@ object LaunchUtils {
         }
     }
 
+    fun getApplicationArchitecture(): String {
+        // supposedly CPU_ABI returns the current arch for the running application
+        // despite being deprecated, this is also one of the few ways to get this information
+        @Suppress("DEPRECATION")
+        return Build.CPU_ABI
+    }
+
     fun getInstalledGeodePath(context: Context): File? {
-        val internalGeodePath = File(context.filesDir.path, "launcher/Geode.so")
+        val arch = getApplicationArchitecture()
+        val geodeName = "Geode.$arch.so"
+
+        val internalGeodePath = File(context.filesDir.path, "launcher/$geodeName")
         if (internalGeodePath.exists()) {
             return internalGeodePath
         }
         context.getExternalFilesDir(null)?.let { dir->
-            val updateGeodePath = File(dir.path, "game/geode/update/Geode.so")
+            val updateGeodePath = File(dir.path, "game/geode/update/$geodeName")
             if (updateGeodePath.exists()) {
                 return updateGeodePath
             }
 
-            val externalGeodePath = File(dir.path, "Geode.so")
+            val externalGeodePath = File(dir.path, geodeName)
             if (externalGeodePath.exists()) {
                 return externalGeodePath
             }
@@ -39,6 +51,7 @@ object LaunchUtils {
         return getInstalledGeodePath(context) != null
     }
 
+    @SuppressLint("DiscouragedPrivateApi")
     fun addAssetsFromPackage(assetManager: AssetManager, packageInfo: PackageInfo) {
         // this method is officially marked as deprecated but it is the only method we are allowed to reflect
         // (the source recommends replacing with AssetManager.setApkAssets(ApkAssets[], boolean) lol)
