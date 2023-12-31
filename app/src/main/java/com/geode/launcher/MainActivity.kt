@@ -12,6 +12,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -19,6 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.Constants
@@ -65,6 +70,42 @@ fun downloadGeode(context: Context) {
     DownloadGeode(context).execute(Constants.GEODE_DOWNLOAD_LINK)
 }
 
+@Composable
+fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    var shouldShowProgress = true
+    var messageBody = context.getString(R.string.release_fetch_in_progress)
+
+    when (state) {
+        is ReleaseViewModel.ReleaseUIState.Finished -> {
+            shouldShowProgress = false
+            messageBody = context.getString(R.string.release_fetch_no_releases)
+        }
+        is ReleaseViewModel.ReleaseUIState.Failure -> {
+            val message = state.exception.message
+
+            shouldShowProgress = false
+            messageBody = context.getString(R.string.release_fetch_failed, message)
+        }
+        else -> {}
+    }
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
+    ) {
+        Text(messageBody)
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        if (shouldShowProgress) {
+            LinearProgressIndicator()
+        }
+    }
+}
+
 fun onLaunch(context: Context) {
     val launchIntent = Intent(context, GeometryDashActivity::class.java)
     launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -78,13 +119,19 @@ fun onSettings(context: Context) {
 }
 
 @Composable
-fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
+fun MainScreen(
+    gdInstalled: Boolean = true,
+    geodeInstalled: Boolean = true,
+    releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
+) {
     val context = LocalContext.current
 
     val shouldAutomaticallyLaunch = usePreference(
         preferenceFileKey = R.string.preference_file_key,
         preferenceId = R.string.preference_load_automatically
     )
+
+    val autoUpdateState by releaseViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -101,6 +148,7 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
             fontSize = 32.sp,
             modifier = Modifier.padding(12.dp)
         )
+
         if (gdInstalled && geodeInstalled) {
             if (shouldAutomaticallyLaunch.value) {
                 val countdownTimer = useCountdownTimer(
@@ -169,6 +217,11 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
                 Text(context.getString(R.string.launcher_settings))
             }
         }
+
+        UpdateCard(
+            autoUpdateState,
+            modifier = Modifier.padding(12.dp)
+        )
     }
 }
 

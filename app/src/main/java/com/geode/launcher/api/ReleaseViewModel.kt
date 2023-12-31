@@ -1,0 +1,90 @@
+package com.geode.launcher.api
+
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.geode.launcher.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.IOException
+
+class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: SharedPreferences): ViewModel() {
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as Application
+                val preferences = application.getSharedPreferences(
+                    application.getString(R.string.preference_file_key),
+                    Context.MODE_PRIVATE
+                )
+
+                ReleaseViewModel(
+                    releaseRepository = ReleaseRepository(),
+                    sharedPreferences = preferences
+                )
+            }
+        }
+    }
+
+
+    sealed class ReleaseUIState {
+        data object InUpdateCheck : ReleaseUIState()
+        data class Failure(val exception: Exception) : ReleaseUIState()
+        data object Finished : ReleaseUIState()
+    }
+
+    private val _uiState = MutableStateFlow<ReleaseUIState>(ReleaseUIState.Finished)
+    val uiState = _uiState.asStateFlow()
+
+    private suspend fun <R> retry(block: suspend () -> R): R {
+        val maxAttempts = 5
+        val initialDelay = 1000L
+
+        repeat(maxAttempts - 1) { attempt ->
+            try {
+                return block()
+            } catch (e: Exception) {
+                // only retry on exceptions that can be handled
+                if (e !is IOException) {
+                    throw e
+                }
+            }
+
+            delay(initialDelay * attempt)
+        }
+
+        // run final time for exceptions
+        return block()
+    }
+
+    fun getLatestRelease() {
+        viewModelScope.launch {
+            _uiState.value = ReleaseUIState.InUpdateCheck
+
+            val latestRelease = try {
+                retry {
+                    releaseRepository.getLatestNightlyRelease()
+                }
+            } catch (e: Exception) {
+                _uiState.value = ReleaseUIState.Failure(e)
+                return@launch
+            }
+
+            _uiState.value = ReleaseUIState.Finished
+        }
+    }
+
+    init {
+        getLatestRelease()
+    }
+}
