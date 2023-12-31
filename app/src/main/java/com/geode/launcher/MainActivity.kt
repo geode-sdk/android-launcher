@@ -3,6 +3,7 @@ package com.geode.launcher
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.format.Formatter.formatShortFileSize
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -25,7 +26,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
-import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.utils.useCountdownTimer
@@ -55,53 +55,62 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-/*
-        if (gdInstalled && !geodeInstalled) {
-            downloadGeode(this)
-        }
- */
     }
 }
 
-fun downloadGeode(context: Context) {
-    // download geode in the background and update the screen when it's done
-    DownloadGeode(context).execute(Constants.GEODE_DOWNLOAD_LINK)
+@Composable
+fun UpdateProgressIndicator(modifier: Modifier = Modifier, message: String, progress: Float? = null) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
+    ) {
+        Text(message)
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        if (progress == null) {
+            LinearProgressIndicator()
+        } else {
+            LinearProgressIndicator(progress)
+        }
+    }
 }
 
 @Composable
 fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    var shouldShowProgress = true
-    var messageBody = context.getString(R.string.release_fetch_in_progress)
-
     when (state) {
-        is ReleaseViewModel.ReleaseUIState.Finished -> {
-            shouldShowProgress = false
-            messageBody = context.getString(R.string.release_fetch_no_releases)
-        }
         is ReleaseViewModel.ReleaseUIState.Failure -> {
             val message = state.exception.message
+            val messageBody = context.getString(R.string.release_fetch_failed, message)
 
-            shouldShowProgress = false
-            messageBody = context.getString(R.string.release_fetch_failed, message)
+            Text(messageBody)
+        }
+        is ReleaseViewModel.ReleaseUIState.InDownload -> {
+            val progress = state.downloaded / state.outOf.toDouble()
+
+            val downloaded = formatShortFileSize(context, state.downloaded)
+            val outOf = formatShortFileSize(context, state.outOf)
+
+            UpdateProgressIndicator(
+                modifier = modifier,
+                message = context.getString(
+                    R.string.release_fetch_downloading,
+                    downloaded,
+                    outOf
+                ),
+                progress = progress.toFloat()
+            )
+        }
+        is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
+            UpdateProgressIndicator(
+                modifier = modifier,
+                message = context.getString(R.string.release_fetch_in_progress)
+            )
         }
         else -> {}
-    }
-
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.Start,
-        modifier = modifier
-    ) {
-        Text(messageBody)
-
-        Spacer(modifier = Modifier.padding(4.dp))
-
-        if (shouldShowProgress) {
-            LinearProgressIndicator()
-        }
     }
 }
 

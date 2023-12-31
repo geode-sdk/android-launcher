@@ -52,15 +52,13 @@ class ReleaseRepository {
                     200 -> {
                         val release = format.decodeFromStream<Release>(inputStream)
 
-                        println("completed! $release")
-
                         release
                     }
                     404 -> {
                         null
                     }
                     else -> {
-                        throw HttpException("server returned response code of $responseCode")
+                        throw HttpException("response $responseCode")
                     }
                 }
             }

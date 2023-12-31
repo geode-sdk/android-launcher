@@ -21,6 +21,7 @@
     <string name="release_fetch_failed">Release check failed with message: %1$s</string>
     <string name="release_fetch_no_releases">No releases found.</string>
     <string name="release_fetch_in_progress">Checking for new releases</string>
+    <string name="release_fetch_downloading">Downloading update… (%1$s/%2$s)</string>
 
     <!-- GeometryDashActivity strings -->
     <string name="message_box_accept">OK</string>

@@ -7,14 +7,17 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.geode.launcher.utils.DownloadReceiver
 import com.geode.launcher.utils.PreferenceUtils
+import com.geode.launcher.utils.downloadFile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: PreferenceUtils): ViewModel() {
+class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: PreferenceUtils, private val application: Application): ViewModel() {
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -23,16 +26,17 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
 
                 ReleaseViewModel(
                     releaseRepository = ReleaseRepository(),
-                    sharedPreferences = preferences
+                    sharedPreferences = preferences,
+                    application = application
                 )
             }
         }
     }
 
-
     sealed class ReleaseUIState {
         data object InUpdateCheck : ReleaseUIState()
         data class Failure(val exception: Exception) : ReleaseUIState()
+        data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseUIState()
         data object Finished : ReleaseUIState()
     }
 
@@ -60,27 +64,75 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
         return block()
     }
 
-    fun getLatestRelease() {
-        viewModelScope.launch {
-            _uiState.value = ReleaseUIState.InUpdateCheck
+    private suspend fun getLatestRelease(): Release? {
+        _uiState.value = ReleaseUIState.InUpdateCheck
 
-            val latestRelease = try {
-                retry {
-                    releaseRepository.getLatestNightlyRelease()
-                }
-            } catch (e: Exception) {
-                _uiState.value = ReleaseUIState.Failure(e)
-                return@launch
+        val latestRelease = retry {
+            releaseRepository.getLatestNightlyRelease(true)
+        }
+
+        return latestRelease
+    }
+
+    private suspend fun checkForNewRelease() {
+        val release = try {
+            getLatestRelease()
+        } catch (e: Exception) {
+            _uiState.value = ReleaseUIState.Failure(e)
+            return
+        }
+
+        if (release == null) {
+            _uiState.value = ReleaseUIState.Finished
+            return
+        }
+
+        val currentVersion = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP)
+        val latestVersion = release.getDescriptor()
+
+        if (latestVersion <= currentVersion) {
+            _uiState.value = ReleaseUIState.Finished
+            return
+        }
+
+        val releaseAsset = release.getAndroidDownload()
+        if (releaseAsset == null) {
+            val noAssetException = Exception("missing Android download")
+            _uiState.value = ReleaseUIState.Failure(noAssetException)
+
+            return
+        }
+
+        createDownload(releaseAsset)
+    }
+
+    fun runReleaseCheck() {
+        viewModelScope.launch {
+            checkForNewRelease()
+        }
+    }
+
+    private fun createDownload(asset: Asset) {
+        _uiState.value = ReleaseUIState.InDownload(0, asset.size.toLong())
+
+        val downloadReceiver = object : DownloadReceiver {
+            override fun onProgress(progress: Long, outOf: Long) {
+                _uiState.value = ReleaseViewModel.ReleaseUIState.InDownload(progress, outOf)
             }
 
-            _uiState.value = ReleaseUIState.Finished
+            override fun onFinished(downloadPath: String) {
+                _uiState.value = ReleaseViewModel.ReleaseUIState.Finished
+                // todo: process
+            }
         }
+
+        downloadFile(application, asset.browserDownloadUrl, asset.name, downloadReceiver)
     }
 
     init {
         val shouldUpdate = sharedPreferences.getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
         if (shouldUpdate) {
-            getLatestRelease()
+            runReleaseCheck()
         }
     }
 }

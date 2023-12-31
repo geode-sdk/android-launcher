@@ -167,7 +167,8 @@ fun SettingsScreen(
                             currentRelease ?: "unknown"
                         ),
                         onClick = {
-                            /* TODO */
+                            releaseViewModel.runReleaseCheck()
+                            // todo: toasts
                         }
                     )
                 }
