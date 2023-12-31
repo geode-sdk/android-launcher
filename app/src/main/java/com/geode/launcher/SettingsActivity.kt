@@ -27,6 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 
@@ -80,7 +82,10 @@ fun onOpenFolder(context: Context) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
+fun SettingsScreen(
+    onBackPressedDispatcher: OnBackPressedDispatcher?,
+    releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
+) {
     val context = LocalContext.current
 
     Scaffold(
@@ -126,6 +131,39 @@ fun SettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         onClick = { onOpenFolder(context) }
                     )
                 }
+
+                OptionsGroup(context.getString(R.string.preference_category_updater)) {
+                    SettingsCard(
+                        title = context.getString(R.string.preference_update_automatically_name),
+                        preferenceId = R.string.preference_update_automatically,
+                        defaultValue = true
+                    )
+                    // disable nightly option until first stable builds release
+                    OptionsCard(
+                        title = {
+                            OptionsTitle(
+                                Modifier.fillMaxWidth(0.75f),
+                                title = context.getString(R.string.preference_release_channel_name),
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            Toast.makeText(
+                                context,
+                                R.string.preference_release_channel_unavailable,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    ) {
+                        Switch(checked = true, onCheckedChange = null)
+                    }
+                    OptionsButton(
+                        title = context.getString(R.string.preference_check_for_updates_button),
+                        description = context.getString(R.string.preference_check_for_updates_description, "unknown"),
+                        onClick = {
+                            /* TODO */
+                        }
+                    )
+                }
 /*
                 OptionsGroup("Data") {
                     OptionsButton(
@@ -155,12 +193,12 @@ fun toggleSetting(context: Context, @StringRes preferenceId: Int): Boolean {
     return preferences.getBoolean(context.getString(preferenceId), false)
 }
 
-fun getSetting(context: Context, @StringRes preferenceId: Int): Boolean {
+fun getSetting(context: Context, @StringRes preferenceId: Int, defaultValue: Boolean = false): Boolean {
     val preferences = context.getSharedPreferences(
         context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
     )
 
-    return preferences.getBoolean(context.getString(preferenceId), false)
+    return preferences.getBoolean(context.getString(preferenceId), defaultValue)
 }
 
 @Composable
@@ -190,10 +228,10 @@ fun OptionsButton(title: String, description: String? = null, onClick: () -> Uni
 }
 
 @Composable
-fun SettingsCard(title: String, description: String? = null, @StringRes preferenceId: Int) {
+fun SettingsCard(title: String, description: String? = null, @StringRes preferenceId: Int, defaultValue: Boolean = false) {
     val context = LocalContext.current
     val settingEnabled = remember {
-        mutableStateOf(getSetting(context, preferenceId)) }
+        mutableStateOf(getSetting(context, preferenceId, defaultValue)) }
 
     OptionsCard(
         title = {

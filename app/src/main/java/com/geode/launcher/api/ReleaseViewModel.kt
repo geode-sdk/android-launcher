@@ -7,11 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.geode.launcher.R
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -85,6 +83,9 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
     }
 
     init {
-        getLatestRelease()
+        val shouldUpdate = sharedPreferences.getBoolean("PreferenceUpdateAutomatically", true)
+        if (shouldUpdate) {
+            getLatestRelease()
+        }
     }
 }
