@@ -25,6 +25,7 @@ import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.GeodeUtils
+import com.geode.launcher.utils.PreferenceUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -364,9 +365,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun getLoadTesting(): Boolean {
-        val preferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
-
-        return preferences.getBoolean(getString(R.string.preference_load_testing), false)
+        val preferences = PreferenceUtils.get(this)
+        return preferences.getBoolean(PreferenceUtils.Key.LOAD_TESTING)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")

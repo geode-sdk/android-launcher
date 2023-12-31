@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,8 +27,8 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.utils.useCountdownTimer
-import com.geode.launcher.utils.usePreference
 
 
 class MainActivity : ComponentActivity() {
@@ -126,9 +125,8 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    val shouldAutomaticallyLaunch = usePreference(
-        preferenceFileKey = R.string.preference_file_key,
-        preferenceId = R.string.preference_load_automatically
+    val shouldAutomaticallyLaunch = PreferenceUtils.usePreference(
+        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 
     val autoUpdateState by releaseViewModel.uiState.collectAsState()

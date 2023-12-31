@@ -1,30 +1,25 @@
 package com.geode.launcher.api
 
 import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.geode.launcher.R
+import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: SharedPreferences): ViewModel() {
+class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: PreferenceUtils): ViewModel() {
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = this[APPLICATION_KEY] as Application
-                val preferences = application.getSharedPreferences(
-                    application.getString(R.string.preference_file_key),
-                    Context.MODE_PRIVATE
-                )
+                val preferences = PreferenceUtils.get(application)
 
                 ReleaseViewModel(
                     releaseRepository = ReleaseRepository(),
@@ -83,7 +78,7 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
     }
 
     init {
-        val shouldUpdate = sharedPreferences.getBoolean("PreferenceUpdateAutomatically", true)
+        val shouldUpdate = sharedPreferences.getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
         if (shouldUpdate) {
             getLatestRelease()
         }

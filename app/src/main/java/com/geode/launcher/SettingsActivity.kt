@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,11 +27,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.PreferenceUtils
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,12 +120,12 @@ fun SettingsScreen(
                 OptionsGroup(context.getString(R.string.preference_category_testing)) {
                     SettingsCard(
                         title = context.getString(R.string.preference_load_testing_name),
-                        preferenceId = R.string.preference_load_testing
+                        preferenceKey = PreferenceUtils.Key.LOAD_TESTING,
                     )
                     SettingsCard(
                         title = context.getString(R.string.preference_load_automatically_name),
                         description = context.getString(R.string.preference_load_automatically_description),
-                        preferenceId = R.string.preference_load_automatically
+                        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
@@ -138,8 +137,7 @@ fun SettingsScreen(
                 OptionsGroup(context.getString(R.string.preference_category_updater)) {
                     SettingsCard(
                         title = context.getString(R.string.preference_update_automatically_name),
-                        preferenceId = R.string.preference_update_automatically,
-                        defaultValue = true
+                        preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
                     )
                     // disable nightly option until first stable builds release
                     OptionsCard(
@@ -180,28 +178,16 @@ fun SettingsScreen(
     )
 }
 
-fun toggleSetting(context: Context, @StringRes preferenceId: Int): Boolean {
-    val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
-    )
+fun toggleSetting(context: Context, preferenceKey: PreferenceUtils.Key): Boolean {
+    val preferences = PreferenceUtils.get(context)
 
-    val current = preferences.getBoolean(
-        context.getString(preferenceId), false
-    )
-    preferences.edit {
-        putBoolean(context.getString(preferenceId), !current)
-        commit()
-    }
-
-    return preferences.getBoolean(context.getString(preferenceId), false)
+    return preferences.toggleBoolean(preferenceKey)
 }
 
-fun getSetting(context: Context, @StringRes preferenceId: Int, defaultValue: Boolean = false): Boolean {
-    val preferences = context.getSharedPreferences(
-        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
-    )
+fun getSetting(context: Context, preferenceKey: PreferenceUtils.Key): Boolean {
+    val preferences = PreferenceUtils.get(context)
 
-    return preferences.getBoolean(context.getString(preferenceId), defaultValue)
+    return preferences.getBoolean(preferenceKey)
 }
 
 @Composable
@@ -231,10 +217,11 @@ fun OptionsButton(title: String, description: String? = null, onClick: () -> Uni
 }
 
 @Composable
-fun SettingsCard(title: String, description: String? = null, @StringRes preferenceId: Int, defaultValue: Boolean = false) {
+fun SettingsCard(title: String, description: String? = null, preferenceKey: PreferenceUtils.Key) {
     val context = LocalContext.current
     val settingEnabled = remember {
-        mutableStateOf(getSetting(context, preferenceId, defaultValue)) }
+        mutableStateOf(getSetting(context, preferenceKey))
+    }
 
     OptionsCard(
         title = {
@@ -246,7 +233,7 @@ fun SettingsCard(title: String, description: String? = null, @StringRes preferen
         },
         modifier = Modifier.toggleable(
             value = settingEnabled.value,
-            onValueChange = { settingEnabled.value = toggleSetting(context, preferenceId) },
+            onValueChange = { settingEnabled.value = toggleSetting(context, preferenceKey) },
             role = Role.Switch,
         )
     ) {
@@ -294,11 +281,11 @@ fun OptionsCardPreview() {
             SettingsCard(
                 title = "Load files from /test",
                 description = "Very long testing description goes here. It is incredibly long, it should wrap onto a new line.",
-                preferenceId = R.string.preference_load_testing
+                preferenceKey = PreferenceUtils.Key.LOAD_TESTING
             )
             SettingsCard(
                 title = "Testing option 2",
-                preferenceId = R.string.preference_load_automatically
+                preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
             )
         }
     }
