@@ -125,7 +125,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    val shouldAutomaticallyLaunch = PreferenceUtils.usePreference(
+    val shouldAutomaticallyLaunch = PreferenceUtils.useBooleanPreference(
         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 

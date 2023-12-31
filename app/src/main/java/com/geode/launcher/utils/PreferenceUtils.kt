@@ -23,7 +23,21 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         private const val FILE_KEY = "GeodeLauncherPreferencesFileKey"
 
         @Composable
-        fun usePreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
+        fun useBooleanPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
+            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
+                p.getBoolean(k)
+            }
+        }
+
+        @Composable
+        fun useStringPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<String?> {
+            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
+                p.getString(k)
+            }
+        }
+
+        @Composable
+        private fun <T> usePreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, preferenceGet: (PreferenceUtils, Key) -> T): MutableState<T> {
             val context = LocalContext.current
             val sharedPreferences = context.getSharedPreferences(FILE_KEY, Context.MODE_PRIVATE)
 
@@ -31,12 +45,12 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
             val preferenceValue = remember {
                 mutableStateOf(
-                    preferences.getBoolean(preferenceKey)
+                    preferenceGet(preferences, preferenceKey)
                 )
             }
 
             val listener = SharedPreferences.OnSharedPreferenceChangeListener {
-                    _, _ -> preferenceValue.value = preferences.getBoolean(preferenceKey)
+                    _, _ -> preferenceValue.value = preferenceGet(preferences, preferenceKey)
             }
 
             DisposableEffect(lifecycleOwner) {
@@ -72,7 +86,9 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LOAD_TESTING,
         LOAD_AUTOMATICALLY,
         UPDATE_AUTOMATICALLY,
-        RELEASE_CHANNEL
+        RELEASE_CHANNEL,
+        CURRENT_VERSION_TAG,
+        CURRENT_VERSION_TIMESTAMP
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -88,6 +104,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LOAD_AUTOMATICALLY -> "PreferenceLoadAutomatically"
             Key.UPDATE_AUTOMATICALLY -> "PreferenceUpdateAutomatically"
             Key.RELEASE_CHANNEL -> "PreferenceReleaseChannel"
+            Key.CURRENT_VERSION_TAG -> "PreferenceCurrentVersionName"
+            Key.CURRENT_VERSION_TIMESTAMP -> "PreferenceCurrentVersionDescriptor"
         }
     }
 
@@ -107,5 +125,29 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         }
 
         return !currentValue
+    }
+
+    fun getString(key: Key): String? {
+        val keyName = keyToName(key)
+        return sharedPreferences.getString(keyName, null)
+    }
+
+    fun setString(key: Key, value: String) {
+        val keyName = keyToName(key)
+        sharedPreferences.edit {
+            putString(keyName, value)
+        }
+    }
+
+    fun getLong(key: Key): Long {
+        val keyName = keyToName(key)
+        return sharedPreferences.getLong(keyName, 0L)
+    }
+
+    fun setLong(key: Key, value: Long) {
+        val keyName = keyToName(key)
+        sharedPreferences.edit {
+            putLong(keyName, value)
+        }
     }
 }
