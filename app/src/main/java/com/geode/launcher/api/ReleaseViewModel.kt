@@ -44,6 +44,8 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
     private val _uiState = MutableStateFlow<ReleaseUIState>(ReleaseUIState.Finished())
     val uiState = _uiState.asStateFlow()
 
+    private var isInUpdateCheck = false
+
     private suspend fun <R> retry(block: suspend () -> R): R {
         val maxAttempts = 5
         val initialDelay = 1000L
@@ -117,8 +119,15 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
     }
 
     fun runReleaseCheck() {
+        // don't run multiple checks
+        if (isInUpdateCheck) {
+            return
+        }
+
         viewModelScope.launch {
+            isInUpdateCheck = true
             checkForNewRelease()
+            isInUpdateCheck = false
         }
     }
 

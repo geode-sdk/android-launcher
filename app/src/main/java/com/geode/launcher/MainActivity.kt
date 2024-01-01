@@ -86,6 +86,8 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
 
     when (state) {
         is ReleaseViewModel.ReleaseUIState.Failure -> {
+            state.exception.printStackTrace()
+
             val message = state.exception.message
 
             Text(

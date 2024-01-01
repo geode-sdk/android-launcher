@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.launch
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,51 +90,50 @@ fun onOpenFolder(context: Context) {
 }
 
 @Composable
-fun UpdateProgressIndicator(
+fun UpdateIndicator(
+    snackbarHostState: SnackbarHostState,
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
 
     val updateStatus by releaseViewModel.uiState.collectAsState()
-    var hasShownDownload by remember { mutableStateOf(false) }
-    var lastToast by remember { mutableStateOf<Toast?>(null) }
+    var enablePopup by remember { mutableStateOf(false) }
+
+    when (updateStatus) {
+        is ReleaseViewModel.ReleaseUIState.InUpdateCheck,
+        is ReleaseViewModel.ReleaseUIState.InDownload -> {
+            enablePopup = true
+            CircularProgressIndicator()
+        }
+        else -> {}
+    }
 
     LaunchedEffect(updateStatus) {
-        val toast = when (val status = updateStatus) {
-            is ReleaseViewModel.ReleaseUIState.Failure -> {
-                hasShownDownload = false
-
-                Log.w("Geode", "Updater failed with message:\n${status.exception.stackTraceToString()}")
-                Toast.makeText(context, R.string.preference_check_for_updates_failed, Toast.LENGTH_SHORT)
-            }
-            is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
-                hasShownDownload = false
-                Toast.makeText(context, R.string.release_fetch_in_progress, Toast.LENGTH_SHORT)
-            }
-            is ReleaseViewModel.ReleaseUIState.Finished -> {
-                hasShownDownload = false
-
-                if (status.hasUpdated) {
-                    Toast.makeText(context, R.string.preference_check_for_updates_success, Toast.LENGTH_SHORT)
-                } else {
-                    Toast.makeText(context, R.string.preference_check_for_updates_none_found, Toast.LENGTH_SHORT)
-                }
-            }
-            is ReleaseViewModel.ReleaseUIState.InDownload -> {
-                if (!hasShownDownload) {
-                    hasShownDownload = true
-
-                    Toast.makeText(context, R.string.preference_check_for_updates_downloading, Toast.LENGTH_LONG)
-                } else {
-                    null
-                }
-            }
+        // only show popup if some progress was shown
+        if (!enablePopup) {
+            return@LaunchedEffect
         }
 
-        if (toast != null) {
-            lastToast?.cancel()
-            lastToast = toast
-            toast.show()
+        when (val state = updateStatus) {
+            is ReleaseViewModel.ReleaseUIState.Failure -> {
+                state.exception.printStackTrace()
+
+                snackbarHostState.showSnackbar(
+                    context.getString(R.string.preference_check_for_updates_failed),
+                )
+            }
+            is ReleaseViewModel.ReleaseUIState.Finished -> {
+                if (state.hasUpdated) {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.preference_check_for_updates_success)
+                    )
+                } else {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.preference_check_for_updates_none_found)
+                    )
+                }
+            }
+            else -> {}
         }
     }
 }
@@ -148,11 +149,12 @@ fun SettingsScreen(
     val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
 
     var showUpdateProgress by remember { mutableStateOf(false) }
-    if (showUpdateProgress) {
-        UpdateProgressIndicator()
-    }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = {
+           SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             TopAppBar(
                 navigationIcon = {
@@ -220,17 +222,26 @@ fun SettingsScreen(
                     ) {
                         Switch(checked = true, onCheckedChange = null)
                     }
-                    OptionsButton(
-                        title = context.getString(R.string.preference_check_for_updates_button),
-                        description = context.getString(
-                            R.string.preference_check_for_updates_description,
-                            currentRelease ?: "unknown"
-                        ),
-                        onClick = {
-                            releaseViewModel.runReleaseCheck()
-                            showUpdateProgress = true
+                    OptionsCard(
+                        title = {
+                            OptionsTitle(
+                                title = stringResource(R.string.preference_check_for_updates_button),
+                                description = stringResource(
+                                    R.string.preference_check_for_updates_description,
+                                    currentRelease ?: "unknown"
+                                )
+                            )
+                        },
+                        modifier = Modifier
+                            .clickable(onClick = {
+                                releaseViewModel.runReleaseCheck()
+                                showUpdateProgress = true
+                            }, role = Role.Button)
+                    ) {
+                        if (showUpdateProgress) {
+                            UpdateIndicator(snackbarHostState)
                         }
-                    )
+                    }
                 }
 /*
                 OptionsGroup("Data") {
