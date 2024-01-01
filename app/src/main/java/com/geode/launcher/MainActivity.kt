@@ -90,7 +90,8 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
 
             Text(
                 stringResource(R.string.release_fetch_failed, message ?: ""),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = modifier
             )
         }
         is ReleaseViewModel.ReleaseUIState.InDownload -> {
@@ -122,7 +123,10 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
         }
         is ReleaseViewModel.ReleaseUIState.Finished -> {
             if (state.hasUpdated) {
-                Text(stringResource(R.string.release_fetch_success))
+                Text(
+                    stringResource(R.string.release_fetch_success),
+                    modifier = modifier
+                )
             }
         }
     }
