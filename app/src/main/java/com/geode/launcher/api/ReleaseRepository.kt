@@ -20,6 +20,7 @@ class ReleaseRepository {
     class HttpException(message: String) : IOException(message)
 
     private var foundNightlyRelease: Release? = null
+    private var foundRelease: Release? = null
 
     suspend fun getLatestNightlyRelease(isRefresh: Boolean = false): Release? {
         if (!isRefresh && foundNightlyRelease != null) {
@@ -31,6 +32,20 @@ class ReleaseRepository {
 
         val release = getReleaseByUrl(url)
         foundNightlyRelease = release
+
+        return release
+    }
+
+    suspend fun getLatestRelease(isRefresh: Boolean = false): Release? {
+        if (!isRefresh && foundRelease != null) {
+            return foundRelease
+        }
+
+        val releasePath = "$GITHUB_API_BASE/releases/latest"
+        val url = URL(releasePath)
+
+        val release = getReleaseByUrl(url)
+        foundRelease = release
 
         return release
     }

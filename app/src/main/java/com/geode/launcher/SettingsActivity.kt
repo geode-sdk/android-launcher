@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -39,7 +38,6 @@ import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.PreferenceUtils
-import kotlinx.coroutines.launch
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -204,24 +202,10 @@ fun SettingsScreen(
                         title = context.getString(R.string.preference_update_automatically_name),
                         preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
                     )
-                    // disable nightly option until first stable builds release
-                    OptionsCard(
-                        title = {
-                            OptionsTitle(
-                                Modifier.fillMaxWidth(0.75f),
-                                title = context.getString(R.string.preference_release_channel_name),
-                            )
-                        },
-                        modifier = Modifier.clickable {
-                            Toast.makeText(
-                                context,
-                                R.string.preference_release_channel_unavailable,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    ) {
-                        Switch(checked = true, onCheckedChange = null)
-                    }
+                    SettingsCard(
+                        title = context.getString(R.string.preference_release_channel_name),
+                        preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL,
+                    )
                     OptionsCard(
                         title = {
                             OptionsTitle(

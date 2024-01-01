@@ -35,20 +35,19 @@
     <string name="export_folder_copied">Copied!</string>
 
     <string name="preference_category_testing">General</string>
+    <string name="preference_load_testing_name">Load files from /test</string>
+    <string name="preference_load_automatically_name">Automatically launch</string>
+    <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
+    <string name="preferences_copy_external_button">Copy external files directory</string>
+
     <string name="preference_category_updater">Updates</string>
     <string name="preference_update_automatically_name">Enable automatic updates</string>
+    <string name="preference_release_channel_name">Use nightly release channel</string>
+
     <string name="preference_check_for_updates_button">Check for updates</string>
     <string name="preference_check_for_updates_description">Current version: %1$s</string>
     <string name="preference_check_for_updates_failed">Update failed. See logs for more details.</string>
     <string name="preference_check_for_updates_none_found">No updates found.</string>
     <string name="preference_check_for_updates_success">Geode has been updated!</string>
-    <string name="preference_check_for_updates_downloading">Downloading update...</string>
-
-    <string name="preference_release_channel_name">Use nightly release channel</string>
-    <string name="preference_release_channel_unavailable">The option to change release channel is currently unavailable!</string>
-
-    <string name="preference_load_testing_name">Load files from /test</string>
-    <string name="preference_load_automatically_name">Automatically launch</string>
-    <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
-    <string name="preferences_copy_external_button">Copy external files directory</string>
+    <string name="preference_check_for_updates_downloading">Downloading update…</string>
 </resources>

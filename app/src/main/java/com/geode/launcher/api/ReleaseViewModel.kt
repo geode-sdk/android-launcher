@@ -70,8 +70,13 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
     private suspend fun getLatestRelease(): Release? {
         _uiState.value = ReleaseUIState.InUpdateCheck
 
+        val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
         val latestRelease = retry {
-            releaseRepository.getLatestNightlyRelease(true)
+            if (useNightly) {
+                releaseRepository.getLatestNightlyRelease(true)
+            } else {
+                releaseRepository.getLatestRelease(true)
+            }
         }
 
         return latestRelease
