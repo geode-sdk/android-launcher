@@ -108,7 +108,12 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
             createDownload(releaseAsset)
         } catch (e: Exception) {
             _uiState.value = ReleaseUIState.Failure(e)
+            return
         }
+
+        // extraction performed
+        updatePreferences(release)
+        _uiState.value = ReleaseUIState.Finished(true)
     }
 
     fun runReleaseCheck() {
@@ -133,8 +138,20 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
 
         DownloadUtils.extractFileFromZip(outputFile, geodeFile, geodeName)
 
-        // extraction performed
-        _uiState.value = ReleaseUIState.Finished(true)
+        // delete file now that it's no longer needed
+        outputFile.delete()
+    }
+
+    private fun updatePreferences(release: Release) {
+        sharedPreferences.setString(
+            PreferenceUtils.Key.CURRENT_VERSION_TAG,
+            release.getDescription()
+        )
+
+        sharedPreferences.setLong(
+            PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP,
+            release.getDescriptor()
+        )
     }
 
     init {

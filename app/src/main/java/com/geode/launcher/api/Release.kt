@@ -26,7 +26,12 @@ class Release(
 ) {
     fun getDescription(): String {
         if (tagName == "nightly") {
-            return "nightly-$targetCommitish"
+            // get the commit from the assets
+            // otherwise, a separate request is needed to get the hash (ew)
+            val asset = assets.first()
+            val commit = asset.name.substring(6..12)
+
+            return "nightly-$commit"
         }
 
         return tagName
