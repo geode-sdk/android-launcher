@@ -138,17 +138,19 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
             _uiState.value = ReleaseUIState.InDownload(progress, outOf)
         }
 
-        val geodeName = LaunchUtils.getGeodeFilename()
+        try {
+            val geodeName = LaunchUtils.getGeodeFilename()
 
-        val fallbackPath = File(application.filesDir, "launcher")
-        val geodeDirectory = application.getExternalFilesDir("") ?: fallbackPath
+            val fallbackPath = File(application.filesDir, "launcher")
+            val geodeDirectory = application.getExternalFilesDir("") ?: fallbackPath
 
-        val geodeFile = File(geodeDirectory, geodeName)
+            val geodeFile = File(geodeDirectory, geodeName)
 
-        DownloadUtils.extractFileFromZip(outputFile, geodeFile, geodeName)
-
-        // delete file now that it's no longer needed
-        outputFile.delete()
+            DownloadUtils.extractFileFromZip(outputFile, geodeFile, geodeName)
+        } finally {
+            // delete file now that it's no longer needed
+            outputFile.delete()
+        }
     }
 
     private fun updatePreferences(release: Release) {
