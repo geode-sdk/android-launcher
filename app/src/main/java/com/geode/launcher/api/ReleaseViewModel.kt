@@ -7,9 +7,8 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.geode.launcher.utils.DownloadReceiver
+import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.PreferenceUtils
-import com.geode.launcher.utils.downloadFile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,10 +36,10 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
         data object InUpdateCheck : ReleaseUIState()
         data class Failure(val exception: Exception) : ReleaseUIState()
         data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseUIState()
-        data object Finished : ReleaseUIState()
+        data class Finished(val hasUpdated: Boolean = false) : ReleaseUIState()
     }
 
-    private val _uiState = MutableStateFlow<ReleaseUIState>(ReleaseUIState.Finished)
+    private val _uiState = MutableStateFlow<ReleaseUIState>(ReleaseUIState.Finished())
     val uiState = _uiState.asStateFlow()
 
     private suspend fun <R> retry(block: suspend () -> R): R {
@@ -83,7 +82,7 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
         }
 
         if (release == null) {
-            _uiState.value = ReleaseUIState.Finished
+            _uiState.value = ReleaseUIState.Finished()
             return
         }
 
@@ -91,7 +90,7 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
         val latestVersion = release.getDescriptor()
 
         if (latestVersion <= currentVersion) {
-            _uiState.value = ReleaseUIState.Finished
+            _uiState.value = ReleaseUIState.Finished()
             return
         }
 
@@ -112,21 +111,15 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
         }
     }
 
-    private fun createDownload(asset: Asset) {
+    private suspend fun createDownload(asset: Asset) {
         _uiState.value = ReleaseUIState.InDownload(0, asset.size.toLong())
 
-        val downloadReceiver = object : DownloadReceiver {
-            override fun onProgress(progress: Long, outOf: Long) {
-                _uiState.value = ReleaseViewModel.ReleaseUIState.InDownload(progress, outOf)
-            }
-
-            override fun onFinished(downloadPath: String) {
-                _uiState.value = ReleaseViewModel.ReleaseUIState.Finished
-                // todo: process
-            }
+        val outputFile = DownloadUtils.downloadFile(application, asset.browserDownloadUrl, asset.name) { progress, outOf ->
+            _uiState.value = ReleaseUIState.InDownload(progress, outOf)
         }
 
-        downloadFile(application, asset.browserDownloadUrl, asset.name, downloadReceiver)
+        _uiState.value = ReleaseUIState.Finished()
+        // todo: process
     }
 
     init {
