@@ -12,13 +12,13 @@ const val MS_TO_SEC = 1000
 @Composable
 fun useCountdownTimer(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, time: Int, onCountdownFinish: () -> Unit): MutableState<Int> {
     val timeData = remember {
-        mutableStateOf(time / MS_TO_SEC % MS_TO_SEC)
+        mutableIntStateOf(time / MS_TO_SEC % MS_TO_SEC)
     }
 
     val countdownTimer =
         object : CountDownTimer(time.toLong(), 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                timeData.value = (millisUntilFinished / MS_TO_SEC % MS_TO_SEC).toInt() + 1
+                timeData.intValue = (millisUntilFinished / MS_TO_SEC % MS_TO_SEC).toInt() + 1
             }
 
             override fun onFinish() {

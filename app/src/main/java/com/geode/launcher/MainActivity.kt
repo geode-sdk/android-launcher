@@ -147,7 +147,7 @@ fun onSettings(context: Context) {
 @Composable
 fun MainScreen(
     gdInstalled: Boolean = true,
-    geodeInstalled: Boolean = true,
+    geodePreinstalled: Boolean = true,
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
@@ -157,6 +157,10 @@ fun MainScreen(
     )
 
     val autoUpdateState by releaseViewModel.uiState.collectAsState()
+
+    val geodeJustInstalled = (autoUpdateState as? ReleaseViewModel.ReleaseUIState.Finished)
+        ?.hasUpdated ?: false
+    val geodeInstalled = geodePreinstalled || geodeJustInstalled
 
     Column(
         modifier = Modifier.fillMaxSize(),
