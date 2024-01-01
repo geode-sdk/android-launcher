@@ -93,7 +93,10 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
-            Key.RELEASE_CHANNEL, Key.UPDATE_AUTOMATICALLY -> true
+            Key.UPDATE_AUTOMATICALLY -> {
+                return LaunchUtils.getApplicationArchitecture() == "armeabi-v7a"
+            }
+            Key.RELEASE_CHANNEL -> true
             else -> false
         }
     }
