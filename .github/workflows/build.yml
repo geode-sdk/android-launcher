@@ -33,8 +33,17 @@ jobs:
           -Pandroid.injected.signing.key.alias="${{secrets.KEY_ALIAS}}" \
           -Pandroid.injected.signing.key.password="${{secrets.KEY_PASSWORD}}"
 
+    - name: Rename apk
+      id: rename_apk
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        APK_PATH=${{github.workspace}}/app/build/outputs/apk/debug/app-debug.apk
+        OUT_PATH=${{github.workspace}}/geode-launcher-debug-$SHORT_SHA.apk
+        mv $APK_PATH $OUT_PATH
+        echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
+
     - name: Upload development build
       uses: actions/upload-artifact@v3
       with:
         name: geode-launcher-debug
-        path: ${{github.workspace}}/app/build/outputs/apk/debug/app-debug.apk
+        path: ${{ steps.rename_apk.outputs.path }}
