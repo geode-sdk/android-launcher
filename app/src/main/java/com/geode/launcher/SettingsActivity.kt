@@ -90,11 +90,10 @@ fun onOpenFolder(context: Context) {
 @Composable
 fun UpdateIndicator(
     snackbarHostState: SnackbarHostState,
-    releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
+    updateStatus: ReleaseViewModel.ReleaseUIState
 ) {
     val context = LocalContext.current
 
-    val updateStatus by releaseViewModel.uiState.collectAsState()
     var enablePopup by remember { mutableStateOf(false) }
 
     when (updateStatus) {
@@ -112,16 +111,16 @@ fun UpdateIndicator(
             return@LaunchedEffect
         }
 
-        when (val state = updateStatus) {
+        when (updateStatus) {
             is ReleaseViewModel.ReleaseUIState.Failure -> {
-                state.exception.printStackTrace()
+                updateStatus.exception.printStackTrace()
 
                 snackbarHostState.showSnackbar(
                     context.getString(R.string.preference_check_for_updates_failed),
                 )
             }
             is ReleaseViewModel.ReleaseUIState.Finished -> {
-                if (state.hasUpdated) {
+                if (updateStatus.hasUpdated) {
                     snackbarHostState.showSnackbar(
                         context.getString(R.string.preference_check_for_updates_success)
                     )
@@ -145,6 +144,7 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+    val updateStatus by releaseViewModel.uiState.collectAsState()
 
     var showUpdateProgress by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -223,7 +223,7 @@ fun SettingsScreen(
                             }, role = Role.Button)
                     ) {
                         if (showUpdateProgress) {
-                            UpdateIndicator(snackbarHostState)
+                            UpdateIndicator(snackbarHostState, updateStatus)
                         }
                     }
                 }
