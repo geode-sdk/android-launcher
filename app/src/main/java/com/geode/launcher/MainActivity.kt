@@ -15,10 +15,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,19 +87,26 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
     when (state) {
         is ReleaseViewModel.ReleaseUIState.Failure -> {
             val message = state.exception.message
-            val messageBody = context.getString(R.string.release_fetch_failed, message)
 
-            Text(messageBody)
+            Text(
+                stringResource(R.string.release_fetch_failed, message ?: ""),
+                textAlign = TextAlign.Center
+            )
         }
         is ReleaseViewModel.ReleaseUIState.InDownload -> {
             val progress = state.downloaded / state.outOf.toDouble()
 
-            val downloaded = formatShortFileSize(context, state.downloaded)
-            val outOf = formatShortFileSize(context, state.outOf)
+            val downloaded = remember(state.downloaded) {
+                formatShortFileSize(context, state.downloaded)
+            }
+
+            val outOf = remember(state.outOf) {
+                formatShortFileSize(context, state.outOf)
+            }
 
             UpdateProgressIndicator(
                 modifier = modifier,
-                message = context.getString(
+                message = stringResource(
                     R.string.release_fetch_downloading,
                     downloaded,
                     outOf
@@ -107,10 +117,14 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
         is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
             UpdateProgressIndicator(
                 modifier = modifier,
-                message = context.getString(R.string.release_fetch_in_progress)
+                message = stringResource(R.string.release_fetch_in_progress)
             )
         }
-        else -> {}
+        is ReleaseViewModel.ReleaseUIState.Finished -> {
+            if (state.hasUpdated) {
+                Text(stringResource(R.string.release_fetch_success))
+            }
+        }
     }
 }
 

@@ -7,13 +7,20 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.os.FileUtils
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.zip.ZipFile
 
 
 object DownloadUtils {
@@ -117,6 +124,40 @@ object DownloadUtils {
 
             continuation.invokeOnCancellation {
                 downloadManager.remove(queuedRequest)
+            }
+        }
+    }
+
+    suspend fun extractFileFromZip(input: File, output: File, zipPath: String) {
+        return coroutineScope {
+            val zip = ZipFile(input)
+            val entry = zip.getEntry(zipPath) ?:
+                throw FileNotFoundException("could not find $zipPath in archive")
+
+            val inputStream = zip.getInputStream(entry)
+            val outputStream = output.outputStream()
+
+            copyFile(inputStream, outputStream)
+        }
+    }
+
+    suspend fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
+        coroutineScope {
+            // gotta love copying
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                FileUtils.copy(inputStream, outputStream)
+            } else {
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        val buffer = ByteArray(4 * 1024)
+                        while (true) {
+                            val byteCount = input.read(buffer)
+                            if (byteCount < 0) break
+                            output.write(buffer, 0, byteCount)
+                        }
+                        output.flush()
+                    }
+                }
             }
         }
     }

@@ -8,11 +8,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.geode.launcher.utils.DownloadUtils
+import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 import java.io.IOException
 
 class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private val sharedPreferences: PreferenceUtils, private val application: Application): ViewModel() {
@@ -102,7 +104,11 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
             return
         }
 
-        createDownload(releaseAsset)
+        try {
+            createDownload(releaseAsset)
+        } catch (e: Exception) {
+            _uiState.value = ReleaseUIState.Failure(e)
+        }
     }
 
     fun runReleaseCheck() {
@@ -118,8 +124,17 @@ class ReleaseViewModel(private val releaseRepository: ReleaseRepository, private
             _uiState.value = ReleaseUIState.InDownload(progress, outOf)
         }
 
-        _uiState.value = ReleaseUIState.Finished()
-        // todo: process
+        val geodeName = LaunchUtils.getGeodeFilename()
+
+        val fallbackPath = File(application.filesDir, "launcher")
+        val geodeDirectory = application.getExternalFilesDir("") ?: fallbackPath
+
+        val geodeFile = File(geodeDirectory, geodeName)
+
+        DownloadUtils.extractFileFromZip(outputFile, geodeFile, geodeName)
+
+        // extraction performed
+        _uiState.value = ReleaseUIState.Finished(true)
     }
 
     init {
