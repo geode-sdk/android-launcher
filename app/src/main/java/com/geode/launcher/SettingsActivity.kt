@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -18,12 +19,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -82,6 +87,56 @@ fun onOpenFolder(context: Context) {
     }
 }
 
+@Composable
+fun UpdateProgressIndicator(
+    releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
+) {
+    val context = LocalContext.current
+
+    val updateStatus by releaseViewModel.uiState.collectAsState()
+    var hasShownDownload by remember { mutableStateOf(false) }
+    var lastToast by remember { mutableStateOf<Toast?>(null) }
+
+    LaunchedEffect(updateStatus) {
+        val toast = when (val status = updateStatus) {
+            is ReleaseViewModel.ReleaseUIState.Failure -> {
+                hasShownDownload = false
+
+                Log.w("Geode", "Updater failed with message:\n${status.exception.stackTraceToString()}")
+                Toast.makeText(context, R.string.preference_check_for_updates_failed, Toast.LENGTH_SHORT)
+            }
+            is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
+                hasShownDownload = false
+                Toast.makeText(context, R.string.release_fetch_in_progress, Toast.LENGTH_SHORT)
+            }
+            is ReleaseViewModel.ReleaseUIState.Finished -> {
+                hasShownDownload = false
+
+                if (status.hasUpdated) {
+                    Toast.makeText(context, R.string.preference_check_for_updates_success, Toast.LENGTH_SHORT)
+                } else {
+                    Toast.makeText(context, R.string.preference_check_for_updates_none_found, Toast.LENGTH_SHORT)
+                }
+            }
+            is ReleaseViewModel.ReleaseUIState.InDownload -> {
+                if (!hasShownDownload) {
+                    hasShownDownload = true
+
+                    Toast.makeText(context, R.string.preference_check_for_updates_downloading, Toast.LENGTH_LONG)
+                } else {
+                    null
+                }
+            }
+        }
+
+        if (toast != null) {
+            lastToast?.cancel()
+            lastToast = toast
+            toast.show()
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -91,6 +146,11 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+
+    var showUpdateProgress by remember { mutableStateOf(false) }
+    if (showUpdateProgress) {
+        UpdateProgressIndicator()
+    }
 
     Scaffold(
         topBar = {
@@ -168,7 +228,7 @@ fun SettingsScreen(
                         ),
                         onClick = {
                             releaseViewModel.runReleaseCheck()
-                            // todo: toasts
+                            showUpdateProgress = true
                         }
                     )
                 }
