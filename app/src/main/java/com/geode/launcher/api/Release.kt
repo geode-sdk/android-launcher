@@ -1,5 +1,6 @@
 package com.geode.launcher.api
 
+import com.geode.launcher.utils.LaunchUtils
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
@@ -42,8 +43,14 @@ class Release(
     }
 
     fun getAndroidDownload(): Asset? {
+        // try to find an asset that matches the architecture first
+        val architecture = LaunchUtils.getApplicationArchitecture()
+        val platform = if (architecture == "arm64-v8a")
+                "android64" else "android32"
+
+        val releaseSuffix = "$platform.zip"
         return assets.find {
-            it.name.contains("android")
+            it.name.endsWith(releaseSuffix)
         }
     }
 }
