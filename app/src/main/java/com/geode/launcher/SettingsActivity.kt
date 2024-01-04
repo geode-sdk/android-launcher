@@ -23,7 +23,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,8 +112,6 @@ fun UpdateIndicator(
 
         when (updateStatus) {
             is ReleaseViewModel.ReleaseUIState.Failure -> {
-                updateStatus.exception.printStackTrace()
-
                 snackbarHostState.showSnackbar(
                     context.getString(R.string.preference_check_for_updates_failed),
                 )
@@ -146,7 +143,6 @@ fun SettingsScreen(
     val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
     val updateStatus by releaseViewModel.uiState.collectAsState()
 
-    var showUpdateProgress by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -219,12 +215,9 @@ fun SettingsScreen(
                         modifier = Modifier
                             .clickable(onClick = {
                                 releaseViewModel.runReleaseCheck()
-                                showUpdateProgress = true
                             }, role = Role.Button)
                     ) {
-                        if (showUpdateProgress) {
-                            UpdateIndicator(snackbarHostState, updateStatus)
-                        }
+                        UpdateIndicator(snackbarHostState, updateStatus)
                     }
                 }
 /*

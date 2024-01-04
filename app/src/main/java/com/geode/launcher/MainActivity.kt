@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -86,8 +87,6 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
 
     when (state) {
         is ReleaseViewModel.ReleaseUIState.Failure -> {
-            state.exception.printStackTrace()
-
             val message = state.exception.message
 
             Text(
@@ -158,11 +157,19 @@ fun MainScreen(
         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 
+    val shouldUpdate by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
+
     val autoUpdateState by releaseViewModel.uiState.collectAsState()
 
     val geodeJustInstalled = (autoUpdateState as? ReleaseViewModel.ReleaseUIState.Finished)
         ?.hasUpdated ?: false
     val geodeInstalled = geodePreinstalled || geodeJustInstalled
+
+    LaunchedEffect(shouldUpdate) {
+        if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
+            releaseViewModel.runReleaseCheck()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),

@@ -19,35 +19,18 @@ class ReleaseRepository {
 
     class HttpException(message: String) : IOException(message)
 
-    private var foundNightlyRelease: Release? = null
-    private var foundRelease: Release? = null
-
-    suspend fun getLatestNightlyRelease(isRefresh: Boolean = false): Release? {
-        if (!isRefresh && foundNightlyRelease != null) {
-            return foundNightlyRelease
-        }
-
+    suspend fun getLatestNightlyRelease(): Release? {
         val nightlyPath = "$GITHUB_API_BASE/releases/tags/nightly"
         val url = URL(nightlyPath)
 
-        val release = getReleaseByUrl(url)
-        foundNightlyRelease = release
-
-        return release
+        return getReleaseByUrl(url)
     }
 
-    suspend fun getLatestRelease(isRefresh: Boolean = false): Release? {
-        if (!isRefresh && foundRelease != null) {
-            return foundRelease
-        }
-
+    suspend fun getLatestRelease(): Release? {
         val releasePath = "$GITHUB_API_BASE/releases/latest"
         val url = URL(releasePath)
 
-        val release = getReleaseByUrl(url)
-        foundRelease = release
-
-        return release
+        return getReleaseByUrl(url)
     }
 
     @OptIn(ExperimentalSerializationApi::class)
