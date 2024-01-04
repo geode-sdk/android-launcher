@@ -152,7 +152,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // there doesn't seem to be a way to load a library from a file descriptor
         val libraryCopy = File(cacheDir, "lib$libraryName.so")
         val libraryOutput = libraryCopy.outputStream()
-        copyFile(libraryFd.createInputStream(), libraryOutput)
+        runBlocking {
+            DownloadUtils.copyFile(libraryFd.createInputStream(), libraryOutput)
+        }
 
         System.load(libraryCopy.path)
 
