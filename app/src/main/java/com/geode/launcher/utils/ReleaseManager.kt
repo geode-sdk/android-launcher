@@ -1,6 +1,7 @@
 package com.geode.launcher.utils
 
 import android.content.Context
+import com.geode.launcher.api.Asset
 import com.geode.launcher.api.Release
 import com.geode.launcher.api.ReleaseRepository
 import kotlinx.coroutines.CoroutineScope
@@ -77,8 +78,6 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun getLatestRelease(): Release? {
-        uiState.value = ReleaseManagerState.InUpdateCheck
-
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
 
@@ -93,18 +92,7 @@ class ReleaseManager private constructor(
         return latestRelease
     }
 
-    private suspend fun performUpdate(release: Release) {
-        val releaseAsset = release.getAndroidDownload()
-        if (releaseAsset == null) {
-            val noAssetException = Exception("missing Android download")
-            sendError(noAssetException)
-
-            return
-        }
-
-        // set an initial download size
-        uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
-
+    private suspend fun performUpdate(release: Release, releaseAsset: Asset) {
         try {
             val file = performDownload(releaseAsset.browserDownloadUrl)
             performExtraction(file)
@@ -119,7 +107,7 @@ class ReleaseManager private constructor(
     }
 
     // cancels the previous update and begins a new one
-    private suspend fun beginUpdate(release: Release) {
+    private suspend fun beginUpdate(release: Release, releaseAsset: Asset) {
         if (release.getDescriptor() == currentUpdate) {
             return
         }
@@ -129,7 +117,7 @@ class ReleaseManager private constructor(
         currentUpdate = release.getDescriptor()
         updateJob = coroutineScope {
             launch {
-                performUpdate(release)
+                performUpdate(release, releaseAsset)
             }
         }
     }
@@ -138,7 +126,7 @@ class ReleaseManager private constructor(
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
-            sendError(e)
+            updateFlow.value = ReleaseManagerState.Failure(e)
             return
         }
 
@@ -158,6 +146,17 @@ class ReleaseManager private constructor(
             return
         }
 
+        val releaseAsset = release.getAndroidDownload()
+        if (releaseAsset == null) {
+            val noAssetException = Exception("missing Android download")
+            updateFlow.value = ReleaseManagerState.Failure(noAssetException)
+
+            return
+        }
+
+        // set an initial download size
+        uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
+
         // final act... sync update flow to uiState
         if (updateScope?.isActive == true) {
             updateScope.launch {
@@ -167,7 +166,7 @@ class ReleaseManager private constructor(
             }
         }
 
-        beginUpdate(release)
+        beginUpdate(release, releaseAsset)
     }
 
     private suspend fun updatePreferences(release: Release) {
