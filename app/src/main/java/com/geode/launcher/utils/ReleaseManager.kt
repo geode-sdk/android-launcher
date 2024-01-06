@@ -109,6 +109,11 @@ class ReleaseManager private constructor(
             val geodeName = LaunchUtils.getGeodeFilename()
             val geodeFile = getGeodeOutputPath(geodeName)
 
+            // work around a permission issue from adb push
+            if (geodeFile.exists()) {
+                geodeFile.delete()
+            }
+
             DownloadUtils.extractFileFromZipStream(
                 fileStream,
                 geodeFile.outputStream(),
@@ -144,8 +149,8 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            _uiState.value = ReleaseManagerState.Finished()
-            return
+            //_uiState.value = ReleaseManagerState.Finished()
+            //return
         }
 
         performUpdate(release)

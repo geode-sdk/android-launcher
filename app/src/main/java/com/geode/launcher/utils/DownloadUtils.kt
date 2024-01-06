@@ -90,16 +90,24 @@ object DownloadUtils {
         // note to self: ZipInputStreams are a little silly
         // (runInterruptible allows it to cancel, otherwise it waits for the stream to finish)
         runInterruptible {
-            val zip = ZipInputStream(inputStream)
-            zip.use {
-                var entry = it.nextEntry
-                while (entry != null) {
-                    if (entry.name == zipPath) {
-                        it.copyTo(outputStream)
-                        return@use
-                    }
+            inputStream.use {
+                outputStream.use {
+                    // nice indentation
+                    val zip = ZipInputStream(inputStream)
+                    zip.use {
+                        var entry = it.nextEntry
+                        while (entry != null) {
+                            if (entry.name == zipPath) {
+                                it.copyTo(outputStream)
+                                return@use
+                            }
 
-                    entry = it.nextEntry
+                            entry = it.nextEntry
+                        }
+
+                        // no matching entries found, throw exception
+                        throw IOException("no file found for $zipPath")
+                    }
                 }
             }
         }
