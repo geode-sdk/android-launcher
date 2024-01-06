@@ -1,27 +1,30 @@
 package com.geode.launcher.utils
 
 import android.content.Context
+import android.util.Log
 import com.geode.launcher.api.Release
 import com.geode.launcher.api.ReleaseRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.io.File
-import java.io.IOException
+import java.io.InterruptedIOException
 
 /**
  * Singleton to manage Geode updates, from update checking to downloading.
  */
 class ReleaseManager private constructor(
     private val applicationContext: Context,
-    private val releaseRepository: ReleaseRepository = ReleaseRepository()
+    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val releaseRepository: ReleaseRepository = ReleaseRepository(httpClient)
 ) {
     companion object {
         private lateinit var managerInstance: ReleaseManager
@@ -51,43 +54,24 @@ class ReleaseManager private constructor(
     val isInUpdate: Boolean
         get() = _uiState.value !is ReleaseManagerState.Failure && _uiState.value !is ReleaseManagerState.Finished
 
-    // runs a given function, retrying until it succeeds or max attempts are reached
-    private suspend fun <R> retry(block: suspend () -> R): R {
-        val maxAttempts = 5
-        val initialDelay = 1000L
-
-        repeat(maxAttempts - 1) { attempt ->
-            try {
-                return block()
-            } catch (e: Exception) {
-                // only retry on exceptions that can be handled
-                if (e !is IOException) {
-                    throw e
-                }
-            }
-
-            delay(initialDelay * attempt)
-        }
-
-        // run final time for exceptions
-        return block()
-    }
-
     private fun sendError(e: Exception) {
         _uiState.value = ReleaseManagerState.Failure(e)
-        e.printStackTrace()
+
+        // ignore cancellation, it's good actually
+        if (e !is CancellationException && e !is InterruptedIOException) {
+            Log.w("Geode", "Release download has failed:")
+            e.printStackTrace()
+        }
     }
 
     private suspend fun getLatestRelease(): Release? {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
 
-        val latestRelease = retry {
-            if (useNightly) {
-                releaseRepository.getLatestNightlyRelease()
-            } else {
-                releaseRepository.getLatestRelease()
-            }
+        val latestRelease = if (useNightly) {
+            releaseRepository.getLatestNightlyRelease()
+        } else {
+            releaseRepository.getLatestRelease()
         }
 
         return latestRelease
@@ -106,8 +90,18 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
 
         try {
-            val file = performDownload(releaseAsset.browserDownloadUrl)
-            performExtraction(file)
+            val fileStream = DownloadUtils.downloadStream(httpClient, releaseAsset.browserDownloadUrl) { progress, outOf ->
+                _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+            }
+
+            val geodeName = LaunchUtils.getGeodeFilename()
+            val geodeFile = getGeodeOutputPath(geodeName)
+
+            DownloadUtils.extractFileFromZipStream(
+                fileStream,
+                geodeFile.outputStream(),
+                geodeName
+            )
         } catch (e: Exception) {
             sendError(e)
             return
@@ -158,24 +152,6 @@ class ReleaseManager private constructor(
                 PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP,
                 release.getDescriptor()
             )
-        }
-    }
-
-    private suspend fun performDownload(url: String): File {
-        return DownloadUtils.downloadFile(applicationContext, url, "geode-release.zip") { progress, outOf ->
-            _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
-        }
-    }
-
-    private suspend fun performExtraction(outputFile: File) {
-        try {
-            val geodeName = LaunchUtils.getGeodeFilename()
-            val geodeFile = getGeodeOutputPath(geodeName)
-
-            DownloadUtils.extractFileFromZip(outputFile, geodeFile, geodeName)
-        } finally {
-            // delete file now that it's no longer needed
-            outputFile.delete()
         }
     }
 

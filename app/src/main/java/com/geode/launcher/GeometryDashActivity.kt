@@ -27,7 +27,6 @@ import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.PreferenceUtils
-import kotlinx.coroutines.runBlocking
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -36,8 +35,6 @@ import org.fmod.FMOD
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 
 
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
@@ -152,9 +149,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // there doesn't seem to be a way to load a library from a file descriptor
         val libraryCopy = File(cacheDir, "lib$libraryName.so")
         val libraryOutput = libraryCopy.outputStream()
-        runBlocking {
-            DownloadUtils.copyFile(libraryFd.createInputStream(), libraryOutput)
-        }
+        DownloadUtils.copyFile(libraryFd.createInputStream(), libraryOutput)
 
         System.load(libraryCopy.path)
 
@@ -217,12 +212,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 val geodePath = File(copiedPath.path, "Geode.so")
 
                 if (externalGeodePath.exists()) {
-                    runBlocking {
-                        DownloadUtils.copyFile(
-                            FileInputStream(externalGeodePath),
-                            FileOutputStream(geodePath)
-                        )
-                    }
+                    DownloadUtils.copyFile(
+                        FileInputStream(externalGeodePath),
+                        FileOutputStream(geodePath)
+                    )
 
                     if (geodePath.exists()) {
                         try {
@@ -426,12 +419,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 if (it.isFile) {
                     // welcome to the world of Android classloader permissions
                     val outputFile = File(testDirPath.path + File.separator + it.name)
-                    runBlocking {
-                        DownloadUtils.copyFile(
-                            FileInputStream(it),
-                            FileOutputStream(outputFile)
-                        )
-                    }
+                    DownloadUtils.copyFile(
+                        FileInputStream(it),
+                        FileOutputStream(outputFile)
+                    )
 
                     try {
                         println("Loading test library ${outputFile.name}")

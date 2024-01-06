@@ -1,163 +1,165 @@
 package com.geode.launcher.utils
 
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.database.ContentObserver
-import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.os.FileUtils
-import android.os.Handler
-import android.os.Looper
-import androidx.core.content.ContextCompat
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.File
-import java.io.FileNotFoundException
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
+import okio.Buffer
+import okio.BufferedSource
+import okio.ForwardingSource
+import okio.Source
+import okio.buffer
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.zip.ZipFile
+import java.util.concurrent.TimeUnit
+import java.util.zip.ZipInputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
+
+typealias ProgressCallback = (progress: Long, outOf: Long) -> Unit
 
 object DownloadUtils {
-    suspend fun downloadFile(
-        context: Context,
+    suspend fun downloadStream(
+        httpClient: OkHttpClient,
         url: String,
-        filename: String,
-        progressHandler: ((progress: Long, outOf: Long) -> Unit)?
-    ): File{
-        val assetUri = Uri.parse(url)
+        onProgress: ProgressCallback? = null
+    ): InputStream {
+        val request = Request.Builder()
+            .url(url)
+            .build()
 
-        // fallback shouldn't be used
-        val fallbackPath = File(Environment.getExternalStorageDirectory(), "Geode")
-        val filesPath = context.getExternalFilesDir("") ?: fallbackPath
-        val downloadPath = File(filesPath, filename)
-        val downloadUri = Uri.fromFile(downloadPath)
+        // build a new client using the same pool as the old client
+        // (more efficient)
+        val progressClientBuilder = httpClient.newBuilder()
+            // disable timeout
+            .readTimeout(0, TimeUnit.SECONDS)
 
-        val request = DownloadManager.Request(assetUri)
-            .setTitle(filename)
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-            .setDestinationUri(downloadUri)
+        // add progress listener
+        if (onProgress != null) {
+            progressClientBuilder.addNetworkInterceptor { chain ->
+                val originalResponse = chain.proceed(chain.request())
+                originalResponse.newBuilder()
+                    .body(ProgressResponseBody(
+                        originalResponse.body!!, onProgress
+                    ))
+                    .build()
+            }
+        }
 
-        val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val queuedRequest = downloadManager.enqueue(request)
-        val query = DownloadManager.Query().setFilterById(queuedRequest)
+        val progressClient = progressClientBuilder.build()
 
-        // register progress and finished handlers
+        val call = progressClient.newCall(request)
+        val response = call.executeCoroutine()
+
+        return response.body!!.byteStream()
+    }
+
+    suspend fun Call.executeCoroutine(): Response {
         return suspendCancellableCoroutine { continuation ->
-            val finishedReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-                    val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-                    if (id != queuedRequest) {
+            this.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    if (continuation.isCancelled) {
                         return
                     }
 
-                    val cursor = downloadManager.query(query)
-                    cursor.use { c ->
-                        if (!c.moveToFirst()) {
-                            return
-                        }
-
-                        val statusColumn = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                        val status = c.getInt(statusColumn)
-
-                        when (status) {
-                            DownloadManager.STATUS_SUCCESSFUL -> continuation.resumeWith(Result.success(downloadPath))
-                            DownloadManager.STATUS_FAILED -> {
-                                val errorColumn = c.getColumnIndex(DownloadManager.COLUMN_REASON)
-                                val error = c.getInt(errorColumn)
-                                val exception = IOException("download failed, status code $error")
-
-                                continuation.resumeWith(Result.failure(exception))
-                            }
-                            else -> {
-                                // could be reported as progress
-                            }
-                        }
-                    }
+                    continuation.resumeWithException(e)
                 }
-            }
 
-            ContextCompat.registerReceiver(
-                context,
-                finishedReceiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                ContextCompat.RECEIVER_EXPORTED
-            )
-
-            val progressReceiver = object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    super.onChange(selfChange)
-
-                    val cursor = downloadManager.query(query)
-                    cursor.use { c ->
-                        if (!c.moveToFirst()) {
-                            return
-                        }
-
-                        val progressColumn = c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                        if (progressColumn < 0) {
-                            return
-                        }
-
-                        val totalSizeColumn = c.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                        if (totalSizeColumn < 0) {
-                            return
-                        }
-
-                        val progress = c.getLong(progressColumn)
-                        val outOf = c.getLong(totalSizeColumn)
-
-                        if (progress < outOf) {
-                            progressHandler?.invoke(progress, outOf)
-                        }
-                    }
+                override fun onResponse(call: Call, response: Response) {
+                    continuation.resume(response)
                 }
-            }
-
-            val downloadsUri = Uri.parse("content://downloads/my_downloads")
-            context.contentResolver.registerContentObserver(downloadsUri, true, progressReceiver)
+            })
 
             continuation.invokeOnCancellation {
-                downloadManager.remove(queuedRequest)
+                this.cancel()
             }
         }
     }
 
-    suspend fun extractFileFromZip(input: File, output: File, zipPath: String) {
-        return coroutineScope {
-            val zip = ZipFile(input)
-            val entry = zip.getEntry(zipPath) ?:
-                throw FileNotFoundException("could not find $zipPath in archive")
+    suspend fun extractFileFromZipStream(inputStream: InputStream, outputStream: OutputStream, zipPath: String) {
+        // note to self: ZipInputStreams are a little silly
+        // (runInterruptible allows it to cancel, otherwise it waits for the stream to finish)
+        runInterruptible {
+            val zip = ZipInputStream(inputStream)
+            zip.use {
+                var entry = it.nextEntry
+                while (entry != null) {
+                    if (entry.name == zipPath) {
+                        it.copyTo(outputStream)
+                        return@use
+                    }
 
-            val inputStream = zip.getInputStream(entry)
-            val outputStream = output.outputStream()
-
-            copyFile(inputStream, outputStream)
+                    entry = it.nextEntry
+                }
+            }
         }
     }
 
-    suspend fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
-        coroutineScope {
-            // gotta love copying
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                FileUtils.copy(inputStream, outputStream)
-            } else {
-                inputStream.use { input ->
-                    outputStream.use { output ->
-                        val buffer = ByteArray(4 * 1024)
-                        while (true) {
-                            val byteCount = input.read(buffer)
-                            if (byteCount < 0) break
-                            output.write(buffer, 0, byteCount)
-                        }
-                        output.flush()
+    fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
+        // gotta love copying
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            FileUtils.copy(inputStream, outputStream)
+        } else {
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    val buffer = ByteArray(4 * 1024)
+                    while (true) {
+                        val byteCount = input.read(buffer)
+                        if (byteCount < 0) break
+                        output.write(buffer, 0, byteCount)
                     }
+                    output.flush()
                 }
+            }
+        }
+    }
+}
+
+// based on <https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/Progress.java>
+// lazily ported to kotlin
+private class ProgressResponseBody (
+    private val responseBody: ResponseBody,
+    private val progressCallback: ProgressCallback
+) : ResponseBody() {
+    private val bufferedSource: BufferedSource by lazy {
+        source(responseBody.source()).buffer()
+    }
+
+    override fun contentType(): MediaType? {
+        return responseBody.contentType()
+    }
+
+    override fun contentLength(): Long {
+        return responseBody.contentLength()
+    }
+
+    override fun source(): BufferedSource {
+        return bufferedSource
+    }
+
+    private fun source(source: Source): Source {
+        return object : ForwardingSource(source) {
+            var totalBytesRead = 0L
+
+            override fun read(sink: Buffer, byteCount: Long): Long {
+                val bytesRead = super.read(sink, byteCount)
+                totalBytesRead += if (bytesRead != -1L) bytesRead else 0
+
+                progressCallback(
+                    totalBytesRead,
+                    responseBody.contentLength()
+                )
+
+                return bytesRead
             }
         }
     }
