@@ -149,8 +149,8 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            //_uiState.value = ReleaseManagerState.Finished()
-            //return
+            _uiState.value = ReleaseManagerState.Finished()
+            return
         }
 
         performUpdate(release)
