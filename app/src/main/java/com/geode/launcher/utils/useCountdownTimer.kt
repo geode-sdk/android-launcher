@@ -38,12 +38,16 @@ fun useCountdownTimer(
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                shouldBeCounting = true
-                millisUntilFinished = time
-
-            } else if (event == Lifecycle.Event.ON_STOP) {
-                shouldBeCounting = false
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    shouldBeCounting = true
+                    millisUntilFinished = time
+                }
+                Lifecycle.Event.ON_PAUSE,
+                Lifecycle.Event.ON_STOP -> {
+                    shouldBeCounting = false
+                }
+                else -> {}
             }
         }
 
