@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -255,7 +256,7 @@ fun MainScreen(
         )
 
         if (gdInstalled && geodeInstalled) {
-            if (shouldAutomaticallyLaunch.value) {
+            if (shouldAutomaticallyLaunch.value && !releaseViewModel.isInUpdate) {
                 val countdownTimer = useCountdownTimer(
                     time = 3000,
                     onCountdownFinish = {
@@ -266,10 +267,12 @@ fun MainScreen(
                     }
                 )
 
-                if (countdownTimer.value != 0) {
+                if (countdownTimer != 0L) {
                     Text(
-                        context.resources.getQuantityString(
-                            R.plurals.automatically_load_countdown, countdownTimer.value, countdownTimer.value
+                        pluralStringResource(
+                            R.plurals.automatically_load_countdown,
+                            countdownTimer.toInt(),
+                            countdownTimer
                         ),
                         style = Typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -279,7 +282,10 @@ fun MainScreen(
             }
 
             Row {
-                Button(onClick = { onLaunch(context) }) {
+                Button(
+                    onClick = { onLaunch(context) },
+                    enabled = !releaseViewModel.isInUpdate
+                ) {
                     Icon(
                         Icons.Filled.PlayArrow,
                         contentDescription = context.getString(R.string.launcher_launch_icon_alt)

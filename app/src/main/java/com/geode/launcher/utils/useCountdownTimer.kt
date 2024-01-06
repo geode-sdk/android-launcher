@@ -1,37 +1,49 @@
 package com.geode.launcher.utils
 
-import android.os.CountDownTimer
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.delay
 
-const val MS_TO_SEC = 1000
+const val MS_TO_SEC = 1000L
 
 @Composable
-fun useCountdownTimer(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, time: Int, onCountdownFinish: () -> Unit): MutableState<Int> {
-    val timeData = remember {
-        mutableIntStateOf(time / MS_TO_SEC % MS_TO_SEC)
+fun useCountdownTimer(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    time: Long,
+    onCountdownFinish: () -> Unit
+): Long {
+    var millisUntilFinished by remember {
+        mutableLongStateOf(time)
     }
 
-    val countdownTimer =
-        object : CountDownTimer(time.toLong(), 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                timeData.intValue = (millisUntilFinished / MS_TO_SEC % MS_TO_SEC).toInt() + 1
-            }
+    var shouldBeCounting by remember {
+        mutableStateOf(true)
+    }
 
-            override fun onFinish() {
-                onCountdownFinish()
-            }
+    LaunchedEffect(shouldBeCounting, millisUntilFinished) {
+        if (!shouldBeCounting) {
+            return@LaunchedEffect
         }
+
+        if (millisUntilFinished > 0) {
+            delay(MS_TO_SEC)
+            millisUntilFinished -= MS_TO_SEC
+        } else {
+            onCountdownFinish()
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                countdownTimer.start()
+                shouldBeCounting = true
+                millisUntilFinished = time
+
             } else if (event == Lifecycle.Event.ON_STOP) {
-                countdownTimer.cancel()
+                shouldBeCounting = false
             }
         }
 
@@ -42,5 +54,5 @@ fun useCountdownTimer(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.curre
         }
     }
 
-    return timeData
+    return millisUntilFinished / MS_TO_SEC
 }
