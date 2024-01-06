@@ -37,6 +37,8 @@ import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.PreferenceUtils
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,9 +120,13 @@ fun UpdateIndicator(
 
         when (updateStatus) {
             is ReleaseViewModel.ReleaseUIState.Failure -> {
-                snackbarHostState.showSnackbar(
-                    context.getString(R.string.preference_check_for_updates_failed),
-                )
+                val message = when (updateStatus.exception) {
+                    is UnknownHostException, is ConnectException ->
+                        context.getString(R.string.release_fetch_no_internet)
+                    else -> context.getString(R.string.preference_check_for_updates_failed)
+                }
+
+                snackbarHostState.showSnackbar(message)
             }
             is ReleaseViewModel.ReleaseUIState.Finished -> {
                 if (updateStatus.hasUpdated) {

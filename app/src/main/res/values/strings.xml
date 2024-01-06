@@ -24,6 +24,7 @@
     <string name="release_fetch_success">Geode updated!</string>
     <string name="release_fetch_downloading">Downloading update… (%1$s/%2$s)</string>
     <string name="release_fetch_cancelling">Cancelling update…</string>
+    <string name="release_fetch_no_internet">No internet found.</string>
     <string name="release_fetch_cancelled">Update cancelled.</string>
     <string name="release_fetch_button_retry">Retry</string>
     <string name="release_fetch_button_cancel">Cancel</string>
@@ -54,5 +55,6 @@
     <string name="preference_check_for_updates_none_found">No updates found.</string>
     <string name="preference_check_for_updates_success">Geode has been updated!</string>
     <string name="preference_check_for_updates_downloading">Downloading update…</string>
+    <string name="preference_check_for_updates_no_internet">No internet found.</string>
     <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 </resources>

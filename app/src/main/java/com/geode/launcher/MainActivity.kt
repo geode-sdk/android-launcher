@@ -36,6 +36,8 @@ import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.utils.useCountdownTimer
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 
 class MainActivity : ComponentActivity() {
@@ -137,7 +139,11 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
 
     when (val state = releaseState) {
         is ReleaseViewModel.ReleaseUIState.Failure -> {
-            val message = state.exception.message
+            val message = when (state.exception) {
+                is UnknownHostException, is ConnectException ->
+                    stringResource(R.string.release_fetch_no_internet)
+                else -> state.exception.message
+            }
 
             UpdateMessageIndicator(
                 stringResource(R.string.release_fetch_failed, message ?: ""),
