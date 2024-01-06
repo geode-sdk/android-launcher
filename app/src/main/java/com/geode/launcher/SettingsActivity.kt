@@ -96,10 +96,16 @@ fun UpdateIndicator(
     var enablePopup by remember { mutableStateOf(false) }
 
     when (updateStatus) {
-        is ReleaseViewModel.ReleaseUIState.InUpdateCheck,
-        is ReleaseViewModel.ReleaseUIState.InDownload -> {
+        is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
             enablePopup = true
             CircularProgressIndicator()
+        }
+        is ReleaseViewModel.ReleaseUIState.InDownload -> {
+            // is this the ideal design? idk
+            enablePopup = true
+            val progress = updateStatus.downloaded / updateStatus.outOf.toDouble()
+
+            CircularProgressIndicator(progress.toFloat())
         }
         else -> {}
     }
