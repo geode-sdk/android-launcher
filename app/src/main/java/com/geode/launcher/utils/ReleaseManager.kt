@@ -45,9 +45,11 @@ class ReleaseManager private constructor(
 
     private var updateJob: Job? = null
 
-    private val uiState = MutableStateFlow<ReleaseManagerState>(ReleaseManagerState.Finished())
+    private val _uiState = MutableStateFlow<ReleaseManagerState>(ReleaseManagerState.Finished())
+    val uiState = _uiState.asStateFlow()
+
     val isInUpdate: Boolean
-        get() = uiState.value !is ReleaseManagerState.Failure && uiState.value !is ReleaseManagerState.Finished
+        get() = _uiState.value !is ReleaseManagerState.Failure && _uiState.value !is ReleaseManagerState.Finished
 
     // runs a given function, retrying until it succeeds or max attempts are reached
     private suspend fun <R> retry(block: suspend () -> R): R {
@@ -72,7 +74,7 @@ class ReleaseManager private constructor(
     }
 
     private fun sendError(e: Exception) {
-        uiState.value = ReleaseManagerState.Failure(e)
+        _uiState.value = ReleaseManagerState.Failure(e)
         e.printStackTrace()
     }
 
@@ -95,13 +97,13 @@ class ReleaseManager private constructor(
         val releaseAsset = release.getAndroidDownload()
         if (releaseAsset == null) {
             val noAssetException = Exception("missing Android download")
-            uiState.value = ReleaseManagerState.Failure(noAssetException)
+            _uiState.value = ReleaseManagerState.Failure(noAssetException)
 
             return
         }
 
         // set an initial download size
-        uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
+        _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
 
         try {
             val file = performDownload(releaseAsset.browserDownloadUrl)
@@ -113,7 +115,7 @@ class ReleaseManager private constructor(
 
         // extraction performed
         updatePreferences(release)
-        uiState.value = ReleaseManagerState.Finished(true)
+        _uiState.value = ReleaseManagerState.Finished(true)
     }
 
     private suspend fun checkForNewRelease() {
@@ -125,7 +127,7 @@ class ReleaseManager private constructor(
         }
 
         if (release == null) {
-            uiState.value = ReleaseManagerState.Finished()
+            _uiState.value = ReleaseManagerState.Finished()
             return
         }
 
@@ -136,7 +138,7 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            uiState.value = ReleaseManagerState.Finished()
+            _uiState.value = ReleaseManagerState.Finished()
             return
         }
 
@@ -161,7 +163,7 @@ class ReleaseManager private constructor(
 
     private suspend fun performDownload(url: String): File {
         return DownloadUtils.downloadFile(applicationContext, url, "geode-release.zip") { progress, outOf ->
-            uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+            _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
         }
     }
 
@@ -191,7 +193,7 @@ class ReleaseManager private constructor(
         updateJob?.cancelAndJoin()
         updateJob = null
 
-        uiState.value = ReleaseManagerState.Finished()
+        _uiState.value = ReleaseManagerState.Finished()
     }
 
     /**
@@ -201,12 +203,12 @@ class ReleaseManager private constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun checkForUpdates(): StateFlow<ReleaseManagerState> {
         if (!isInUpdate) {
-            uiState.value = ReleaseManagerState.InUpdateCheck
+            _uiState.value = ReleaseManagerState.InUpdateCheck
             updateJob = GlobalScope.launch {
                 checkForNewRelease()
             }
         }
 
-        return uiState.asStateFlow()
+        return _uiState.asStateFlow()
     }
 }

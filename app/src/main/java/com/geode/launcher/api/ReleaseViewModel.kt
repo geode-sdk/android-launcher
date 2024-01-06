@@ -9,8 +9,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.geode.launcher.utils.ReleaseManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ReleaseViewModel(private val application: Application): ViewModel() {
@@ -65,6 +66,26 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
         }
     }
 
+    private suspend fun syncUiState(
+        flow: StateFlow<ReleaseManager.ReleaseManagerState>
+    ) {
+        flow.map(ReleaseUIState::managerStateToUI).collect {
+            // send the mapped state to the ui
+            _uiState.value = it
+        }
+    }
+
+    fun useGlobalCheckState() {
+        hasPerformedCheck = true
+
+        viewModelScope.launch {
+            val releaseFlow = ReleaseManager.get(application)
+                .uiState
+
+            syncUiState(releaseFlow)
+        }
+    }
+
     fun runReleaseCheck() {
         hasPerformedCheck = true
 
@@ -72,19 +93,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
             val releaseFlow = ReleaseManager.get(application)
                 .checkForUpdates()
 
-            releaseFlow
-                .transformWhile {
-                    // map the ui state into something that can be used
-                    emit(ReleaseUIState.managerStateToUI(it))
-
-                    // end collection once ReleaseManager reaches a state of "completion"
-                    it !is ReleaseManager.ReleaseManagerState.Finished &&
-                            it !is ReleaseManager.ReleaseManagerState.Failure
-                }
-                .collect {
-                    // send the mapped state to the ui
-                    _uiState.value = it
-                }
+            syncUiState(releaseFlow)
         }
     }
 }

@@ -236,6 +236,8 @@ fun MainScreen(
     LaunchedEffect(shouldUpdate) {
         if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
             releaseViewModel.runReleaseCheck()
+        } else {
+            releaseViewModel.useGlobalCheckState()
         }
     }
 
