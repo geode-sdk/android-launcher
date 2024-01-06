@@ -31,6 +31,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
         data class Failure(val exception: Exception) : ReleaseUIState()
         data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseUIState()
         data class Finished(val hasUpdated: Boolean = false) : ReleaseUIState()
+        data class Cancelled(val isCancelling: Boolean = false) : ReleaseUIState()
 
         companion object {
             fun managerStateToUI(state: ReleaseManager.ReleaseManagerState): ReleaseUIState {
@@ -54,12 +55,17 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     var hasPerformedCheck = false
         private set
 
-    fun runReleaseCheck() {
-        // don't run multiple checks
-        if (isInUpdate) {
-            return
-        }
+    fun cancelUpdate() {
+        viewModelScope.launch {
+            _uiState.value = ReleaseUIState.Cancelled(true)
 
+            ReleaseManager.get(application).cancelUpdate()
+
+            _uiState.value = ReleaseUIState.Cancelled()
+        }
+    }
+
+    fun runReleaseCheck() {
         hasPerformedCheck = true
 
         viewModelScope.launch {

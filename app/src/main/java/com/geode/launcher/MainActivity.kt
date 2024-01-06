@@ -63,7 +63,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun UpdateProgressIndicator(modifier: Modifier = Modifier, message: String, progress: Float? = null) {
+fun UpdateProgressIndicator(
+    message: String,
+    releaseViewModel: ReleaseViewModel,
+    modifier: Modifier = Modifier,
+    progress: Float? = null
+) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start,
@@ -78,21 +83,64 @@ fun UpdateProgressIndicator(modifier: Modifier = Modifier, message: String, prog
         } else {
             LinearProgressIndicator(progress)
         }
+
+        TextButton(
+            onClick = {
+                releaseViewModel.cancelUpdate()
+            },
+            modifier = Modifier.offset((-12).dp)
+        ) {
+            Text(stringResource(R.string.release_fetch_button_cancel))
+        }
     }
 }
 
 @Composable
-fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modifier) {
+fun UpdateMessageIndicator(
+    message: String,
+    releaseViewModel: ReleaseViewModel,
+    modifier: Modifier = Modifier,
+    allowRetry: Boolean = false
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Text(
+            message,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        if (allowRetry) {
+            OutlinedButton(
+                onClick = {
+                    releaseViewModel.runReleaseCheck()
+                },
+            ) {
+                Text(stringResource(R.string.release_fetch_button_retry))
+            }
+        }
+    }
+
+}
+
+@Composable
+fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    when (state) {
+    val releaseState by releaseViewModel.uiState.collectAsState()
+
+    when (val state = releaseState) {
         is ReleaseViewModel.ReleaseUIState.Failure -> {
             val message = state.exception.message
 
-            Text(
+            UpdateMessageIndicator(
                 stringResource(R.string.release_fetch_failed, message ?: ""),
-                textAlign = TextAlign.Center,
-                modifier = modifier
+                modifier = modifier,
+                allowRetry = true,
+                releaseViewModel = releaseViewModel
             )
         }
         is ReleaseViewModel.ReleaseUIState.InDownload -> {
@@ -107,26 +155,45 @@ fun UpdateCard(state: ReleaseViewModel.ReleaseUIState, modifier: Modifier = Modi
             }
 
             UpdateProgressIndicator(
-                modifier = modifier,
-                message = stringResource(
+                stringResource(
                     R.string.release_fetch_downloading,
                     downloaded,
                     outOf
                 ),
+                modifier = modifier,
+                releaseViewModel = releaseViewModel,
                 progress = progress.toFloat()
             )
         }
         is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
             UpdateProgressIndicator(
+                stringResource(R.string.release_fetch_in_progress),
                 modifier = modifier,
-                message = stringResource(R.string.release_fetch_in_progress)
+                releaseViewModel = releaseViewModel
             )
         }
         is ReleaseViewModel.ReleaseUIState.Finished -> {
             if (state.hasUpdated) {
-                Text(
+                UpdateMessageIndicator(
                     stringResource(R.string.release_fetch_success),
-                    modifier = modifier
+                    modifier = modifier,
+                    releaseViewModel = releaseViewModel
+                )
+            }
+        }
+        is ReleaseViewModel.ReleaseUIState.Cancelled -> {
+            if (state.isCancelling) {
+                UpdateProgressIndicator(
+                    stringResource(R.string.release_fetch_cancelling),
+                    modifier = modifier,
+                    releaseViewModel = releaseViewModel
+                )
+            } else {
+                UpdateMessageIndicator(
+                    stringResource(R.string.release_fetch_cancelled),
+                    modifier = modifier,
+                    allowRetry = true,
+                    releaseViewModel = releaseViewModel
                 )
             }
         }
@@ -257,7 +324,7 @@ fun MainScreen(
         }
 
         UpdateCard(
-            autoUpdateState,
+            releaseViewModel,
             modifier = Modifier.padding(12.dp)
         )
     }

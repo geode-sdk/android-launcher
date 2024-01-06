@@ -23,6 +23,10 @@
     <string name="release_fetch_in_progress">Checking for new releases…</string>
     <string name="release_fetch_success">Geode updated!</string>
     <string name="release_fetch_downloading">Downloading update… (%1$s/%2$s)</string>
+    <string name="release_fetch_cancelling">Cancelling update…</string>
+    <string name="release_fetch_cancelled">Update cancelled.</string>
+    <string name="release_fetch_button_retry">Retry</string>
+    <string name="release_fetch_button_cancel">Cancel</string>
 
     <!-- GeometryDashActivity strings -->
     <string name="message_box_accept">OK</string>

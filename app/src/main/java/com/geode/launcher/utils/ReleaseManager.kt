@@ -6,6 +6,7 @@ import com.geode.launcher.api.ReleaseRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +44,6 @@ class ReleaseManager private constructor(
     }
 
     private var updateJob: Job? = null
-    private var currentUpdate: Long? = null
 
     private val uiState = MutableStateFlow<ReleaseManagerState>(ReleaseManagerState.Finished())
     val isInUpdate: Boolean
@@ -116,24 +116,6 @@ class ReleaseManager private constructor(
         uiState.value = ReleaseManagerState.Finished(true)
     }
 
-    // cancels the previous update and begins a new one
-    private suspend fun beginUpdate(release: Release) {
-        if (release.getDescriptor() == currentUpdate) {
-            return
-        }
-
-        updateJob?.cancel()
-
-        currentUpdate = release.getDescriptor()
-        updateJob = coroutineScope {
-            launch {
-                performUpdate(release)
-
-                currentUpdate = null
-            }
-        }
-    }
-
     private suspend fun checkForNewRelease() {
         val release = try {
             getLatestRelease()
@@ -154,11 +136,11 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            // uiState.value = ReleaseManagerState.Finished()
-            // return
+            uiState.value = ReleaseManagerState.Finished()
+            return
         }
 
-        beginUpdate(release)
+        performUpdate(release)
     }
 
     private suspend fun updatePreferences(release: Release) {
@@ -203,6 +185,16 @@ class ReleaseManager private constructor(
     }
 
     /**
+     * Cancels the current update job.
+     */
+    suspend fun cancelUpdate() {
+        updateJob?.cancelAndJoin()
+        updateJob = null
+
+        uiState.value = ReleaseManagerState.Finished()
+    }
+
+    /**
      * Schedules a new update checking job.
      * @return Flow that tracks the state of the update.
      */
@@ -210,7 +202,7 @@ class ReleaseManager private constructor(
     fun checkForUpdates(): StateFlow<ReleaseManagerState> {
         if (!isInUpdate) {
             uiState.value = ReleaseManagerState.InUpdateCheck
-            GlobalScope.launch {
+            updateJob = GlobalScope.launch {
                 checkForNewRelease()
             }
         }
