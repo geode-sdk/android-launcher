@@ -17,13 +17,20 @@
         <item quantity="other">Automatically launching game in %1$d seconds.</item>
     </plurals>
 
-    <!-- GeometryDashActivity strings -->
-    <string name="message_box_accept">Ok</string>
+    <!-- Updater strings -->
+    <string name="release_fetch_failed">Update failed.\n%1$s</string>
+    <string name="release_fetch_no_releases">No updates found.</string>
+    <string name="release_fetch_in_progress">Checking for new releases…</string>
+    <string name="release_fetch_success">Geode updated!</string>
+    <string name="release_fetch_downloading">Downloading update… (%1$s/%2$s)</string>
+    <string name="release_fetch_cancelling">Cancelling update…</string>
+    <string name="release_fetch_no_internet">No internet found.</string>
+    <string name="release_fetch_cancelled">Update cancelled.</string>
+    <string name="release_fetch_button_retry">Retry</string>
+    <string name="release_fetch_button_cancel">Cancel</string>
 
-    <!-- Preference keys -->
-    <string name="preference_file_key">GeodeLauncherPreferencesFileKey</string>
-    <string name="preference_load_testing">PreferenceLoadTesting</string>
-    <string name="preference_load_automatically">PreferenceLoadAutomatically</string>
+    <!-- GeometryDashActivity strings -->
+    <string name="message_box_accept">OK</string>
 
     <!-- SettingsActivity strings -->
     <string name="title_activity_settings">Settings</string>
@@ -37,4 +44,17 @@
     <string name="preference_load_automatically_name">Automatically launch</string>
     <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
+
+    <string name="preference_category_updater">Updates</string>
+    <string name="preference_update_automatically_name">Enable automatic updates</string>
+    <string name="preference_release_channel_name">Use nightly release channel</string>
+
+    <string name="preference_check_for_updates_button">Check for updates</string>
+    <string name="preference_check_for_updates_description">Current version: %1$s</string>
+    <string name="preference_check_for_updates_failed">Update failed. See logs for more details.</string>
+    <string name="preference_check_for_updates_none_found">No updates found.</string>
+    <string name="preference_check_for_updates_success">Geode has been updated!</string>
+    <string name="preference_check_for_updates_downloading">Downloading update…</string>
+    <string name="preference_check_for_updates_no_internet">No internet found.</string>
+    <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 </resources>

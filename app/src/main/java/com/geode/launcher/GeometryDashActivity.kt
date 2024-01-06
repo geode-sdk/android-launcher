@@ -23,8 +23,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.GeodeUtils
+import com.geode.launcher.utils.PreferenceUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
@@ -33,8 +35,6 @@ import org.fmod.FMOD
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 
 
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
@@ -149,7 +149,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // there doesn't seem to be a way to load a library from a file descriptor
         val libraryCopy = File(cacheDir, "lib$libraryName.so")
         val libraryOutput = libraryCopy.outputStream()
-        copyFile(libraryFd.createInputStream(), libraryOutput)
+        DownloadUtils.copyFile(libraryFd.createInputStream(), libraryOutput)
 
         System.load(libraryCopy.path)
 
@@ -190,7 +190,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return true
         } catch (e: UnsatisfiedLinkError) {
             // but users may prefer it stored with data
-            val geodePath = File(filesDir.path, "launcher/Geode.so")
+            val geodeFilename = LaunchUtils.getGeodeFilename()
+            val geodePath = File(filesDir.path, "launcher/$geodeFilename")
             if (geodePath.exists()) {
                 System.load(geodePath.path)
                 return true
@@ -211,7 +212,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 val geodePath = File(copiedPath.path, "Geode.so")
 
                 if (externalGeodePath.exists()) {
-                    copyFile(FileInputStream(externalGeodePath), FileOutputStream(geodePath))
+                    DownloadUtils.copyFile(
+                        FileInputStream(externalGeodePath),
+                        FileOutputStream(geodePath)
+                    )
 
                     if (geodePath.exists()) {
                         try {
@@ -395,9 +399,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun getLoadTesting(): Boolean {
-        val preferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
-
-        return preferences.getBoolean(getString(R.string.preference_load_testing), false)
+        val preferences = PreferenceUtils.get(this)
+        return preferences.getBoolean(PreferenceUtils.Key.LOAD_TESTING)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
@@ -416,7 +419,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 if (it.isFile) {
                     // welcome to the world of Android classloader permissions
                     val outputFile = File(testDirPath.path + File.separator + it.name)
-                    copyFile(FileInputStream(it), FileOutputStream(outputFile))
+                    DownloadUtils.copyFile(
+                        FileInputStream(it),
+                        FileOutputStream(outputFile)
+                    )
 
                     try {
                         println("Loading test library ${outputFile.name}")
@@ -424,25 +430,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                     } catch (e: UnsatisfiedLinkError) {
                         e.printStackTrace()
                     }
-                }
-            }
-        }
-    }
-
-    private fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
-        // gotta love copying
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            FileUtils.copy(inputStream, outputStream)
-        } else {
-            inputStream.use { input ->
-                outputStream.use { output ->
-                    val buffer = ByteArray(4 * 1024)
-                    while (true) {
-                        val byteCount = input.read(buffer)
-                        if (byteCount < 0) break
-                        output.write(buffer, 0, byteCount)
-                    }
-                    output.flush()
                 }
             }
         }

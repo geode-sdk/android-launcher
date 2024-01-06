@@ -3,28 +3,41 @@ package com.geode.launcher
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.format.Formatter.formatShortFileSize
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
-import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.utils.useCountdownTimer
-import com.geode.launcher.utils.usePreference
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 
 class MainActivity : ComponentActivity() {
@@ -51,18 +64,149 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-/*
-        if (gdInstalled && !geodeInstalled) {
-            downloadGeode(this)
-        }
- */
     }
 }
 
-fun downloadGeode(context: Context) {
-    // download geode in the background and update the screen when it's done
-    DownloadGeode(context).execute(Constants.GEODE_DOWNLOAD_LINK)
+@Composable
+fun UpdateProgressIndicator(
+    message: String,
+    releaseViewModel: ReleaseViewModel,
+    modifier: Modifier = Modifier,
+    progress: Float? = null
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
+    ) {
+        Text(message)
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        if (progress == null) {
+            LinearProgressIndicator()
+        } else {
+            LinearProgressIndicator(progress)
+        }
+
+        TextButton(
+            onClick = {
+                releaseViewModel.cancelUpdate()
+            },
+            modifier = Modifier.offset((-12).dp)
+        ) {
+            Text(stringResource(R.string.release_fetch_button_cancel))
+        }
+    }
+}
+
+@Composable
+fun UpdateMessageIndicator(
+    message: String,
+    releaseViewModel: ReleaseViewModel,
+    modifier: Modifier = Modifier,
+    allowRetry: Boolean = false
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Text(
+            message,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        if (allowRetry) {
+            OutlinedButton(
+                onClick = {
+                    releaseViewModel.runReleaseCheck()
+                },
+            ) {
+                Text(stringResource(R.string.release_fetch_button_retry))
+            }
+        }
+    }
+
+}
+
+@Composable
+fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    val releaseState by releaseViewModel.uiState.collectAsState()
+
+    when (val state = releaseState) {
+        is ReleaseViewModel.ReleaseUIState.Failure -> {
+            val message = when (state.exception) {
+                is UnknownHostException, is ConnectException ->
+                    stringResource(R.string.release_fetch_no_internet)
+                else -> state.exception.message
+            }
+
+            UpdateMessageIndicator(
+                stringResource(R.string.release_fetch_failed, message ?: ""),
+                modifier = modifier,
+                allowRetry = true,
+                releaseViewModel = releaseViewModel
+            )
+        }
+        is ReleaseViewModel.ReleaseUIState.InDownload -> {
+            val progress = state.downloaded / state.outOf.toDouble()
+
+            val downloaded = remember(state.downloaded) {
+                formatShortFileSize(context, state.downloaded)
+            }
+
+            val outOf = remember(state.outOf) {
+                formatShortFileSize(context, state.outOf)
+            }
+
+            UpdateProgressIndicator(
+                stringResource(
+                    R.string.release_fetch_downloading,
+                    downloaded,
+                    outOf
+                ),
+                modifier = modifier,
+                releaseViewModel = releaseViewModel,
+                progress = progress.toFloat()
+            )
+        }
+        is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
+            UpdateProgressIndicator(
+                stringResource(R.string.release_fetch_in_progress),
+                modifier = modifier,
+                releaseViewModel = releaseViewModel
+            )
+        }
+        is ReleaseViewModel.ReleaseUIState.Finished -> {
+            if (state.hasUpdated) {
+                UpdateMessageIndicator(
+                    stringResource(R.string.release_fetch_success),
+                    modifier = modifier,
+                    releaseViewModel = releaseViewModel
+                )
+            }
+        }
+        is ReleaseViewModel.ReleaseUIState.Cancelled -> {
+            if (state.isCancelling) {
+                UpdateProgressIndicator(
+                    stringResource(R.string.release_fetch_cancelling),
+                    modifier = modifier,
+                    releaseViewModel = releaseViewModel
+                )
+            } else {
+                UpdateMessageIndicator(
+                    stringResource(R.string.release_fetch_cancelled),
+                    modifier = modifier,
+                    allowRetry = true,
+                    releaseViewModel = releaseViewModel
+                )
+            }
+        }
+    }
 }
 
 fun onLaunch(context: Context) {
@@ -78,16 +222,37 @@ fun onSettings(context: Context) {
 }
 
 @Composable
-fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
+fun MainScreen(
+    gdInstalled: Boolean = true,
+    geodePreinstalled: Boolean = true,
+    releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
+) {
     val context = LocalContext.current
 
-    val shouldAutomaticallyLaunch = usePreference(
-        preferenceFileKey = R.string.preference_file_key,
-        preferenceId = R.string.preference_load_automatically
+    val shouldAutomaticallyLaunch = PreferenceUtils.useBooleanPreference(
+        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 
+    val shouldUpdate by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
+
+    val autoUpdateState by releaseViewModel.uiState.collectAsState()
+
+    val geodeJustInstalled = (autoUpdateState as? ReleaseViewModel.ReleaseUIState.Finished)
+        ?.hasUpdated ?: false
+    val geodeInstalled = geodePreinstalled || geodeJustInstalled
+
+    LaunchedEffect(shouldUpdate) {
+        if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
+            releaseViewModel.runReleaseCheck()
+        } else {
+            releaseViewModel.useGlobalCheckState()
+        }
+    }
+
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -101,8 +266,9 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
             fontSize = 32.sp,
             modifier = Modifier.padding(12.dp)
         )
+
         if (gdInstalled && geodeInstalled) {
-            if (shouldAutomaticallyLaunch.value) {
+            if (shouldAutomaticallyLaunch.value && !releaseViewModel.isInUpdate) {
                 val countdownTimer = useCountdownTimer(
                     time = 3000,
                     onCountdownFinish = {
@@ -113,10 +279,12 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
                     }
                 )
 
-                if (countdownTimer.value != 0) {
+                if (countdownTimer != 0L) {
                     Text(
-                        context.resources.getQuantityString(
-                            R.plurals.automatically_load_countdown, countdownTimer.value, countdownTimer.value
+                        pluralStringResource(
+                            R.plurals.automatically_load_countdown,
+                            countdownTimer.toInt(),
+                            countdownTimer
                         ),
                         style = Typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -126,7 +294,10 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
             }
 
             Row {
-                Button(onClick = { onLaunch(context) }) {
+                Button(
+                    onClick = { onLaunch(context) },
+                    enabled = !releaseViewModel.isInUpdate
+                ) {
                     Icon(
                         Icons.Filled.PlayArrow,
                         contentDescription = context.getString(R.string.launcher_launch_icon_alt)
@@ -169,6 +340,11 @@ fun MainScreen(gdInstalled: Boolean = true, geodeInstalled: Boolean = true) {
                 Text(context.getString(R.string.launcher_settings))
             }
         }
+
+        UpdateCard(
+            releaseViewModel,
+            modifier = Modifier.padding(12.dp)
+        )
     }
 }
 

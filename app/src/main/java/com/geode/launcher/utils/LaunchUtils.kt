@@ -25,9 +25,13 @@ object LaunchUtils {
         return Build.CPU_ABI
     }
 
+    fun getGeodeFilename(): String {
+        val abi = getApplicationArchitecture()
+        return "Geode.$abi.so"
+    }
+
     fun getInstalledGeodePath(context: Context): File? {
-        val arch = getApplicationArchitecture()
-        val geodeName = "Geode.$arch.so"
+        val geodeName = getGeodeFilename()
 
         val internalGeodePath = File(context.filesDir.path, "launcher/$geodeName")
         if (internalGeodePath.exists()) {
