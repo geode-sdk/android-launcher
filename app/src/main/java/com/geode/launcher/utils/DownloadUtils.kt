@@ -40,6 +40,7 @@ object DownloadUtils {
         // build a new client using the same pool as the old client
         // (more efficient)
         val progressClientBuilder = httpClient.newBuilder()
+            .cache(null)
             // disable timeout
             .readTimeout(0, TimeUnit.SECONDS)
 

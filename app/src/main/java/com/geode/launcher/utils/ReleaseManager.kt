@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.io.File
 import java.io.InterruptedIOException
@@ -23,7 +24,7 @@ import java.io.InterruptedIOException
  */
 class ReleaseManager private constructor(
     private val applicationContext: Context,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient,
     private val releaseRepository: ReleaseRepository = ReleaseRepository(httpClient)
 ) {
     companion object {
@@ -32,7 +33,18 @@ class ReleaseManager private constructor(
         fun get(context: Context): ReleaseManager {
             if (!::managerInstance.isInitialized) {
                 val applicationContext = context.applicationContext
-                managerInstance = ReleaseManager(applicationContext)
+
+                val httpClient = OkHttpClient.Builder()
+                    .cache(Cache(
+                        applicationContext.cacheDir,
+                        maxSize = 10L * 1024L * 1024L // 10mb cache size
+                    ))
+                    .build()
+
+                managerInstance = ReleaseManager(
+                    applicationContext,
+                    httpClient
+                )
             }
 
             return managerInstance
