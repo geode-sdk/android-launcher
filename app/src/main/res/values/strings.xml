@@ -50,4 +50,5 @@
     <string name="preference_check_for_updates_none_found">No updates found.</string>
     <string name="preference_check_for_updates_success">Geode has been updated!</string>
     <string name="preference_check_for_updates_downloading">Downloading update…</string>
+    <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 </resources>

@@ -1,10 +1,8 @@
 package com.geode.launcher.utils
 
 import android.content.Context
-import com.geode.launcher.api.Asset
 import com.geode.launcher.api.Release
 import com.geode.launcher.api.ReleaseRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -13,7 +11,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -157,8 +154,8 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            uiState.value = ReleaseManagerState.Finished()
-            return
+            // uiState.value = ReleaseManagerState.Finished()
+            // return
         }
 
         beginUpdate(release)

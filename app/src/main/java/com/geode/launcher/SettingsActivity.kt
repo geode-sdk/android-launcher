@@ -144,6 +144,16 @@ fun SettingsScreen(
     val updateStatus by releaseViewModel.uiState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    var showUpdateInProgress by remember { mutableStateOf(false) }
+
+    if (showUpdateInProgress) {
+        LaunchedEffect(snackbarHostState) {
+            snackbarHostState.showSnackbar(
+                context.getString(R.string.preference_check_for_updates_already_updating)
+            )
+            showUpdateInProgress = false
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -213,9 +223,16 @@ fun SettingsScreen(
                             )
                         },
                         modifier = Modifier
-                            .clickable(onClick = {
-                                releaseViewModel.runReleaseCheck()
-                            }, role = Role.Button)
+                            .clickable(
+                                onClick = {
+                                    if (releaseViewModel.isInUpdate) {
+                                        showUpdateInProgress = true
+                                    } else {
+                                        releaseViewModel.runReleaseCheck()
+                                    }
+                                },
+                                role = Role.Button
+                            )
                     ) {
                         UpdateIndicator(snackbarHostState, updateStatus)
                     }

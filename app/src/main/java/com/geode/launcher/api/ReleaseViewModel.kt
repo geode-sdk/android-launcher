@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.geode.launcher.utils.ReleaseManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.transformWhile
@@ -49,21 +48,21 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     private val _uiState = MutableStateFlow<ReleaseUIState>(ReleaseUIState.Finished())
     val uiState = _uiState.asStateFlow()
 
-    private var isInUpdateCheck = false
+    val isInUpdate
+        get() = ReleaseManager.get(application).isInUpdate
+
     var hasPerformedCheck = false
         private set
 
     fun runReleaseCheck() {
         // don't run multiple checks
-        if (isInUpdateCheck) {
+        if (isInUpdate) {
             return
         }
 
         hasPerformedCheck = true
 
         viewModelScope.launch {
-            isInUpdateCheck = true
-
             val releaseFlow = ReleaseManager.get(application)
                 .checkForUpdates()
 
@@ -80,8 +79,6 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
                     // send the mapped state to the ui
                     _uiState.value = it
                 }
-
-            isInUpdateCheck = false
         }
     }
 }
