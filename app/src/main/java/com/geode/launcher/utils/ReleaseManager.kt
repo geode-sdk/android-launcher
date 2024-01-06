@@ -49,6 +49,8 @@ class ReleaseManager private constructor(
     private var currentUpdate: Long? = null
 
     private val uiState = MutableStateFlow<ReleaseManagerState>(ReleaseManagerState.Finished())
+    val isInUpdate: Boolean
+        get() = uiState.value !is ReleaseManagerState.Failure && uiState.value !is ReleaseManagerState.Finished
 
     // runs a given function, retrying until it succeeds or max attempts are reached
     private suspend fun <R> retry(block: suspend () -> R): R {
@@ -92,7 +94,18 @@ class ReleaseManager private constructor(
         return latestRelease
     }
 
-    private suspend fun performUpdate(release: Release, releaseAsset: Asset) {
+    private suspend fun performUpdate(release: Release) {
+        val releaseAsset = release.getAndroidDownload()
+        if (releaseAsset == null) {
+            val noAssetException = Exception("missing Android download")
+            uiState.value = ReleaseManagerState.Failure(noAssetException)
+
+            return
+        }
+
+        // set an initial download size
+        uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
+
         try {
             val file = performDownload(releaseAsset.browserDownloadUrl)
             performExtraction(file)
@@ -107,7 +120,7 @@ class ReleaseManager private constructor(
     }
 
     // cancels the previous update and begins a new one
-    private suspend fun beginUpdate(release: Release, releaseAsset: Asset) {
+    private suspend fun beginUpdate(release: Release) {
         if (release.getDescriptor() == currentUpdate) {
             return
         }
@@ -117,21 +130,23 @@ class ReleaseManager private constructor(
         currentUpdate = release.getDescriptor()
         updateJob = coroutineScope {
             launch {
-                performUpdate(release, releaseAsset)
+                performUpdate(release)
+
+                currentUpdate = null
             }
         }
     }
 
-    private suspend fun checkForNewRelease(updateFlow: MutableStateFlow<ReleaseManagerState>, updateScope: CoroutineScope?) {
+    private suspend fun checkForNewRelease() {
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
-            updateFlow.value = ReleaseManagerState.Failure(e)
+            sendError(e)
             return
         }
 
         if (release == null) {
-            updateFlow.value = ReleaseManagerState.Finished()
+            uiState.value = ReleaseManagerState.Finished()
             return
         }
 
@@ -142,31 +157,11 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion <= currentVersion) {
-            updateFlow.value = ReleaseManagerState.Finished()
+            uiState.value = ReleaseManagerState.Finished()
             return
         }
 
-        val releaseAsset = release.getAndroidDownload()
-        if (releaseAsset == null) {
-            val noAssetException = Exception("missing Android download")
-            updateFlow.value = ReleaseManagerState.Failure(noAssetException)
-
-            return
-        }
-
-        // set an initial download size
-        uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
-
-        // final act... sync update flow to uiState
-        if (updateScope?.isActive == true) {
-            updateScope.launch {
-                uiState.collect {
-                    updateFlow.value = it
-                }
-            }
-        }
-
-        beginUpdate(release, releaseAsset)
+        beginUpdate(release)
     }
 
     private suspend fun updatePreferences(release: Release) {
@@ -212,17 +207,17 @@ class ReleaseManager private constructor(
 
     /**
      * Schedules a new update checking job.
-     * @param updateScope Limits the lifetime of flow collection to the scope.
-     * @return Flow that tracks the state of the update, eventually being merged into the main downloader state.
+     * @return Flow that tracks the state of the update.
      */
     @OptIn(DelicateCoroutinesApi::class)
-    fun checkForUpdates(updateScope: CoroutineScope? = null): StateFlow<ReleaseManagerState> {
-        val flow = MutableStateFlow<ReleaseManagerState>(ReleaseManagerState.InUpdateCheck)
-
-        GlobalScope.launch {
-            checkForNewRelease(flow, updateScope)
+    fun checkForUpdates(): StateFlow<ReleaseManagerState> {
+        if (!isInUpdate) {
+            uiState.value = ReleaseManagerState.InUpdateCheck
+            GlobalScope.launch {
+                checkForNewRelease()
+            }
         }
 
-        return flow.asStateFlow()
+        return uiState.asStateFlow()
     }
 }

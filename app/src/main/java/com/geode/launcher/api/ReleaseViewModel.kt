@@ -65,10 +65,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
             isInUpdateCheck = true
 
             val releaseFlow = ReleaseManager.get(application)
-                .checkForUpdates(
-                    // use the current scope so (hopefully) flow piping ends once collection is finished
-                    CoroutineScope(coroutineContext)
-                )
+                .checkForUpdates()
 
             releaseFlow
                 .transformWhile {
