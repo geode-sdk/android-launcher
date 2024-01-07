@@ -68,9 +68,12 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         try {
             // fixes bugs specific to the new app directory, such as package name
+            val saveDir = LaunchUtils.getSaveDirectory(this)
+            saveDir.mkdir()
+
             LauncherFix.loadLibrary()
             LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
-            LauncherFix.setDataPath(filesDir.path)
+            LauncherFix.setDataPath(saveDir.path)
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
         }

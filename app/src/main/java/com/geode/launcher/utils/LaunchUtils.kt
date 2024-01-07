@@ -55,6 +55,17 @@ object LaunchUtils {
         return getInstalledGeodePath(context) != null
     }
 
+    /**
+     * Returns the directory that Geode/the game should base itself off of.
+     */
+    fun getBaseDirectory(context: Context): File {
+        return context.getExternalFilesDir("")!!
+    }
+
+    fun getSaveDirectory(context: Context): File {
+        return File(getBaseDirectory(context), "save")
+    }
+
     @SuppressLint("DiscouragedPrivateApi")
     fun addAssetsFromPackage(assetManager: AssetManager, packageInfo: PackageInfo) {
         // this method is officially marked as deprecated but it is the only method we are allowed to reflect

@@ -222,6 +222,12 @@ object GeodeUtils {
         return false
     }
 
+    @JvmStatic
+    fun getBaseDirectory(): String {
+        val activity = activity.get()!!
+        return LaunchUtils.getBaseDirectory(activity).path
+    }
+
     // copied from https://stackoverflow.com/questions/17546101/get-real-path-for-uri-android
     // i am actually very lazy to move this to a separate class
 

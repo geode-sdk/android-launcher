@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Process
 import com.customRobTop.BaseRobTopActivity
+import com.geode.launcher.utils.LaunchUtils
 
 
 @Suppress("unused", "KotlinJniMissingFunction")
@@ -50,7 +51,7 @@ object Cocos2dxHelper {
 //        sContext = pContext
         this.cocos2dxHelperListener = cocos2dxHelperListener
         packageName = applicationInfo.packageName
-        fileDirectory = context.filesDir.absolutePath
+        fileDirectory = LaunchUtils.getSaveDirectory(context).absolutePath
 //        Cocos2dxHelper.sCocos2dxAccelerometer = Cocos2dxAccelerometer(pContext)
 //        Cocos2dxHelper.sCocos2dMusic = Cocos2dxMusic(pContext)
 //        var simultaneousStreams: Int = Cocos2dxSound.MAX_SIMULTANEOUS_STREAMS_DEFAULT
