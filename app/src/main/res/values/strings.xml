@@ -44,6 +44,7 @@
     <string name="preference_load_automatically_name">Automatically launch</string>
     <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
+    <string name="preferences_open_file_manager">Open file manager</string>
 
     <string name="preference_category_updater">Updates</string>
     <string name="preference_update_automatically_name">Enable automatic updates</string>

@@ -3,6 +3,7 @@ package com.geode.launcher
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -32,11 +33,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
 
@@ -69,23 +73,31 @@ fun onExportSaveData(context: Context) {
 */
 
 fun onOpenFolder(context: Context) {
-    context.getExternalFilesDir(null)?.let { file ->
-        val clipboardManager =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.setPrimaryClip(
-            ClipData.newPlainText(
-                context.getString(R.string.export_folder_tag),
-                file.path
-            )
+    val file = LaunchUtils.getBaseDirectory(context)
+    val clipboardManager =
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboardManager.setPrimaryClip(
+        ClipData.newPlainText(
+            context.getString(R.string.export_folder_tag),
+            file.path
         )
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.export_folder_copied),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+    )
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.export_folder_copied),
+            Toast.LENGTH_SHORT
+        ).show()
     }
+}
+
+fun onOpenFileManager(context: Context) {
+    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        type = "*/*"
+    }
+
+    context.startActivity(intent)
 }
 
 @Composable
@@ -210,8 +222,12 @@ fun SettingsScreen(
                     )
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
-                        description = context.getExternalFilesDir(null)?.path,
+                        description = LaunchUtils.getBaseDirectory(context).path,
                         onClick = { onOpenFolder(context) }
+                    )
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_open_file_manager),
+                        onClick = { onOpenFileManager(context) }
                     )
                 }
 
