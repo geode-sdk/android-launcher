@@ -54,8 +54,10 @@ class MainActivity : ComponentActivity() {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
 
+            val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
+
             CompositionLocalProvider(LocalTheme provides theme) {
-                GeodeLauncherTheme(theme = theme) {
+                GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background

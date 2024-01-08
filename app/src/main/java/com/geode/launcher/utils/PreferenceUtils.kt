@@ -95,7 +95,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         RELEASE_CHANNEL,
         CURRENT_VERSION_TAG,
         CURRENT_VERSION_TIMESTAMP,
-        THEME
+        THEME,
+        BLACK_BACKGROUND,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -114,6 +115,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.CURRENT_VERSION_TAG -> "PreferenceCurrentVersionName"
             Key.CURRENT_VERSION_TIMESTAMP -> "PreferenceCurrentVersionDescriptor"
             Key.THEME -> "PreferenceTheme"
+            Key.BLACK_BACKGROUND -> "PreferenceBlackBackground"
         }
     }
 

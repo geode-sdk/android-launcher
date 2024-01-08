@@ -60,16 +60,21 @@ fun GeodeLauncherTheme(
     theme: Theme = Theme.fromInt(0),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    blackBackground: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            when (theme) {
-                Theme.DARK -> dynamicDarkColorScheme(context)
+            when {
+                theme == Theme.DARK && blackBackground ->
+                    dynamicDarkColorScheme(context).copy(surface = Color.Black, background = Color.Black)
+                theme == Theme.DARK -> dynamicDarkColorScheme(context)
                 else -> dynamicLightColorScheme(context)
             }
         }
+        theme == Theme.DARK && blackBackground ->
+            DarkColorScheme.copy(surface = Color.Black, background = Color.Black)
         theme == Theme.DARK -> DarkColorScheme
         else -> LightColorScheme
     }

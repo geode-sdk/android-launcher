@@ -58,8 +58,10 @@ class SettingsActivity : ComponentActivity() {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
 
+            val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
+
             CompositionLocalProvider(LocalTheme provides theme) {
-                GeodeLauncherTheme(theme = theme) {
+                GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
@@ -264,6 +266,10 @@ fun SettingsScreen(
                         preferenceKey = PreferenceUtils.Key.THEME,
                         toLabel = { themeToKey(it) },
                         extraSelectBehavior = { updateTheme(context, it) }
+                    )
+                    SettingsCard(
+                        title = stringResource(R.string.preference_black_background_name),
+                        preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
                     )
                     SettingsCard(
                         title = context.getString(R.string.preference_load_testing_name),
