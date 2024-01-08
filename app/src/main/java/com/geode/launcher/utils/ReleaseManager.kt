@@ -113,6 +113,8 @@ class ReleaseManager private constructor(
                 geodeFile.delete()
             }
 
+            geodeFile.parentFile?.mkdirs()
+
             DownloadUtils.extractFileFromZipStream(
                 fileStream,
                 geodeFile.outputStream(),
