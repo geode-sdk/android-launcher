@@ -106,8 +106,7 @@ class ReleaseManager private constructor(
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
             }
 
-            val geodeName = LaunchUtils.getGeodeFilename()
-            val geodeFile = getGeodeOutputPath(geodeName)
+            val geodeFile = getGeodeOutputPath()
 
             // work around a permission issue from adb push
             if (geodeFile.exists()) {
@@ -117,7 +116,7 @@ class ReleaseManager private constructor(
             DownloadUtils.extractFileFromZipStream(
                 fileStream,
                 geodeFile.outputStream(),
-                geodeName
+                geodeFile.name
             )
         } catch (e: Exception) {
             sendError(e)
@@ -147,8 +146,11 @@ class ReleaseManager private constructor(
         val currentVersion = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP)
         val latestVersion = release.getDescriptor()
 
+        // make sure geode is still here. just in case
+        val geodeFile = getGeodeOutputPath()
+
         // check if an update is needed
-        if (latestVersion <= currentVersion) {
+        if (latestVersion <= currentVersion && geodeFile.exists()) {
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
@@ -172,7 +174,9 @@ class ReleaseManager private constructor(
         }
     }
 
-    private fun getGeodeOutputPath(geodeName: String): File {
+    private fun getGeodeOutputPath(): File {
+        val geodeName = LaunchUtils.getGeodeFilename()
+
         val fallbackPath = File(applicationContext.filesDir, "launcher")
         val geodeDirectory = applicationContext.getExternalFilesDir("") ?: fallbackPath
 

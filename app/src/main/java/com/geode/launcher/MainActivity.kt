@@ -323,18 +323,31 @@ fun MainScreen(
                     )
                 }
             }
-        } else if (gdInstalled && !geodeInstalled) {
+        } else if (gdInstalled) {
             Text(
                 context.getString(R.string.geode_download_title),
                 modifier = Modifier.padding(12.dp)
             )
-            OutlinedButton(onClick = { onSettings(context) }) {
-                Icon(
-                    Icons.Filled.Settings,
-                    contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(context.getString(R.string.launcher_settings))
+
+            Row {
+                Button(
+                    onClick = { releaseViewModel.runReleaseCheck() },
+                    enabled = !releaseViewModel.isInUpdate
+                ) {
+                    Icon(
+                        painterResource(R.drawable.icon_download),
+                        contentDescription = context.getString(R.string.launcher_download_icon_alt)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(context.getString(R.string.launcher_download))
+                }
+                Spacer(Modifier.size(2.dp))
+                IconButton(onClick = { onSettings(context) }) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                    )
+                }
             }
         } else {
             Text(
