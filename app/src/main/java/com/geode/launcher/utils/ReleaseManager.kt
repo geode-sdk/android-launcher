@@ -176,9 +176,7 @@ class ReleaseManager private constructor(
 
     private fun getGeodeOutputPath(): File {
         val geodeName = LaunchUtils.getGeodeFilename()
-
-        val fallbackPath = File(applicationContext.filesDir, "launcher")
-        val geodeDirectory = applicationContext.getExternalFilesDir("") ?: fallbackPath
+        val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
 
         return File(geodeDirectory, geodeName)
     }

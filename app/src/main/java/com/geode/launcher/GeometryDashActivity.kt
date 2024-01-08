@@ -147,29 +147,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadLibraryFromAssetsCopy(libraryName: String) {
-        // loads a library loaded in assets
-        // this copies the library to a non-compressed directory
-
-        val arch = LaunchUtils.getApplicationArchitecture()
-        val libraryFd = try {
-            assets.openNonAssetFd("lib/$arch/lib$libraryName.so")
-        } catch (_: Exception) {
-            throw UnsatisfiedLinkError("Could not find library lib$libraryName.so for abi $arch")
-        }
-
-        // copy the library to a path we can access
-        // there doesn't seem to be a way to load a library from a file descriptor
-        val libraryCopy = File(cacheDir, "lib$libraryName.so")
-        val libraryOutput = libraryCopy.outputStream()
-        DownloadUtils.copyFile(libraryFd.createInputStream(), libraryOutput)
-
-        System.load(libraryCopy.path)
-
-        return
-    }
-
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun loadGeodeLibrary(): Boolean {
         // Load Geode if exists
         // bundling the object with the application allows for nicer backtraces
@@ -189,34 +166,31 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             // you know zmx i have 0 clue what this does so im
             // just gonna like copy the binary from external
             // also i get 20 million permission denied errors
-            getExternalFilesDir(null)?.let { dir ->
-                val externalGeodePath = LaunchUtils.getInstalledGeodePath(this) ?: return false
+            val externalGeodePath = LaunchUtils.getInstalledGeodePath(this) ?: return false
 
-                val copiedPath = File(filesDir.path, "copied")
-                if (copiedPath.exists()) {
-                    copiedPath.deleteRecursively()
-                }
-                copiedPath.mkdir()
+            val copiedPath = File(filesDir.path, "copied")
+            if (copiedPath.exists()) {
+                copiedPath.deleteRecursively()
+            }
+            copiedPath.mkdir()
 
-                val geodePath = File(copiedPath.path, "Geode.so")
+            val copiedGeodePath = File(copiedPath.path, "Geode.so")
 
-                if (externalGeodePath.exists()) {
-                    DownloadUtils.copyFile(
-                        FileInputStream(externalGeodePath),
-                        FileOutputStream(geodePath)
-                    )
+            if (externalGeodePath.exists()) {
+                DownloadUtils.copyFile(
+                    FileInputStream(externalGeodePath),
+                    FileOutputStream(copiedGeodePath)
+                )
 
-                    if (geodePath.exists()) {
-                        try {
-                            println("Loading Geode from ${externalGeodePath.name}")
-                            System.load(geodePath.path)
-                        } catch (e: UnsatisfiedLinkError) {
-                            e.printStackTrace()
-                        }
+                if (copiedGeodePath.exists()) {
+                    try {
+                        println("Loading Geode from ${externalGeodePath.name}")
+                        System.load(copiedGeodePath.path)
+                    } catch (e: UnsatisfiedLinkError) {
+                        e.printStackTrace()
                     }
                 }
             }
-
         }
 
         return false
@@ -257,6 +231,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         hideSystemUi()
     }
 
+    @Suppress("DEPRECATION")
     private fun hideSystemUi() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             // window compat is dumb!!
@@ -275,6 +250,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun setLegacyVisibility() {
         // setDecorFitsSystemWindows doesn't hide anything
         window.decorView.systemUiVisibility =
@@ -401,24 +377,23 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
         testDirPath.mkdir()
 
-        getExternalFilesDir(null)?.let { dir ->
-            val testingPath = dir.path + File.separator + "test" + File.separator
+        val dir = LaunchUtils.getBaseDirectory(this)
+        val testingPath = File(dir, "test")
 
-            File(testingPath).walk().forEach {
-                if (it.isFile) {
-                    // welcome to the world of Android classloader permissions
-                    val outputFile = File(testDirPath.path + File.separator + it.name)
-                    DownloadUtils.copyFile(
-                        FileInputStream(it),
-                        FileOutputStream(outputFile)
-                    )
+        testingPath.walk().forEach {
+            if (it.isFile) {
+                // welcome to the world of Android classloader permissions
+                val outputFile = File(testDirPath, it.name)
+                DownloadUtils.copyFile(
+                    FileInputStream(it),
+                    FileOutputStream(outputFile)
+                )
 
-                    try {
-                        println("Loading test library ${outputFile.name}")
-                        System.load(outputFile.path)
-                    } catch (e: UnsatisfiedLinkError) {
-                        e.printStackTrace()
-                    }
+                try {
+                    println("Loading test library ${outputFile.name}")
+                    System.load(outputFile.path)
+                } catch (e: UnsatisfiedLinkError) {
+                    e.printStackTrace()
                 }
             }
         }

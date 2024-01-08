@@ -33,21 +33,23 @@ object LaunchUtils {
     fun getInstalledGeodePath(context: Context): File? {
         val geodeName = getGeodeFilename()
 
-        val internalGeodePath = File(context.filesDir.path, "launcher/$geodeName")
+        val internalGeodePath = File(context.filesDir, "launcher/$geodeName")
         if (internalGeodePath.exists()) {
             return internalGeodePath
         }
-        context.getExternalFilesDir(null)?.let { dir->
-            val updateGeodePath = File(dir.path, "game/geode/update/$geodeName")
-            if (updateGeodePath.exists()) {
-                return updateGeodePath
-            }
 
-            val externalGeodePath = File(dir.path, geodeName)
-            if (externalGeodePath.exists()) {
-                return externalGeodePath
-            }
+        val externalGeodeDir = getBaseDirectory(context)
+
+        val updateGeodePath = File(externalGeodeDir, "launcher/$geodeName")
+        if (updateGeodePath.exists()) {
+            return updateGeodePath
         }
+
+        val externalGeodePath = File(externalGeodeDir, geodeName)
+        if (externalGeodePath.exists()) {
+            return externalGeodePath
+        }
+
         return null
     }
 
