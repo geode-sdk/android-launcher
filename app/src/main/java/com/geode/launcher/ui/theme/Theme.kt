@@ -10,10 +10,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
         primary = Purple80,
@@ -37,32 +40,53 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+enum class Theme {
+    LIGHT, DARK;
+
+    companion object {
+        @Composable
+        fun fromInt(value: Int) = when (value) {
+            1 -> LIGHT
+            2 -> DARK
+            else -> if (isSystemInDarkTheme()) DARK else LIGHT
+        }
+    }
+}
+
+val LocalTheme = compositionLocalOf { Theme.LIGHT }
+
 @Composable
 fun GeodeLauncherTheme(
-        darkTheme: Boolean = isSystemInDarkTheme(),
-        // Dynamic color is available on Android 12+
-        dynamicColor: Boolean = true,
-        content: @Composable () -> Unit
+    theme: Theme = Theme.fromInt(0),
+    // Dynamic color is available on Android 12+
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            when (theme) {
+                Theme.DARK -> dynamicDarkColorScheme(context)
+                else -> dynamicLightColorScheme(context)
+            }
         }
-        darkTheme -> DarkColorScheme
+        theme == Theme.DARK -> DarkColorScheme
         else -> LightColorScheme
     }
 
     val view = LocalView.current
+
     if (!view.isInEditMode) {
         SideEffect {
             with ((view.context as Activity).window) {
-                statusBarColor = colorScheme.background.toArgb()
-                navigationBarColor = colorScheme.background.toArgb()
+                WindowCompat.setDecorFitsSystemWindows(this, false)
+
+                statusBarColor = Color.Transparent.toArgb()
+                navigationBarColor = Color.Transparent.toArgb()
             }
             with (ViewCompat.getWindowInsetsController(view)) {
-                this?.isAppearanceLightStatusBars = !darkTheme
-                this?.isAppearanceLightNavigationBars = !darkTheme
+                this?.isAppearanceLightStatusBars = theme == Theme.LIGHT
+                this?.isAppearanceLightNavigationBars = theme == Theme.LIGHT
             }
         }
     }

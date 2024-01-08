@@ -1,5 +1,6 @@
 package com.geode.launcher
 
+import android.app.UiModeManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -10,37 +11,43 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.documentfile.provider.DocumentFile
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
+import com.geode.launcher.ui.theme.LocalTheme
+import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
 
@@ -48,14 +55,19 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            GeodeLauncherTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SettingsScreen(
-                        onBackPressedDispatcher = onBackPressedDispatcher
-                    )
+            val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
+            val theme = Theme.fromInt(themeOption)
+
+            CompositionLocalProvider(LocalTheme provides theme) {
+                GeodeLauncherTheme(theme = theme) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        SettingsScreen(
+                            onBackPressedDispatcher = onBackPressedDispatcher
+                        )
+                    }
                 }
             }
         }
@@ -156,6 +168,36 @@ fun UpdateIndicator(
     }
 }
 
+@Composable
+fun themeToKey(theme: Int): String {
+    return when (theme) {
+        1 -> stringResource(R.string.preference_theme_light)
+        2 -> stringResource(R.string.preference_theme_dark)
+        else -> stringResource(R.string.preference_theme_default)
+    }
+}
+
+fun updateTheme(context: Context, theme: Int) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        uiModeManager.setApplicationNightMode(
+            when (theme) {
+                1 -> UiModeManager.MODE_NIGHT_NO
+                2 -> UiModeManager.MODE_NIGHT_YES
+                else -> UiModeManager.MODE_NIGHT_CUSTOM
+            }
+        )
+    } else {
+        AppCompatDelegate.setDefaultNightMode(
+            when (theme) {
+                1 -> AppCompatDelegate.MODE_NIGHT_NO
+                2 -> AppCompatDelegate.MODE_NIGHT_YES
+                else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            }
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -179,11 +221,14 @@ fun SettingsScreen(
         }
     }
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = {
            SnackbarHost(hostState = snackbarHostState)
         },
         topBar = {
+            // todo: the TopAppBar makes theme transitions look bad. why is that
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
@@ -200,6 +245,7 @@ fun SettingsScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
+                scrollBehavior = scrollBehavior,
             )
         },
         content = { innerPadding ->
@@ -211,6 +257,14 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OptionsGroup(context.getString(R.string.preference_category_testing)) {
+                    SettingsSelectCard(
+                        title = stringResource(R.string.preference_theme_name),
+                        dialogTitle = stringResource(R.string.preference_theme_select),
+                        maxVal = 2,
+                        preferenceKey = PreferenceUtils.Key.THEME,
+                        toLabel = { themeToKey(it) },
+                        extraSelectBehavior = { updateTheme(context, it) }
+                    )
                     SettingsCard(
                         title = context.getString(R.string.preference_load_testing_name),
                         preferenceKey = PreferenceUtils.Key.LOAD_TESTING,
@@ -299,6 +353,127 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
         content()
+    }
+}
+
+@Composable
+fun SettingsSelectCard(
+    title: String,
+    dialogTitle: String,
+    maxVal: Int,
+    preferenceKey: PreferenceUtils.Key,
+    toLabel: @Composable (Int) -> String,
+    extraSelectBehavior: ((Int) -> Unit)? = null
+) {
+    val preferenceValue by PreferenceUtils.useIntPreference(preferenceKey)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsCard(
+        title = { OptionsTitle(title = title) },
+        modifier = Modifier
+            .clickable(
+                onClick = {
+                    showDialog = true
+                },
+                role = Role.Button
+            )
+    ) {
+        Text(toLabel(preferenceValue))
+    }
+
+    if (showDialog) {
+        val context = LocalContext.current
+
+        SelectDialog(
+            title = dialogTitle,
+            onDismissRequest = {
+               showDialog = false
+            },
+            onSelect = { selected ->
+                showDialog = false
+                PreferenceUtils.get(context)
+                    .setInt(preferenceKey, selected)
+                extraSelectBehavior?.invoke(selected)
+            },
+            initialValue = preferenceValue,
+            toLabel = toLabel,
+            optionsCount = maxVal
+        )
+    }
+}
+
+@Composable
+fun SelectDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onSelect: (Int) -> Unit,
+    initialValue: Int,
+    toLabel: @Composable (Int) -> String,
+    optionsCount: Int,
+) {
+    var selectedValue by remember { mutableIntStateOf(initialValue) }
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            // styling a dialog is actually a little hard if you're doing what i'm doing
+            // maybe there's a better way to make these padding values...
+            Column {
+                Text(
+                    title,
+                    style = Typography.titleLarge,
+                    modifier = Modifier.padding(
+                        start = 28.dp,
+                        top = 24.dp,
+                        bottom = 12.dp
+                    )
+                )
+
+                // do not give the row or column padding!! it messes up the selection effect
+                (0..optionsCount).forEach { id ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                onClick = { selectedValue = id },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 12.dp)
+                    ) {
+                        RadioButton(
+                            selected = selectedValue == id,
+                            onClick = { selectedValue = id }
+                        )
+                        Text(
+                            toLabel(id),
+                            style = Typography.bodyMedium
+                        )
+                    }
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            bottom = 16.dp,
+                            end = 16.dp,
+                            top = 4.dp
+                        )
+                ) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text(stringResource(R.string.message_box_cancel))
+                    }
+
+                    TextButton(onClick = { onSelect(selectedValue) }) {
+                        Text(stringResource(R.string.message_box_accept))
+                    }
+                }
+            }
+        }
     }
 }
 

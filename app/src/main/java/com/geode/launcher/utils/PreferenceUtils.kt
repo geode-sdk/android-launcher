@@ -2,7 +2,6 @@ package com.geode.launcher.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
@@ -33,6 +32,13 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         fun useStringPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<String?> {
             return usePreference(preferenceKey, lifecycleOwner) { p, k ->
                 p.getString(k)
+            }
+        }
+
+        @Composable
+        fun useIntPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Int> {
+            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
+                p.getInt(k)
             }
         }
 
@@ -88,7 +94,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         UPDATE_AUTOMATICALLY,
         RELEASE_CHANNEL,
         CURRENT_VERSION_TAG,
-        CURRENT_VERSION_TIMESTAMP
+        CURRENT_VERSION_TIMESTAMP,
+        THEME
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -106,6 +113,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.RELEASE_CHANNEL -> "PreferenceReleaseChannel"
             Key.CURRENT_VERSION_TAG -> "PreferenceCurrentVersionName"
             Key.CURRENT_VERSION_TIMESTAMP -> "PreferenceCurrentVersionDescriptor"
+            Key.THEME -> "PreferenceTheme"
         }
     }
 
@@ -148,6 +156,18 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         val keyName = keyToName(key)
         sharedPreferences.edit {
             putLong(keyName, value)
+        }
+    }
+
+    fun getInt(key: Key): Int {
+        val keyName = keyToName(key)
+        return sharedPreferences.getInt(keyName, 0)
+    }
+
+    fun setInt(key: Key, value: Int) {
+        val keyName = keyToName(key)
+        sharedPreferences.edit {
+            putInt(keyName, value)
         }
     }
 }

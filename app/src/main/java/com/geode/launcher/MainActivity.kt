@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.api.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
+import com.geode.launcher.ui.theme.LocalTheme
+import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -48,12 +51,17 @@ class MainActivity : ComponentActivity() {
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
         setContent {
-            GeodeLauncherTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen(gdInstalled, geodeInstalled)
+            val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
+            val theme = Theme.fromInt(themeOption)
+
+            CompositionLocalProvider(LocalTheme provides theme) {
+                GeodeLauncherTheme(theme = theme) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        MainScreen(gdInstalled, geodeInstalled)
+                    }
                 }
             }
         }
@@ -362,7 +370,7 @@ fun MainScreenLightPreview() {
 @Preview(showSystemUi = true)
 @Composable
 fun MainScreenDarkPreview() {
-    GeodeLauncherTheme(darkTheme = true) {
+    GeodeLauncherTheme(theme = Theme.DARK) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             MainScreen()
         }
