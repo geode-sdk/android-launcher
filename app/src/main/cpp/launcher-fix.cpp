@@ -1,9 +1,6 @@
-#include <android/dlext.h>
-#include <android/log.h>
 #include <dlfcn.h>
 #include <jni.h>
 #include <string>
-#include <unistd.h>
 
 #ifndef DISABLE_LAUNCHER_FIX
 #include <dobby.h>
@@ -49,36 +46,6 @@ JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_setOriginalDataPath(
     DataPaths::get_instance().original_data_path = std::string(data_path_str);
 
     env->ReleaseStringUTFChars(data_path, data_path_str);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL Java_com_geode_launcher_LauncherFix_loadLibraryFromOffset(JNIEnv *env, jobject, jstring library_name, jint fd, jlong offset) {
-    // loads a given library at an offset and file descriptor
-    // assumes we have ownership of the file passed in fd
-
-    auto is_copy = jboolean();
-    auto library_cname = env->GetStringUTFChars(library_name, &is_copy);
-
-    android_dlextinfo ext_info{};
-    ext_info.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
-    ext_info.library_fd = fd;
-    ext_info.library_fd_offset = offset;
-
-    auto handle = android_dlopen_ext(library_cname, RTLD_NOW | RTLD_GLOBAL, &ext_info);
-    env->ReleaseStringUTFChars(library_name, library_cname);
-    close(fd);
-
-    if (handle == nullptr) {
-        auto error = dlerror();
-        __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-Fix", "dlopen_ext failed. given: %s\n", error);
-
-        return false;
-    }
-
-    // we don't need the library anymore
-    dlclose(handle);
-
-    return true;
 }
 
 std::string redirect_path(const char* pathname) {

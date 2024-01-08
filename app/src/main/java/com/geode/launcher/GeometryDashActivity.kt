@@ -2,15 +2,14 @@ package com.geode.launcher
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.FileUtils
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -118,22 +117,33 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
-        try {
-            val nativeDir = packageInfo.applicationInfo.nativeLibraryDir
-            System.load("$nativeDir/lib$libraryName.so")
-        } catch (ule: UnsatisfiedLinkError) {
-            loadLibraryFromAssets(libraryName)
-        }
+        val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo)
+        System.load("$nativeDir/lib$libraryName.so")
     }
 
-    private fun loadLibraryFromAssets(libraryName: String) {
-        // for split apks, loads a library stored inside of the apk
-        // maybe todo: is there really no way to load these libraries without weird workarounds?
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            loadLibraryFromAssetsNative(libraryName)
-        } else {
-            loadLibraryFromAssetsCopy(libraryName)
+    private fun getNativeLibraryDirectory(applicationInfo: ApplicationInfo): String {
+        // native libraries have been extracted, so the path is same as usual
+        if (applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS) {
+            return applicationInfo.nativeLibraryDir
         }
+
+        // might be split apks, select the best path for the library
+        val sourceDirs = applicationInfo.splitSourceDirs
+        val architecture = LaunchUtils.getApplicationArchitecture()
+
+        if (!sourceDirs.isNullOrEmpty()) {
+            val configAbi = architecture.replace("-", "_")
+            val abiDir = sourceDirs.find { it.contains(configAbi) }
+
+            if (abiDir != null) {
+                return "$abiDir!/lib/$architecture/"
+            }
+        }
+
+        // this configuration should never happen!
+        // non split apk, but libraries are stored in apk
+        val sourceDir = applicationInfo.sourceDir
+        return "$sourceDir!/lib/$architecture/"
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
@@ -157,30 +167,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         System.load(libraryCopy.path)
 
         return
-    }
-
-    private fun loadLibraryFromAssetsNative(libraryName: String) {
-        // loads a library loaded in assets (which points to the apk + an offset)
-        // these libraries are available to the application after merging
-
-        val arch = LaunchUtils.getApplicationArchitecture()
-        val libraryFd = try {
-            assets.openNonAssetFd("lib/$arch/lib$libraryName.so")
-        } catch (_: Exception) {
-            throw UnsatisfiedLinkError("Could not find library lib$libraryName.so for abi $arch")
-        }
-
-        val fdOffset = libraryFd.startOffset
-        val fdDescriptor = libraryFd.parcelFileDescriptor.detachFd()
-
-        if (!LauncherFix.loadLibraryFromOffset("lib$libraryName.so", fdDescriptor, fdOffset)) {
-            throw UnsatisfiedLinkError("Failed to load asset lib$libraryName.so")
-        }
-
-        // after the library is opened in native code, it should be available for loading
-        // you can read more about the behavior (added in android 11):
-        // https://android.googlesource.com/platform/libcore/+/7f3eb2e0ac87bdea471bc577380cf50025aebde5/ojluni/src/main/java/java/lang/Runtime.java#1060
-        System.loadLibrary(libraryName)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
