@@ -106,9 +106,9 @@ fun onOpenFolder(context: Context) {
 }
 
 fun onOpenFileManager(context: Context) {
-    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        type = "*/*"
+        type = "vnd.android.document/directory"
     }
 
     context.startActivity(intent)
