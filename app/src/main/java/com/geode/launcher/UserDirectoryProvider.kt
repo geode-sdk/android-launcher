@@ -7,6 +7,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.webkit.MimeTypeMap
+import com.geode.launcher.utils.LaunchUtils
 import java.io.File
 
 private const val ROOT = "root"
@@ -33,7 +34,7 @@ class UserDirectoryProvider : DocumentsProvider() {
 
     override fun onCreate(): Boolean {
         val context = context ?: return false
-        rootDir = context.filesDir
+        rootDir = LaunchUtils.getBaseDirectory(context)
 
         return true
     }
