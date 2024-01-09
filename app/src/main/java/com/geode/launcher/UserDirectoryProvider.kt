@@ -129,6 +129,22 @@ class UserDirectoryProvider : DocumentsProvider() {
         }
     }
 
+    override fun createDocument(
+        parentDocumentId: String,
+        mimeType: String,
+        displayName: String
+    ): String? {
+        val folder = getFileForDocumentId(parentDocumentId)
+        val file = findFileNameForNewFile(File(folder, displayName))
+        if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
+            file.mkdirs()
+        } else {
+            file.createNewFile()
+        }
+
+        return getDocumentIdForFile(file)
+    }
+
      override fun deleteDocument(documentId: String) {
         val file = getFileForDocumentId(documentId)
         file.deleteRecursively()
