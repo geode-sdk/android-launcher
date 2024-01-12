@@ -138,7 +138,7 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.Finished(true)
     }
 
-    private suspend fun checkForNewRelease() {
+    private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
@@ -167,7 +167,7 @@ class ReleaseManager private constructor(
 
         // check if the file was externally modified
         val fileLastModified = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
-        if (fileLastModified != 0L && fileLastModified != geodeFile.lastModified()) {
+        if (!allowOverwriting && fileLastModified != 0L && fileLastModified != geodeFile.lastModified()) {
             sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
             return
         }
@@ -217,11 +217,11 @@ class ReleaseManager private constructor(
      * @return Flow that tracks the state of the update.
      */
     @OptIn(DelicateCoroutinesApi::class)
-    fun checkForUpdates(): StateFlow<ReleaseManagerState> {
+    fun checkForUpdates(isManual: Boolean = false): StateFlow<ReleaseManagerState> {
         if (!isInUpdate) {
             _uiState.value = ReleaseManagerState.InUpdateCheck
             updateJob = GlobalScope.launch {
-                checkForNewRelease()
+                checkForNewRelease(isManual)
             }
         }
 

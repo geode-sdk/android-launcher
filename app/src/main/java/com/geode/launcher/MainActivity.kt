@@ -132,7 +132,7 @@ fun UpdateMessageIndicator(
         if (allowRetry) {
             OutlinedButton(
                 onClick = {
-                    releaseViewModel.runReleaseCheck()
+                    releaseViewModel.runReleaseCheck(true)
                 },
             ) {
                 Text(stringResource(R.string.release_fetch_button_retry))
@@ -340,7 +340,7 @@ fun MainScreen(
 
             Row {
                 Button(
-                    onClick = { releaseViewModel.runReleaseCheck() },
+                    onClick = { releaseViewModel.runReleaseCheck(true) },
                     enabled = !releaseViewModel.isInUpdate
                 ) {
                     Icon(

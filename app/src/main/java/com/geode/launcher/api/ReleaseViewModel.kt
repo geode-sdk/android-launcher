@@ -86,12 +86,12 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
         }
     }
 
-    fun runReleaseCheck() {
+    fun runReleaseCheck(isManual: Boolean = false) {
         hasPerformedCheck = true
 
         viewModelScope.launch {
             val releaseFlow = ReleaseManager.get(application)
-                .checkForUpdates()
+                .checkForUpdates(isManual)
 
             syncUiState(releaseFlow)
         }

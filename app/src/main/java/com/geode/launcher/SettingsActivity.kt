@@ -316,7 +316,7 @@ fun SettingsScreen(
                                     if (releaseViewModel.isInUpdate) {
                                         showUpdateInProgress = true
                                     } else {
-                                        releaseViewModel.runReleaseCheck()
+                                        releaseViewModel.runReleaseCheck(true)
                                     }
                                 },
                                 role = Role.Button
