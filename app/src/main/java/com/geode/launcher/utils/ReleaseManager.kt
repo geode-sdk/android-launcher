@@ -9,7 +9,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,6 +55,15 @@ class ReleaseManager private constructor(
         data class Failure(val exception: Exception) : ReleaseManagerState()
         data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseManagerState()
         data class Finished(val hasUpdated: Boolean = false) : ReleaseManagerState()
+    }
+
+    class UpdateException(reason: Reason? = null, cause: Throwable? = null) : Exception(reason?.name, cause) {
+        enum class Reason {
+            EXTERNAL_FILE_IN_USE
+        }
+
+        var reason: Reason? = reason
+            private set
     }
 
     private var updateJob: Job? = null
@@ -157,23 +165,34 @@ class ReleaseManager private constructor(
             return
         }
 
+        // check if the file was externally modified
+        val fileLastModified = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
+        if (fileLastModified != 0L && fileLastModified != geodeFile.lastModified()) {
+            sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
+            return
+        }
+
         performUpdate(release)
     }
 
-    private suspend fun updatePreferences(release: Release) {
-        coroutineScope {
-            val sharedPreferences = PreferenceUtils.get(applicationContext)
+    private fun updatePreferences(release: Release) {
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
 
-            sharedPreferences.setString(
-                PreferenceUtils.Key.CURRENT_VERSION_TAG,
-                release.getDescription()
-            )
+        sharedPreferences.setString(
+            PreferenceUtils.Key.CURRENT_VERSION_TAG,
+            release.getDescription()
+        )
 
-            sharedPreferences.setLong(
-                PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP,
-                release.getDescriptor()
-            )
-        }
+        sharedPreferences.setLong(
+            PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP,
+            release.getDescriptor()
+        )
+
+        val outputFile = getGeodeOutputPath()
+        sharedPreferences.setLong(
+            PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED,
+            outputFile.lastModified()
+        )
     }
 
     private fun getGeodeOutputPath(): File {

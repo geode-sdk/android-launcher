@@ -97,6 +97,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         CURRENT_VERSION_TIMESTAMP,
         THEME,
         BLACK_BACKGROUND,
+        CURRENT_RELEASE_MODIFIED,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -116,6 +117,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.CURRENT_VERSION_TIMESTAMP -> "PreferenceCurrentVersionDescriptor"
             Key.THEME -> "PreferenceTheme"
             Key.BLACK_BACKGROUND -> "PreferenceBlackBackground"
+            Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModified"
         }
     }
 

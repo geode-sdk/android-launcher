@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Geode</string>
+    <string name="app_name" translatable="false">Geode</string>
     <string name="no_activity_found">No activity found for this action.</string>
 
     <!-- MainActivity strings -->
@@ -30,6 +30,7 @@
     <string name="release_fetch_cancelled">Update cancelled.</string>
     <string name="release_fetch_button_retry">Retry</string>
     <string name="release_fetch_button_cancel">Cancel</string>
+    <string name="release_fetch_manual_check_required">Externally managed library in use, please manually check for updates if you want to overwrite it.</string>
 
     <!-- GeometryDashActivity strings -->
     <string name="message_box_cancel">Cancel</string>

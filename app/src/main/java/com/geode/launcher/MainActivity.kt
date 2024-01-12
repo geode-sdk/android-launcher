@@ -38,6 +38,7 @@ import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import com.geode.launcher.utils.ReleaseManager
 import com.geode.launcher.utils.useCountdownTimer
 import java.net.ConnectException
 import java.net.UnknownHostException
@@ -152,6 +153,14 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
             val message = when (state.exception) {
                 is UnknownHostException, is ConnectException ->
                     stringResource(R.string.release_fetch_no_internet)
+                is ReleaseManager.UpdateException -> {
+                    when (state.exception.reason) {
+                        ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
+                            R.string.release_fetch_manual_check_required
+                        )
+                        else -> state.exception.message
+                    }
+                }
                 else -> state.exception.message
             }
 
