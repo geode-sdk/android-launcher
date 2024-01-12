@@ -1,9 +1,16 @@
 #include <dlfcn.h>
 #include <jni.h>
 #include <string>
+#include <android/log.h>
 
 #ifndef DISABLE_LAUNCHER_FIX
+
+#ifdef USE_TULIPHOOK
+#include <tulip/TulipHook.hpp>
+#else
 #include <dobby.h>
+#endif
+
 #endif
 
 class DataPaths {
@@ -79,22 +86,60 @@ int rename_hook(const char* old_path, const char* new_path) {
     return rename_original(old_path_str.c_str(), new_path_str.c_str());
 }
 
+bool hook_function(void* addr, auto* hook, auto** orig) {
+#ifdef USE_TULIPHOOK
+    using namespace tulip::hook;
+
+    HandlerMetadata metadata = {
+        std::make_shared<PlatformConvention>(),
+        AbstractFunction::from(hook)
+    };
+
+    auto handler_result = createHandler(addr, metadata);
+    if (!handler_result) {
+        __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-Fix",
+            "failed to create handler: %s\n", handler_result.unwrapErr().c_str());
+        return false;
+    }
+
+    auto handler = *handler_result;
+
+    HookMetadata hook_metadata = {0};
+
+    createHook(handler, reinterpret_cast<void*>(hook), hook_metadata);
+
+    WrapperMetadata wrapper_metadata = {
+            std::make_unique<PlatformConvention>(),
+            AbstractFunction::from(hook)
+    };
+
+    auto wrapper = createWrapper(addr, std::move(wrapper_metadata));
+    if (!wrapper) {
+        __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-Fix",
+            "failed to create wrapper: %s\n", wrapper.unwrapErr().c_str());
+        return false;
+    }
+
+    *reinterpret_cast<void**>(orig) = *wrapper;
+
+    return true;
+#else
+    DobbyHook(
+        addr,
+        reinterpret_cast<dobby_dummy_func_t>(hook),
+        reinterpret_cast<dobby_dummy_func_t*>(orig)
+    );
+
+    return true;
+#endif
+}
+
 [[gnu::constructor]] [[gnu::used]] void setup_hooks() {
     #ifndef DISABLE_LAUNCHER_FIX
     auto fopen_addr = dlsym(RTLD_NEXT, "fopen");
+    hook_function(fopen_addr, &fopen_hook, &fopen_original);
+
     auto rename_addr = dlsym(RTLD_NEXT, "rename");
-
-    DobbyHook(
-        fopen_addr,
-        reinterpret_cast<dobby_dummy_func_t>(&fopen_hook),
-        reinterpret_cast<dobby_dummy_func_t*>(&fopen_original)
-    );
-
-    DobbyHook(
-            rename_addr,
-            reinterpret_cast<dobby_dummy_func_t>(&rename_hook),
-            reinterpret_cast<dobby_dummy_func_t*>(&rename_original)
-    );
-
+    hook_function(rename_addr, &rename_hook, &rename_original);
     #endif
 }

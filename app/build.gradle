@@ -19,7 +19,7 @@ android {
         }
         externalNativeBuild {
             cmake {
-                arguments "-DDOBBY_DEBUG=OFF"
+                arguments "-DUSE_TULIPHOOK:BOOL=OFF"
             }
         }
 
