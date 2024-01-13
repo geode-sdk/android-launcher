@@ -228,6 +228,21 @@ object GeodeUtils {
         return LaunchUtils.getBaseDirectory(activity).path
     }
 
+    private val gameVersionMap = mapOf(
+        37L to "2.200"
+    )
+
+    @JvmStatic
+    fun getGameVersion(): String {
+        // these versions should be aligned to windows releases, not what android says
+        activity.get()?.run {
+            val versionCode = LaunchUtils.getGeometryDashVersionCode(packageManager)
+            return gameVersionMap[versionCode] ?: LaunchUtils.getGeometryDashVersionString(packageManager)
+        }
+
+        return ""
+    }
+
     // copied from https://stackoverflow.com/questions/17546101/get-real-path-for-uri-android
     // i am actually very lazy to move this to a separate class
 
