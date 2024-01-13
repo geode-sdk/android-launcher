@@ -18,6 +18,21 @@ object LaunchUtils {
         }
     }
 
+    fun getGeometryDashVersionCode(packageManager: PackageManager): Long {
+        val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            game.longVersionCode
+        } else {
+            game.versionCode.toLong()
+        }
+    }
+
+    fun getGeometryDashVersionString(packageManager: PackageManager): String {
+        val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+        return game.versionName
+    }
+
     fun getApplicationArchitecture(): String {
         // supposedly CPU_ABI returns the current arch for the running application
         // despite being deprecated, this is also one of the few ways to get this information

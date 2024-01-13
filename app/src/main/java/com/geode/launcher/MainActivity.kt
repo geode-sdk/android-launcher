@@ -13,13 +13,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +39,7 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.utils.ReleaseManager
@@ -140,6 +144,57 @@ fun UpdateMessageIndicator(
         }
     }
 
+}
+
+@Composable
+fun UpdateWarning() {
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+
+    val gdVersionCode = remember { LaunchUtils.getGeometryDashVersionCode(packageManager) }
+    val gdVersionString = remember { LaunchUtils.getGeometryDashVersionString(packageManager) }
+
+    var showUpdateWarning by remember { mutableStateOf(true) }
+
+    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE) {
+        if (showUpdateWarning) {
+            AlertDialog(
+                icon = {
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                    )
+                },
+                title = {
+                    Text(stringResource(R.string.launcher_unsupported_version_title))
+                },
+                text = {
+                    Text(stringResource(
+                        R.string.launcher_unsupported_version_description,
+                        gdVersionString, Constants.SUPPORTED_VERSION_STRING
+                    ))
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showUpdateWarning = false
+                        onLaunch(context)
+                    }) {
+                        Text(stringResource(R.string.message_box_accept))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showUpdateWarning = false }) {
+                        Text(stringResource(R.string.message_box_cancel))
+                    }
+                },
+                onDismissRequest = { showUpdateWarning = false }
+            )
+        }
+    } else {
+        LaunchedEffect(gdVersionCode) {
+            onLaunch(context)
+        }
+    }
 }
 
 @Composable
@@ -260,6 +315,8 @@ fun MainScreen(
         ?.hasUpdated ?: false
     val geodeInstalled = geodePreinstalled || geodeJustInstalled
 
+    var beginLaunch by remember { mutableStateOf(false) }
+
     LaunchedEffect(shouldUpdate) {
         if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
             releaseViewModel.runReleaseCheck()
@@ -293,7 +350,7 @@ fun MainScreen(
                     onCountdownFinish = {
                         // just in case this changed async
                         if (shouldAutomaticallyLaunch.value) {
-                            onLaunch(context)
+                            beginLaunch = true
                         }
                     }
                 )
@@ -314,7 +371,7 @@ fun MainScreen(
 
             Row {
                 Button(
-                    onClick = { onLaunch(context) },
+                    onClick = { beginLaunch = true },
                     enabled = !releaseViewModel.isInUpdate
                 ) {
                     Icon(
@@ -377,6 +434,10 @@ fun MainScreen(
             releaseViewModel,
             modifier = Modifier.padding(12.dp)
         )
+    }
+
+    if (beginLaunch) {
+        UpdateWarning()
     }
 }
 

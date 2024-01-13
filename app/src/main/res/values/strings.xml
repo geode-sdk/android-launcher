@@ -18,6 +18,11 @@
         <item quantity="one">Automatically launching game in %1$d second.</item>
         <item quantity="other">Automatically launching game in %1$d seconds.</item>
     </plurals>
+    <string name="launcher_warning_icon_alt">warning</string>
+    <string name="launcher_unsupported_version_title">Unsupported version</string>
+    <string name="launcher_unsupported_version_description">
+        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s).\nLaunch will continue, but crashes may occur!
+    </string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
