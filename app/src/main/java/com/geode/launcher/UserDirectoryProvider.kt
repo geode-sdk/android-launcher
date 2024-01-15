@@ -2,6 +2,7 @@ package com.geode.launcher
 
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.net.Uri
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
@@ -76,6 +77,10 @@ class UserDirectoryProvider : DocumentsProvider() {
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             val parent = getFileForDocumentId(parentDocumentId ?: ROOT)
             parent.listFiles()?.forEach { file -> appendDocument(this, file) }
+
+            context?.let {
+                setNotificationUri(it.contentResolver, getDocumentUri(parentDocumentId))
+            }
         }
     }
 
@@ -86,16 +91,6 @@ class UserDirectoryProvider : DocumentsProvider() {
     ): ParcelFileDescriptor {
         val file = getFileForDocumentId(documentId ?: ROOT)
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
-    }
-
-    private fun addDocument(cursor: MatrixCursor, file: File) {
-        cursor.newRow().apply {
-            add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, getDocumentIdForFile(file))
-            add(DocumentsContract.Document.COLUMN_MIME_TYPE, typeForFile(file))
-            add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.name)
-            add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified())
-            add(DocumentsContract.Document.COLUMN_SIZE, file.length())
-        }
     }
 
     private fun appendDocument(cursor: MatrixCursor, file: File) {
@@ -133,7 +128,7 @@ class UserDirectoryProvider : DocumentsProvider() {
         parentDocumentId: String,
         mimeType: String,
         displayName: String
-    ): String? {
+    ): String {
         val folder = getFileForDocumentId(parentDocumentId)
         val file = findFileNameForNewFile(File(folder, displayName))
         if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
@@ -142,18 +137,22 @@ class UserDirectoryProvider : DocumentsProvider() {
             file.createNewFile()
         }
 
+        notifyFileChange(file)
         return getDocumentIdForFile(file)
     }
 
      override fun deleteDocument(documentId: String) {
         val file = getFileForDocumentId(documentId)
         file.deleteRecursively()
-    }
+        notifyFileChange(file)
+     }
 
     override fun renameDocument(documentId: String, displayName: String): String? {
         val file = getFileForDocumentId(documentId)
         val dest = findFileNameForNewFile(File(file.parentFile, displayName))
         file.renameTo(dest)
+
+        notifyFileChange(file)
         return getDocumentIdForFile(dest)
     }
 
@@ -184,5 +183,21 @@ class UserDirectoryProvider : DocumentsProvider() {
             i++
         }
         return unusedFile
+    }
+
+    private fun getDocumentUri(parentDocumentId: String?): Uri {
+        return DocumentsContract.buildChildDocumentsUri(
+            "${context!!.packageName}.user",
+            parentDocumentId
+        )
+    }
+
+    private fun notifyFileChange(file: File) {
+        notifyChange(getDocumentIdForFile(file.parentFile!!))
+    }
+
+    private fun notifyChange(parentDocumentId: String?) {
+        val uri = getDocumentUri(parentDocumentId)
+        context!!.contentResolver.notifyChange(uri, null)
     }
 }
