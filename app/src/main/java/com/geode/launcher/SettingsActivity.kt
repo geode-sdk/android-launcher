@@ -1,6 +1,7 @@
 package com.geode.launcher
 
 import android.app.UiModeManager
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -12,6 +13,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -111,7 +115,14 @@ fun onOpenFileManager(context: Context) {
         type = "vnd.android.document/directory"
     }
 
-    context.startActivity(intent)
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            context.getText(R.string.no_activity_found), Toast.LENGTH_SHORT
+        ).show()
+    }
 }
 
 @Composable
@@ -223,14 +234,21 @@ fun SettingsScreen(
         }
     }
 
+    // fix theme transition by giving it the exact same animation as the top bar
+    val containerColor by animateColorAsState(
+        targetValue = MaterialTheme.colorScheme.background,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "background color"
+    )
+
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = containerColor,
         snackbarHost = {
            SnackbarHost(hostState = snackbarHostState)
         },
         topBar = {
-            // todo: the TopAppBar makes theme transitions look bad. why is that
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
