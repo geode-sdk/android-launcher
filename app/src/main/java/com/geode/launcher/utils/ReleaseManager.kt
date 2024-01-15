@@ -138,6 +138,22 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.Finished(true)
     }
 
+    private fun fileWasExternallyModified(): Boolean {
+        val geodeFile = getGeodeOutputPath()
+        if (!geodeFile.exists()) {
+            return false
+        }
+
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+
+        val fileLastModified = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
+        if (fileLastModified == 0L) {
+            return false
+        }
+
+        return fileLastModified != geodeFile.lastModified()
+    }
+
     private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
         val release = try {
             getLatestRelease()
@@ -166,8 +182,7 @@ class ReleaseManager private constructor(
         }
 
         // check if the file was externally modified
-        val fileLastModified = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
-        if (!allowOverwriting && fileLastModified != 0L && fileLastModified != geodeFile.lastModified()) {
+        if (!allowOverwriting && fileWasExternallyModified()) {
             sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
             return
         }
