@@ -231,35 +231,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         hideSystemUi()
     }
 
-    @Suppress("DEPRECATION")
     private fun hideSystemUi() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            // window compat is dumb!!
-            setLegacyVisibility()
-            window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
-                if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                    setLegacyVisibility()
-                }
-            }
-        }
-
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowCompat.getInsetsController(window, window.decorView).apply {
             systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             hide(WindowInsetsCompat.Type.systemBars())
         }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun setLegacyVisibility() {
-        // setDecorFitsSystemWindows doesn't hide anything
-        window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
     }
 
     override fun onDestroy() {
