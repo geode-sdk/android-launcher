@@ -76,7 +76,17 @@ object LaunchUtils {
      * Returns the directory that Geode/the game should base itself off of.
      */
     fun getBaseDirectory(context: Context): File {
-        return context.getExternalFilesDir("")!!
+        // deprecated, but seems to be the best choice of directory (i forced mat to test it)
+        // also, is getting the first item the correct choice here?? what do they mean
+        @Suppress("DEPRECATION")
+        val dir = context.externalMediaDirs.first()
+
+        // prevent having resources added to system gallery
+        // accessing this file every time the directory is read may be a little wasteful...
+        val noMediaPath = File(dir, ".nomedia")
+        noMediaPath.createNewFile()
+
+        return dir
     }
 
     fun getSaveDirectory(context: Context): File {
