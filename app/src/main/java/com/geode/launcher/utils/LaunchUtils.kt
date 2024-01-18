@@ -33,20 +33,18 @@ object LaunchUtils {
         return game.versionName
     }
 
-    fun getApplicationArchitecture(): String {
-        // supposedly CPU_ABI returns the current arch for the running application
-        // despite being deprecated, this is also one of the few ways to get this information
-        @Suppress("DEPRECATION")
-        return Build.CPU_ABI
-    }
+    // supposedly CPU_ABI returns the current arch for the running application
+    // despite being deprecated, this is also one of the few ways to get this information
+    @Suppress("DEPRECATION")
+    val applicationArchitecture: String = Build.CPU_ABI
 
-    fun getGeodeFilename(): String {
-        val abi = getApplicationArchitecture()
-        return "Geode.$abi.so"
-    }
+    val platformName: String = if (applicationArchitecture == "arm64-v8a")
+        "android64" else "android32"
+
+    val geodeFilename: String = "Geode.$platformName.so"
 
     fun getInstalledGeodePath(context: Context): File? {
-        val geodeName = getGeodeFilename()
+        val geodeName = geodeFilename
 
         val internalGeodePath = File(context.filesDir, "launcher/$geodeName")
         if (internalGeodePath.exists()) {

@@ -44,9 +44,7 @@ class Release(
 
     fun getAndroidDownload(): Asset? {
         // try to find an asset that matches the architecture first
-        val architecture = LaunchUtils.getApplicationArchitecture()
-        val platform = if (architecture == "arm64-v8a")
-                "android64" else "android32"
+        val platform = LaunchUtils.platformName
 
         val releaseSuffix = "$platform.zip"
         return assets.find {

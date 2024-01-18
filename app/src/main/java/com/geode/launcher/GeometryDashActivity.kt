@@ -129,7 +129,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         // might be split apks, select the best path for the library
         val sourceDirs = applicationInfo.splitSourceDirs
-        val architecture = LaunchUtils.getApplicationArchitecture()
+        val architecture = LaunchUtils.applicationArchitecture
 
         if (!sourceDirs.isNullOrEmpty()) {
             val configAbi = architecture.replace("-", "_")
@@ -156,7 +156,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return true
         } catch (e: UnsatisfiedLinkError) {
             // but users may prefer it stored with data
-            val geodeFilename = LaunchUtils.getGeodeFilename()
+            val geodeFilename = LaunchUtils.geodeFilename
             val geodePath = File(filesDir.path, "launcher/$geodeFilename")
             if (geodePath.exists()) {
                 System.load(geodePath.path)
