@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
@@ -118,7 +117,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
         val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo)
-        System.load("$nativeDir/lib$libraryName.so")
+
+        val libraryPath = if (nativeDir.endsWith('/')) "${nativeDir}lib$libraryName.so" else "$nativeDir/lib$libraryName.so"
+        System.load(libraryPath)
     }
 
     private fun getNativeLibraryDirectory(applicationInfo: ApplicationInfo): String {
