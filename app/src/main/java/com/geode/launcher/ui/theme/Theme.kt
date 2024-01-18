@@ -88,10 +88,11 @@ fun GeodeLauncherTheme(
 
                 statusBarColor = Color.Transparent.toArgb()
                 navigationBarColor = Color.Transparent.toArgb()
-            }
-            with (ViewCompat.getWindowInsetsController(view)) {
-                this?.isAppearanceLightStatusBars = theme == Theme.LIGHT
-                this?.isAppearanceLightNavigationBars = theme == Theme.LIGHT
+
+                WindowCompat.getInsetsController(this, view).apply {
+                    isAppearanceLightStatusBars = theme == Theme.LIGHT
+                    isAppearanceLightNavigationBars = theme == Theme.LIGHT
+                }
             }
         }
     }
