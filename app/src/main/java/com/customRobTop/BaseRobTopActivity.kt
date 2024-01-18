@@ -7,9 +7,9 @@ import android.content.*
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import android.view.WindowManager
 import android.widget.Toast
 import com.customRobTop.JniToCpp.resumeSound
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
@@ -130,7 +130,14 @@ object BaseRobTopActivity {
 
     @JvmStatic
     fun getDeviceRefreshRate(): Float {
-        return (me.get()?.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.refreshRate
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            me.get()?.display
+        } else {
+            @Suppress("DEPRECATION")
+            me.get()?.windowManager?.defaultDisplay
+        }
+
+        return display!!.refreshRate
     }
 
     // Everyplay doesn't even exist anymore lol
