@@ -5,10 +5,16 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.util.Log
 import java.io.File
 
 object LaunchUtils {
+    enum class FailureReason {
+        NOT_FOUND, ABI_MISMATCH, UNKNOWN
+    }
+
     fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
         return try {
             packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
@@ -32,6 +38,45 @@ object LaunchUtils {
     fun getGeometryDashVersionString(packageManager: PackageManager): String {
         val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
         return game.versionName
+    }
+
+    fun diagnoseLoadErrors(context: Context, packageInfo: PackageInfo): FailureReason {
+        val abi = applicationArchitecture
+        val isExtracted =
+            packageInfo.applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
+        val isSplit = (packageInfo.applicationInfo.splitSourceDirs?.size ?: 0) > 1
+
+        val metadata =
+            "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
+        Log.i("GeodeLauncher", metadata)
+
+        // determine if it can find gd libraries for the opposite architecture
+        val gdBinaryName = "lib${Constants.COCOS_LIB_NAME}.so"
+        val oppositeArchitecture = if (abi == "arm64-v8a") "armeabi-v7a" else "arm64-v8a"
+
+        if (packageInfo.applicationInfo.nativeLibraryDir.contains(oppositeArchitecture)) {
+            return FailureReason.ABI_MISMATCH
+        }
+
+        if (!isExtracted) {
+            try {
+                context.assets.openNonAssetFd("lib/$oppositeArchitecture/$gdBinaryName")
+                return FailureReason.ABI_MISMATCH
+            } catch (_: Exception) {
+                // this is good, actually!
+            }
+        }
+
+        // try fetching for its own libraries (only for uncompressed libraries)
+        if (!isExtracted) {
+            try {
+                context.assets.openNonAssetFd("lib/$abi/$gdBinaryName")
+            } catch (_: Exception) {
+                return FailureReason.NOT_FOUND
+            }
+        }
+
+        return FailureReason.UNKNOWN
     }
 
     // supposedly CPU_ABI returns the current arch for the running application

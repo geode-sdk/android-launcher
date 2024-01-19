@@ -61,17 +61,11 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             // generates helpful information for use in debugging library load failures
             val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-
-            val abi = LaunchUtils.applicationArchitecture
-            val isExtracted = gdPackageInfo.applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
-            val isSplit = (gdPackageInfo.applicationInfo.splitSourceDirs?.size ?: 0) > 1
-
-            val metadata = "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
-            Log.i("GeodeLauncher", metadata)
+            val failureReason = LaunchUtils.diagnoseLoadErrors(this, gdPackageInfo)
 
             returnToMain(
                 getString(R.string.load_failed_link_error),
-                getString(R.string.load_failed_link_error_description)
+                getString(R.string.load_failed_link_error_description, failureReason.name)
             )
 
             return
