@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.AssetManager
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -23,12 +25,10 @@ object FMOD {
     @JvmStatic
     fun init(context: Context?) {
         gContext = context
-        if (context != null) {
-            gContext!!.registerReceiver(
-                gPluginBroadcastReceiver,
-                IntentFilter("android.intent.action.HEADSET_PLUG")
-            )
-        }
+        gContext?.registerReceiver(
+            gPluginBroadcastReceiver,
+            IntentFilter(Intent.ACTION_HEADSET_PLUG)
+        )
     }
 
     @JvmStatic
@@ -58,29 +58,21 @@ object FMOD {
         val isBluetoothOn = isBluetoothOn()
         Log.i(
             "fmod",
-            "FMOD::supportsLowLatency                 : Low latency = $lowLatencyFlag, Pro Audio = $proAudioFlag, Bluetooth On = $isBluetoothOn, Acceptable Block Size = $z ($outputBlockSize)"
+            "FMOD::supportsLowLatency : Low latency = $lowLatencyFlag, Pro Audio = $proAudioFlag, Bluetooth On = $isBluetoothOn, Acceptable Block Size = $z ($outputBlockSize)"
         )
         return z && lowLatencyFlag && !isBluetoothOn
     }
 
     @JvmStatic
     fun lowLatencyFlag(): Boolean {
-        if (Build.VERSION.SDK_INT < 5) {
-            return false
-        }
-
         val context = gContext ?: return false
-        return context.packageManager.hasSystemFeature("android.hardware.audio.low_latency")
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY)
     }
 
     @JvmStatic
     fun proAudioFlag(): Boolean {
-        if (Build.VERSION.SDK_INT < 5) {
-            return false
-        }
-
         val context = gContext ?: return false
-        return context.packageManager.hasSystemFeature("android.hardware.audio.pro")
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_AUDIO_PRO)
     }
 
     @JvmStatic
@@ -90,26 +82,18 @@ object FMOD {
 
     @JvmStatic
     fun getOutputSampleRate(): Int {
-        if (Build.VERSION.SDK_INT < 17) {
-            return 0
-        }
-
         val context = gContext ?: return 0
         val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val property = audioService.getProperty("android.media.property.OUTPUT_SAMPLE_RATE")
+        val property = audioService.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
 
         return property?.toInt() ?: 0
     }
 
     @JvmStatic
     fun getOutputBlockSize(): Int {
-        if (Build.VERSION.SDK_INT < 17) {
-            return 0
-        }
-
         val context = gContext ?: return 0
         val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val property = audioService.getProperty("android.media.property.OUTPUT_FRAMES_PER_BUFFER")
+        val property = audioService.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
 
         return property?.toInt() ?: 0
     }
@@ -118,7 +102,11 @@ object FMOD {
     fun isBluetoothOn(): Boolean {
         val context = gContext ?: return false
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        return audioManager.isBluetoothA2dpOn || audioManager.isBluetoothScoOn
+
+        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+        return devices.any {
+            it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+        }
     }
 
     @JvmStatic

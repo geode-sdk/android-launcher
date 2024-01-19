@@ -1,5 +1,6 @@
 package org.fmod
 
+import android.media.MediaCodec
 import android.media.MediaCrypto
 import android.media.MediaDataSource
 import android.media.MediaExtractor
@@ -14,8 +15,7 @@ class MediaCodec {
 
     var mCodecPtr: Long = 0
     private var mCurrentOutputBufferIndex = -1
-    private var mDataSourceProxy: Any? = null
-    private var mDecoder: android.media.MediaCodec? = null
+    private var mDecoder: MediaCodec? = null
     private var mExtractor: MediaExtractor? = null
     private var mInputBuffers: Array<ByteBuffer>? = null
     private var mInputFinished = false
@@ -57,7 +57,7 @@ class MediaCodec {
             )
             if (string == "audio/mp4a-latm") {
                 return try {
-                    mDecoder = android.media.MediaCodec.createDecoderByType(string)
+                    mDecoder = MediaCodec.createDecoderByType(string)
                     mExtractor!!.selectTrack(i2)
                     mDecoder!!.configure(trackFormat, null as Surface?, null as MediaCrypto?, 0)
                     mDecoder!!.start()
@@ -100,7 +100,7 @@ class MediaCodec {
         }
     }
 
-    fun read(bArr: ByteArray?, i: Int): Int {
+    fun read(bArr: ByteArray, i: Int): Int {
         var dequeueInputBuffer = 0
         val i2 =
             if (!mInputFinished || !mOutputFinished || mCurrentOutputBufferIndex != -1) 0 else -1
@@ -129,14 +129,14 @@ class MediaCodec {
                 mCurrentOutputBufferIndex = dequeueOutputBuffer
                 mOutputBuffers!![dequeueOutputBuffer].limit(bufferInfo.size)
                 mOutputBuffers!![dequeueOutputBuffer].position(bufferInfo.offset)
-            } else if (dequeueOutputBuffer == -3) {
+            } else if (dequeueOutputBuffer == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                 mOutputBuffers = mDecoder!!.outputBuffers
-            } else if (dequeueOutputBuffer == -2) {
+            } else if (dequeueOutputBuffer == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 Log.d(
                     "fmod",
                     "MediaCodec::read : MediaCodec::dequeueOutputBuffer returned MediaCodec.INFO_OUTPUT_FORMAT_CHANGED " + mDecoder!!.outputFormat
                 )
-            } else if (dequeueOutputBuffer == -1) {
+            } else if (dequeueOutputBuffer == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 Log.d(
                     "fmod",
                     "MediaCodec::read : MediaCodec::dequeueOutputBuffer returned MediaCodec.INFO_TRY_AGAIN_LATER."
@@ -147,7 +147,7 @@ class MediaCodec {
                     "MediaCodec::read : MediaCodec::dequeueOutputBuffer returned $dequeueOutputBuffer"
                 )
             }
-            if (bufferInfo.flags and 4 !== 0) {
+            if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                 mOutputFinished = true
             }
         }
@@ -188,13 +188,15 @@ class MediaCodec {
         }
         val bArr = ByteArray(1024)
         while (i3 > 0) {
-            i3 -= read(bArr, Math.min(1024, i3))
+            i3 -= read(bArr, 1024.coerceAtMost(i3))
         }
     }
 
     companion object {
+        @JvmStatic
         external fun fmodGetSize(j: Long): Long
 
+        @JvmStatic
         external fun fmodReadAt(j: Long, j2: Long, bArr: ByteArray?, i: Int, i2: Int): Int
     }
 }
