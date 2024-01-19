@@ -50,31 +50,60 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         // return back to main if Geometry Dash isn't found
         if (!LaunchUtils.isGeometryDashInstalled(packageManager)) {
-            val launchIntent = Intent(this, MainActivity::class.java)
-            launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-
-            startActivity(launchIntent)
-        }
-
-        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-
-        try {
-            LaunchUtils.addAssetsFromPackage(assets, gdPackageInfo)
-        } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
+            returnToMain()
+            return
         }
 
         try {
-            // fixes bugs specific to the new app directory, such as package name
-            val saveDir = LaunchUtils.getSaveDirectory(this)
-            saveDir.mkdir()
-
-            LauncherFix.loadLibrary()
-            LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
-            LauncherFix.setDataPath(saveDir.path)
+            tryLoadGame()
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
+
+            // generates helpful information for use in debugging library load failures
+            val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+
+            val abi = LaunchUtils.applicationArchitecture
+            val isExtracted = gdPackageInfo.applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
+            val isSplit = (gdPackageInfo.applicationInfo.splitSourceDirs?.size ?: 0) > 1
+
+            val metadata = "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
+            Log.i("GeodeLauncher", metadata)
+
+            returnToMain(
+                getString(R.string.load_failed_link_error),
+                getString(R.string.load_failed_link_error_description)
+            )
+
+            return
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+            returnToMain(
+                getString(R.string.load_failed_generic_error),
+                getString(R.string.load_failed_generic_error_description, e.message ?: "UnknownException")
+            )
+
+            return
         }
+    }
+
+    private fun returnToMain(returnTitle: String? = null, returnMessage: String? = null) {
+        val launchIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+
+            if (!returnTitle.isNullOrEmpty() && !returnMessage.isNullOrEmpty()) {
+                putExtra(Constants.LAUNCHER_KEY_RETURN_TITLE, returnTitle)
+                putExtra(Constants.LAUNCHER_KEY_RETURN_MESSAGE, returnMessage)
+            }
+        }
+
+        startActivity(launchIntent)
+    }
+
+    private fun tryLoadGame() {
+        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+
+        setupRedirection(gdPackageInfo)
 
         // request read and write permissions
         requestPermissions(
@@ -95,23 +124,47 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             loadTestingLibraries()
         }
 
-        FMOD.init(this)
-
         setContentView(createView())
 
-        // call native functions after native libraries init
-        JniToCpp.setupHSSAssets(
-            gdPackageInfo.applicationInfo.sourceDir,
-            Environment.getExternalStorageDirectory().absolutePath
-        )
-        Cocos2dxHelper.nativeSetApkPath(gdPackageInfo.applicationInfo.sourceDir)
-
-        BaseRobTopActivity.setCurrentActivity(this)
-        registerReceiver()
+        setupPostLibraryLoad(gdPackageInfo)
 
         if (!loadGeodeLibrary()) {
             Log.w("GeodeLauncher", "could not load Geode object!")
         }
+    }
+
+    private fun setupRedirection(packageInfo: PackageInfo) {
+        try {
+            LaunchUtils.addAssetsFromPackage(assets, packageInfo)
+        } catch (e: NoSuchMethodException) {
+            e.printStackTrace()
+        }
+
+        try {
+            // fixes bugs specific to the new app directory, such as package name
+            val saveDir = LaunchUtils.getSaveDirectory(this)
+            saveDir.mkdir()
+
+            LauncherFix.loadLibrary()
+            LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
+            LauncherFix.setDataPath(saveDir.path)
+        } catch (e: UnsatisfiedLinkError) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun setupPostLibraryLoad(packageInfo: PackageInfo) {
+        FMOD.init(this)
+
+        // call native functions after native libraries init
+        JniToCpp.setupHSSAssets(
+            packageInfo.applicationInfo.sourceDir,
+            Environment.getExternalStorageDirectory().absolutePath
+        )
+        Cocos2dxHelper.nativeSetApkPath(packageInfo.applicationInfo.sourceDir)
+
+        BaseRobTopActivity.setCurrentActivity(this)
+        registerReceiver()
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")

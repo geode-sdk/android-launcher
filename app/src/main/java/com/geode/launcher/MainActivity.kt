@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
         val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
+        val returnMessage = intent.extras?.getString(Constants.LAUNCHER_KEY_RETURN_MESSAGE)
+        val returnTitle = intent.extras?.getString(Constants.LAUNCHER_KEY_RETURN_TITLE)
+
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
@@ -68,6 +71,10 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.background
                     ) {
                         MainScreen(gdInstalled, geodeInstalled)
+
+                        if (!returnMessage.isNullOrEmpty() && !returnTitle.isNullOrEmpty()) {
+                            LoadFailedDialog(returnTitle, returnMessage)
+                        }
                     }
                 }
             }
@@ -144,6 +151,30 @@ fun UpdateMessageIndicator(
         }
     }
 
+}
+
+@Composable
+fun LoadFailedDialog(returnTitle: String, returnMessage: String) {
+    var showDialog by remember { mutableStateOf(true) }
+
+    if (showDialog) {
+        AlertDialog(
+            icon = {
+                Icon(
+                    painterResource(R.drawable.icon_error),
+                    contentDescription = stringResource(R.string.launcher_error_icon_alt)
+                )
+            },
+            title = { Text(returnTitle) },
+            text = { Text(returnMessage) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(R.string.message_box_accept))
+                }
+            },
+            onDismissRequest = { showDialog = false }
+        )
+    }
 }
 
 @Composable
