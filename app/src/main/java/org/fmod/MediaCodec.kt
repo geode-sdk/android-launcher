@@ -1,103 +1,105 @@
 package org.fmod
 
 import android.media.MediaCodec
-import android.media.MediaCrypto
 import android.media.MediaDataSource
 import android.media.MediaExtractor
 import android.media.MediaCodec.BufferInfo
+import android.media.MediaFormat
+import android.os.Build
 import android.util.Log
-import android.view.Surface
 import java.io.IOException
 import java.nio.ByteBuffer
 
 class MediaCodec {
     private var channelCount = 0
 
-    var mCodecPtr: Long = 0
+    var mCodecPtr = 0L
     private var mCurrentOutputBufferIndex = -1
     private var mDecoder: MediaCodec? = null
     private var mExtractor: MediaExtractor? = null
     private var mInputBuffers: Array<ByteBuffer>? = null
     private var mInputFinished = false
-    private var length: Long = 0
+    private var length = 0L
     private var mOutputBuffers: Array<ByteBuffer>? = null
     private var mOutputFinished = false
     private var sampleRate = 0
 
-    fun init(j: Long): Boolean {
-        mCodecPtr = j
-        var i = 0
+    fun init(codecPtr: Long): Boolean {
+        mCodecPtr = codecPtr
 
         try {
             val mediaExtractor = MediaExtractor()
             mExtractor = mediaExtractor
             mediaExtractor.setDataSource(object : MediaDataSource() {
                 override fun close() {}
-                override fun readAt(j: Long, bArr: ByteArray, i: Int, i2: Int): Int {
-                    return fmodReadAt(mCodecPtr, j, bArr, i, i2)
+                override fun readAt(position: Long, buffer: ByteArray, offset: Int, size: Int): Int {
+                    return fmodReadAt(mCodecPtr, position, buffer, offset, size)
                 }
 
                 override fun getSize(): Long {
                     return fmodGetSize(mCodecPtr)
                 }
             })
-        } catch (e5: IOException) {
-            Log.w("fmod", "MediaCodec::init : $e5")
+        } catch (e: IOException) {
+            Log.w("fmod", "MediaCodec::init : $e")
             return false
         }
 
-        val trackCount = mExtractor!!.trackCount
-        var i2 = 0
-        while (i2 < trackCount) {
-            val trackFormat = mExtractor!!.getTrackFormat(i2)
-            val string = trackFormat.getString("mime")
+        val extractor = mExtractor!!
+
+        val trackCount = extractor.trackCount
+        var track = 0
+
+        while (track < trackCount) {
+            val trackFormat = extractor.getTrackFormat(track)
+            val string = trackFormat.getString(MediaFormat.KEY_MIME)
             Log.d(
                 "fmod",
-                "MediaCodec::init : Format $i2 / $trackCount -- $trackFormat"
+                "MediaCodec::init : Format $track / $trackCount -- $trackFormat"
             )
-            if (string == "audio/mp4a-latm") {
+            if (string == MediaFormat.MIMETYPE_AUDIO_AAC) {
                 return try {
-                    mDecoder = MediaCodec.createDecoderByType(string)
-                    mExtractor!!.selectTrack(i2)
-                    mDecoder!!.configure(trackFormat, null as Surface?, null as MediaCrypto?, 0)
-                    mDecoder!!.start()
-                    mInputBuffers = mDecoder!!.inputBuffers
-                    mOutputBuffers = mDecoder!!.outputBuffers
-                    val integer =
-                        if (trackFormat.containsKey("encoder-delay")) trackFormat.getInteger("encoder-delay") else 0
-                    if (trackFormat.containsKey("encoder-padding")) {
-                        i = trackFormat.getInteger("encoder-padding")
-                    }
-                    val j2 = trackFormat.getLong("durationUs")
-                    channelCount = trackFormat.getInteger("channel-count")
-                    val integer2 = trackFormat.getInteger("sample-rate")
-                    sampleRate = integer2
+                    val decoder = MediaCodec.createDecoderByType(string)
+                    extractor.selectTrack(track)
+                    decoder.configure(trackFormat, null, null, 0)
+                    decoder.start()
+                    mInputBuffers = decoder.inputBuffers
+                    mOutputBuffers = decoder.outputBuffers
+                    mDecoder = decoder
+
+                    val encoderDelay =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && trackFormat.containsKey(MediaFormat.KEY_ENCODER_DELAY))
+                            trackFormat.getInteger(MediaFormat.KEY_ENCODER_DELAY) else 0
+
+                    val encoderPadding = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && trackFormat.containsKey(MediaFormat.KEY_ENCODER_PADDING))
+                        trackFormat.getInteger(MediaFormat.KEY_ENCODER_PADDING) else 0
+
+                    val trackDuration = trackFormat.getLong(MediaFormat.KEY_DURATION)
+                    channelCount = trackFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                    val trackSampleRate = trackFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                    sampleRate = trackSampleRate
                     length =
-                        (((j2 * integer2.toLong() + 999999) / 1000000).toInt() - integer - i).toLong()
+                        (((trackDuration * trackSampleRate.toLong() + 999999) / 1000000).toInt() - encoderDelay - encoderPadding).toLong()
+
                     true
-                } catch (e6: IOException) {
-                    Log.e("fmod", "MediaCodec::init : $e6")
+                } catch (e: IOException) {
+                    Log.e("fmod", "MediaCodec::init : $e")
                     false
                 }
             } else {
-                i2++
+                track++
             }
         }
         return false
     }
 
     fun release() {
-        val mediaCodec = mDecoder
-        if (mediaCodec != null) {
-            mediaCodec.stop()
-            mDecoder?.release()
-            mDecoder = null
-        }
-        val mediaExtractor = mExtractor
-        if (mediaExtractor != null) {
-            mediaExtractor.release()
-            mExtractor = null
-        }
+        mDecoder?.stop()
+        mDecoder?.release()
+        mDecoder = null
+
+        mExtractor?.release()
+        mExtractor = null
     }
 
     fun read(bArr: ByteArray, i: Int): Int {
@@ -194,9 +196,9 @@ class MediaCodec {
 
     companion object {
         @JvmStatic
-        external fun fmodGetSize(j: Long): Long
+        external fun fmodGetSize(codecPtr: Long): Long
 
         @JvmStatic
-        external fun fmodReadAt(j: Long, j2: Long, bArr: ByteArray?, i: Int, i2: Int): Int
+        external fun fmodReadAt(codecPtr: Long, position: Long, buffer: ByteArray?, offset: Int, size: Int): Int
     }
 }
