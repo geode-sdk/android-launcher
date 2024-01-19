@@ -24,6 +24,7 @@ object LaunchUtils {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             game.longVersionCode
         } else {
+            @Suppress("DEPRECATION")
             game.versionCode.toLong()
         }
     }

@@ -99,7 +99,7 @@ object DownloadUtils {
                         while (entry != null) {
                             if (entry.name == zipPath) {
                                 it.copyTo(outputStream)
-                                return@use
+                                return@runInterruptible
                             }
 
                             entry = it.nextEntry
