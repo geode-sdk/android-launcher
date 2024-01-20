@@ -102,7 +102,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
-            Key.UPDATE_AUTOMATICALLY, Key.RELEASE_CHANNEL -> true
+            Key.UPDATE_AUTOMATICALLY -> true
             else -> false
         }
     }
