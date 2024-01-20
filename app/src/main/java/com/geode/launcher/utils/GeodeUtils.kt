@@ -225,7 +225,13 @@ object GeodeUtils {
     @JvmStatic
     fun getBaseDirectory(): String {
         val activity = activity.get()!!
-        return LaunchUtils.getBaseDirectory(activity).path
+        return LaunchUtils.getBaseDirectory(activity).canonicalPath
+    }
+
+    @JvmStatic
+    fun getInternalDirectory(): String {
+        val activity = activity.get()!!
+        return activity.filesDir.canonicalPath
     }
 
     private val gameVersionMap = mapOf(
