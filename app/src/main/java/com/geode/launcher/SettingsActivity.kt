@@ -104,7 +104,7 @@ fun onOpenFolder(context: Context) {
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
         Toast.makeText(
             context,
-            context.getString(R.string.export_folder_copied),
+            context.getString(R.string.text_copied),
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -224,6 +224,11 @@ fun updateTheme(context: Context, theme: Int) {
     }
 }
 
+fun onOpenLogs(context: Context) {
+    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
+    context.startActivity(launchIntent)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -267,7 +272,7 @@ fun SettingsScreen(
                     IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = context.getString(R.string.settings_back_icon_alt)
+                            contentDescription = context.getString(R.string.back_icon_alt)
                         )
                     }
                 },
@@ -303,10 +308,6 @@ fun SettingsScreen(
                         preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
                     )
                     SettingsCard(
-                        title = context.getString(R.string.preference_load_testing_name),
-                        preferenceKey = PreferenceUtils.Key.LOAD_TESTING,
-                    )
-                    SettingsCard(
                         title = context.getString(R.string.preference_load_automatically_name),
                         description = context.getString(R.string.preference_load_automatically_description),
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
@@ -319,6 +320,10 @@ fun SettingsScreen(
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         onClick = { onOpenFileManager(context) }
+                    )
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_logs),
+                        onClick = { onOpenLogs(context) }
                     )
                 }
 

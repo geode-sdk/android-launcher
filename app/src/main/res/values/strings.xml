@@ -48,10 +48,10 @@
 
     <!-- SettingsActivity strings -->
     <string name="title_activity_settings">Settings</string>
-    <string name="settings_back_icon_alt">back arrow icon</string>
+    <string name="back_icon_alt">back</string>
 
     <string name="export_folder_tag">Launcher External Folder</string>
-    <string name="export_folder_copied">Copied!</string>
+    <string name="text_copied">Copied to clipboard.</string>
 
     <string name="preference_category_testing">General</string>
     <string name="preference_load_testing_name">Load files from /test</string>
@@ -59,6 +59,7 @@
     <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
     <string name="preferences_open_file_manager">Open file manager</string>
+    <string name="preferences_view_logs">View application logs</string>
 
     <string name="preference_theme_name">Theme</string>
     <string name="preference_theme_select">Select theme</string>
@@ -79,4 +80,11 @@
     <string name="preference_check_for_updates_downloading">Downloading update…</string>
     <string name="preference_check_for_updates_no_internet">No internet found.</string>
     <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
+
+    <!-- ApplicationLogsActivity strings -->
+    <string name="title_activity_application_logs">Application Logs</string>
+    <string name="application_logs_no_logs">No logs available.</string>
+    <string name="application_logs_delete">Clear</string>
+    <string name="application_logs_share">Share</string>
+    <string name="application_log_copy_label">Log Message</string>
 </resources>
