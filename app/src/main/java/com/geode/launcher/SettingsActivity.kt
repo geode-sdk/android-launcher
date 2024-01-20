@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -110,9 +111,21 @@ fun onOpenFolder(context: Context) {
 }
 
 fun onOpenFileManager(context: Context) {
+    // future thoughts: Intent.ACTION_VIEW may not work on some devices
+    // the "correct" solution is to go through a list of possible intents/applications
+    // don't feel like writing that behavior. this is good enough
+
     val intent = Intent(Intent.ACTION_VIEW).apply {
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        type = "vnd.android.document/directory"
+        data = DocumentsContract.buildRootUri(
+            "${context.packageName}.user",
+            UserDirectoryProvider.ROOT
+        )
+
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
     }
 
     try {

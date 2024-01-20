@@ -11,8 +11,6 @@ import android.webkit.MimeTypeMap
 import com.geode.launcher.utils.LaunchUtils
 import java.io.File
 
-private const val ROOT = "root"
-
 private val DEFAULT_ROOT_PROJECTION: Array<String> = arrayOf(
     DocumentsContract.Root.COLUMN_ROOT_ID,
     DocumentsContract.Root.COLUMN_FLAGS,
@@ -30,7 +28,12 @@ private val DEFAULT_DOCUMENT_PROJECTION: Array<String> = arrayOf(
     DocumentsContract.Document.COLUMN_SIZE
 )
 
+// a lot of this code is pulled from <https://github.com/dolphin-emu/dolphin>
 class UserDirectoryProvider : DocumentsProvider() {
+    companion object {
+        internal const val ROOT = "root"
+    }
+
     private lateinit var rootDir: File
 
     override fun onCreate(): Boolean {
