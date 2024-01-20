@@ -33,12 +33,21 @@ jobs:
           -Pandroid.injected.signing.key.alias="${{secrets.KEY_ALIAS}}" \
           -Pandroid.injected.signing.key.password="${{secrets.KEY_PASSWORD}}"
 
+    - name: Rename universal apk
+      id: rename_apk_universal
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        APK_PATH=${{github.workspace}}/app/build/outputs/apk/debug/app-universal-debug.apk
+        OUT_PATH=${{github.workspace}}/geode-launcher-debug-$SHORT_SHA.apk
+        mv $APK_PATH $OUT_PATH
+        echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
+
     - name: Rename apk
       id: rename_apk
       run: |
         SHORT_SHA=${GITHUB_SHA::7}
-        APK_PATH=${{github.workspace}}/app/build/outputs/apk/debug/app-debug.apk
-        OUT_PATH=${{github.workspace}}/geode-launcher-debug-$SHORT_SHA.apk
+        APK_PATH=${{github.workspace}}/app/build/outputs/apk/debug/app-armeabi-v7a-debug.apk
+        OUT_PATH=${{github.workspace}}/geode-launcher-debug-android32-$SHORT_SHA.apk
         mv $APK_PATH $OUT_PATH
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
@@ -46,4 +55,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: geode-launcher-debug
-        path: ${{ steps.rename_apk.outputs.path }}
+        path: |
+          ${{ steps.rename_apk_universal.outputs.path }}
+          ${{ steps.rename_apk.outputs.path }}
