@@ -70,7 +70,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        MainScreen(gdInstalled, geodeInstalled)
+                        val loadFailed = !returnMessage.isNullOrEmpty() && !returnTitle.isNullOrEmpty()
+                        MainScreen(gdInstalled, geodeInstalled, loadFailed)
 
                         if (!returnMessage.isNullOrEmpty() && !returnTitle.isNullOrEmpty()) {
                             LoadFailedDialog(returnTitle, returnMessage)
@@ -330,6 +331,7 @@ fun onSettings(context: Context) {
 fun MainScreen(
     gdInstalled: Boolean = true,
     geodePreinstalled: Boolean = true,
+    disableAutomaticLaunch: Boolean = false,
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
@@ -375,7 +377,7 @@ fun MainScreen(
         )
 
         if (gdInstalled && geodeInstalled) {
-            if (shouldAutomaticallyLaunch.value && !releaseViewModel.isInUpdate) {
+            if (shouldAutomaticallyLaunch.value && !releaseViewModel.isInUpdate && !disableAutomaticLaunch) {
                 val countdownTimer = useCountdownTimer(
                     time = 3000,
                     onCountdownFinish = {
