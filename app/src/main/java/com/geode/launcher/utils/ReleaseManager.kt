@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.Cache
 import okhttp3.OkHttpClient
+import okio.buffer
+import okio.source
 import java.io.File
 import java.io.InterruptedIOException
 
@@ -145,13 +147,12 @@ class ReleaseManager private constructor(
         }
 
         val sharedPreferences = PreferenceUtils.get(applicationContext)
+        val originalFileHash = sharedPreferences.getString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
+            ?: return false
 
-        val fileLastModified = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
-        if (fileLastModified == 0L) {
-            return false
-        }
+        val currentFileHash = computeFileHash(geodeFile)
 
-        return fileLastModified != geodeFile.lastModified()
+        return originalFileHash != currentFileHash
     }
 
     private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
@@ -203,12 +204,15 @@ class ReleaseManager private constructor(
             release.getDescriptor()
         )
 
+        // store hash as modified time is unreliable (don't know why)
         val outputFile = getGeodeOutputPath()
-        sharedPreferences.setLong(
-            PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED,
-            outputFile.lastModified()
-        )
+        val fileHash = computeFileHash(outputFile)
+
+        sharedPreferences.setString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED, fileHash)
     }
+
+    private fun computeFileHash(file: File): String =
+        file.source().buffer().readByteString().md5().hex()
 
     private fun getGeodeOutputPath(): File {
         val geodeName = LaunchUtils.geodeFilename

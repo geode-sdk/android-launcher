@@ -117,7 +117,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.CURRENT_VERSION_TIMESTAMP -> "PreferenceCurrentVersionDescriptor"
             Key.THEME -> "PreferenceTheme"
             Key.BLACK_BACKGROUND -> "PreferenceBlackBackground"
-            Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModified"
+            Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModifiedHash"
         }
     }
 
