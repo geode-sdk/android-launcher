@@ -116,19 +116,13 @@ object DownloadUtils {
     fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
         // gotta love copying
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            FileUtils.copy(inputStream, outputStream)
+            inputStream.use { input -> outputStream.use { output ->
+                FileUtils.copy(input, output)
+            }}
         } else {
-            inputStream.use { input ->
-                outputStream.use { output ->
-                    val buffer = ByteArray(4 * 1024)
-                    while (true) {
-                        val byteCount = input.read(buffer)
-                        if (byteCount < 0) break
-                        output.write(buffer, 0, byteCount)
-                    }
-                    output.flush()
-                }
-            }
+            inputStream.use { input -> outputStream.use { output ->
+                input.copyTo(output)
+            }}
         }
     }
 }
