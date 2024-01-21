@@ -337,6 +337,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         super.onPause()
         mIsOnPause = true
         BaseRobTopActivity.isPaused = true
+    }
+
+    override fun onStop() {
+        super.onStop()
         if (mIsRunning) {
             pauseGame()
         }
