@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.format.Formatter.formatShortFileSize
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -51,6 +52,8 @@ import java.net.UnknownHostException
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
 
         val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)

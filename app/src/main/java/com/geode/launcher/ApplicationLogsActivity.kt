@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,8 @@ import kotlinx.coroutines.launch
 
 class ApplicationLogsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)

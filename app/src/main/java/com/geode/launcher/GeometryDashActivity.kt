@@ -24,8 +24,8 @@ import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.DownloadUtils
-import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.GeodeUtils
+import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
@@ -46,9 +46,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         setupUIState()
+
+        super.onCreate(savedInstanceState)
 
         // return back to main if Geometry Dash isn't found
         if (!LaunchUtils.isGeometryDashInstalled(packageManager)) {
@@ -288,11 +288,22 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun hideSystemUi() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         WindowCompat.getInsetsController(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.systemBars())
         }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        mHasWindowFocus = hasWindowFocus
+        if (hasWindowFocus && !mIsOnPause) {
+            resumeGame()
+        }
+
+        hideSystemUi()
     }
 
     override fun onDestroy() {
@@ -347,14 +358,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         if (mReceiver != null) {
             unregisterReceiver(mReceiver)
             mReceiver = null
-        }
-    }
-
-    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
-        super.onWindowFocusChanged(hasWindowFocus)
-        mHasWindowFocus = hasWindowFocus
-        if (hasWindowFocus && !mIsOnPause) {
-            resumeGame()
         }
     }
 

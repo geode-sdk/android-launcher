@@ -79,24 +79,6 @@ fun GeodeLauncherTheme(
         else -> LightColorScheme
     }
 
-    val view = LocalView.current
-
-    if (!view.isInEditMode) {
-        SideEffect {
-            with ((view.context as Activity).window) {
-                WindowCompat.setDecorFitsSystemWindows(this, false)
-
-                statusBarColor = Color.Transparent.toArgb()
-                navigationBarColor = Color.Transparent.toArgb()
-
-                WindowCompat.getInsetsController(this, view).apply {
-                    isAppearanceLightStatusBars = theme == Theme.LIGHT
-                    isAppearanceLightNavigationBars = theme == Theme.LIGHT
-                }
-            }
-        }
-    }
-
     MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

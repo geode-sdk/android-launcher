@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -58,7 +59,9 @@ import java.net.UnknownHostException
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
