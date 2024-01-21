@@ -5,14 +5,14 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
-import java.io.DataInputStream
+import okio.BufferedSource
 import java.io.IOException
 
-fun DataInputStream.readCChar(): Char {
+fun BufferedSource.readCChar(): Char {
     return this.readByte().toInt().toChar()
 }
 
-fun DataInputStream.readCString(): String {
+fun BufferedSource.readCString(): String {
     val buffer = StringBuilder()
 
     var lastByte = this.readCChar()
@@ -22,32 +22,6 @@ fun DataInputStream.readCString(): String {
     }
 
     return buffer.toString()
-}
-
-fun DataInputStream.readLeUShort(): UShort {
-    val byteA = this.readByte().toInt() and 0xff
-    val byteB = this.readByte().toInt() and 0xff
-
-    val shortValue = (byteB shl 8) or byteA
-    return shortValue.toUShort()
-}
-
-fun DataInputStream.readLeInt(): Int {
-    val byteA = this.readByte().toInt() and 0xff
-    val byteB = this.readByte().toInt() and 0xff
-    val byteC = this.readByte().toInt() and 0xff
-    val byteD = this.readByte().toInt() and 0xff
-
-    return (byteD shl 24) or (byteC shl 16) or (byteB shl 8) or byteA
-}
-
-fun DataInputStream.readLeUInt(): UInt {
-    val byteA = this.readByte().toUInt() and 0xffu
-    val byteB = this.readByte().toUInt() and 0xffu
-    val byteC = this.readByte().toUInt() and 0xffu
-    val byteD = this.readByte().toUInt() and 0xffu
-
-    return (byteD shl 24) or (byteC shl 16) or (byteB shl 8) or byteA
 }
 
 data class ProcessInformation(val processId: Int, val threadId: Int, val processUid: Int)
@@ -107,7 +81,7 @@ data class LogLine(
             else -> throw IOException("LogLine::fromInputStream: unknown format for (headerSize = $size)")
         }
 
-        fun fromInputStream(readStream: DataInputStream): LogLine {
+        fun fromBufferedSource(source: BufferedSource): LogLine {
             /*
                 // from android <liblog/include/log/log_read.h>
                 // there are multiple logger entry formats
@@ -135,27 +109,27 @@ data class LogLine(
                 };
             */
 
-            /* val payloadLength = */ readStream.readLeUShort()
-            val headerSize = readStream.readLeUShort()
+            /* val payloadLength = */ source.readShortLe()
+            val headerSize = source.readShortLe().toUShort()
 
             val entryVersion = headerSizeToVersion(headerSize)
 
-            val pid = readStream.readLeInt()
-            val tid = readStream.readLeUInt().toInt()
-            val sec = readStream.readLeUInt().toLong()
-            val nSec = readStream.readLeUInt().toInt()
-            val lid = readStream.readLeUInt().toInt()
+            val pid = source.readIntLe()
+            val tid = source.readIntLe()
+            val sec = source.readIntLe().toLong()
+            val nSec = source.readIntLe()
+            val lid = source.readIntLe()
             val uid = if (entryVersion == EntryVersion.V4)
-                readStream.readLeUInt().toInt() else 0
+                source.readIntLe() else 0
 
             val processInformation = ProcessInformation(pid, tid, uid)
             val time = Instant.fromEpochSeconds(sec, nSec)
 
-            val priorityByte = readStream.readByte()
+            val priorityByte = source.readByte()
             val priority = LogPriority.fromByte(priorityByte)
 
-            val tag = readStream.readCString()
-            val message = readStream.readCString()
+            val tag = source.readCString()
+            val message = source.readCString()
 
             return LogLine(
                 process = processInformation,
@@ -179,6 +153,8 @@ data class LogLine(
 
     val identifier = time.toJavaInstant()
 
-    val formattedTime = this.time.toLocalDateTime(TimeZone.currentSystemDefault())
-    val asSimpleString = "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.message}"
+    val formattedTime by lazy { this.time.toLocalDateTime(TimeZone.currentSystemDefault()) }
+    val asSimpleString by lazy {
+        "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.message}"
+    }
 }

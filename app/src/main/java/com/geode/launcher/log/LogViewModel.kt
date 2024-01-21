@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import java.io.DataInputStream
+import okio.buffer
+import okio.source
 import java.io.EOFException
 import java.util.LinkedList
 
@@ -31,16 +32,15 @@ class LogViewModel: ViewModel() {
     private suspend fun logOutput(): List<LogLine> {
         val logLines = LinkedList<LogLine>()
 
-        val logStream = DataInputStream(
-            // -B = binary format, -d = dump logs
-            Runtime.getRuntime().exec("logcat -B -d").inputStream
-        )
+        // -B = binary format, -d = dump logs
+        val logSource = Runtime.getRuntime().exec("logcat -B -d")
+            .inputStream.source().buffer()
 
         try {
             coroutineScope {
                 // this runs until the stream is exhausted
                 while (true) {
-                    val line = LogLine.fromInputStream(logStream)
+                    val line = LogLine.fromBufferedSource(logSource)
 
                     // skip debug/verbose lines
                     if (line.priority >= LogPriority.INFO) {
