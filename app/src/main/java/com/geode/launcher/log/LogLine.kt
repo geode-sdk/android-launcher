@@ -9,7 +9,7 @@ import okio.BufferedSource
 import java.io.IOException
 
 fun BufferedSource.readCChar(): Char {
-    return this.readByte().toInt().toChar()
+    return this.readUtf8CodePoint().toChar()
 }
 
 fun BufferedSource.readCString(): String {
