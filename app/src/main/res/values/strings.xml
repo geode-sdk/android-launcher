@@ -12,6 +12,7 @@
     <string name="launcher_launch_icon_alt">play icon</string>
     <string name="launcher_download_icon_alt">download icon</string>
     <string name="launcher_settings_icon_alt">settings icon</string>
+    <string name="launcher_retry_icon_alt">retry icon</string>
     <string name="geode_download_title">Geode is not installed.</string>
     <string name="geode_download_description">Geode is downloading. Please wait.</string>
     <plurals name="automatically_load_countdown">

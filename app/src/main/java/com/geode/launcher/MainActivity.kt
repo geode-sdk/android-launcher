@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -147,6 +148,11 @@ fun UpdateMessageIndicator(
                     releaseViewModel.runReleaseCheck(true)
                 },
             ) {
+                Icon(
+                    Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.launcher_retry_icon_alt)
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.release_fetch_button_retry))
             }
         }
