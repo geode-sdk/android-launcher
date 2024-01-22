@@ -235,7 +235,8 @@ object GeodeUtils {
     }
 
     private val gameVersionMap = mapOf(
-        37L to "2.200"
+        37L to "2.200",
+        38L to "2.205"
     )
 
     @JvmStatic
