@@ -17,9 +17,18 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         private const val GITHUB_API_VERSION = "2022-11-28"
     }
 
+    suspend fun getLatestLauncherRelease(): Release? {
+        val releasePath = "$GITHUB_API_BASE/repos/geode-sdk/android-launcher/releases/latest"
+
+        val url = URL(releasePath)
+
+        return getReleaseByUrl(url)
+    }
+
     suspend fun getLatestGeodeRelease(isNightly: Boolean = false): Release? {
-        val releasePath = if (isNightly) "$GITHUB_API_BASE/releases/tags/nightly"
-            else "$GITHUB_API_BASE/repos/geode-sdk/geode/releases/latest"
+        val geodeBaseUrl = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases"
+        val releasePath = if (isNightly) "$geodeBaseUrl/tags/nightly"
+            else "$geodeBaseUrl/latest"
 
         val url = URL(releasePath)
 
@@ -33,6 +42,8 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .addHeader("Accept", "application/json")
             .addHeader(GITHUB_API_HEADER, GITHUB_API_VERSION)
             .build()
+
+        println("fetching url $url")
 
         val call = httpClient.newCall(request)
         val response = call.executeCoroutine()
