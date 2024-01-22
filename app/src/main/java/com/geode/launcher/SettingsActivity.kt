@@ -364,14 +364,12 @@ fun SettingsScreen(
                         UpdateIndicator(snackbarHostState, updateStatus)
                     }
                 }
-/*
-                OptionsGroup("Data") {
-                    OptionsButton(
-                        title = "Export save data",
-                        onClick = { onExportSaveData(context) }
-                    )
-                }
- */
+
+                Text(
+                    stringResource(R.string.preference_launcher_version, BuildConfig.VERSION_NAME),
+                    style = Typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
             }
         }
     )
