@@ -36,7 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.geode.launcher.api.ReleaseViewModel
+import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
@@ -44,7 +44,7 @@ import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import com.geode.launcher.utils.ReleaseManager
+import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.useCountdownTimer
 import java.net.ConnectException
 import java.net.UnknownHostException

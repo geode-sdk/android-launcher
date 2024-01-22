@@ -1,9 +1,10 @@
-package com.geode.launcher.utils
+package com.geode.launcher.updater
 
 import android.content.Context
 import android.util.Log
-import com.geode.launcher.api.Release
-import com.geode.launcher.api.ReleaseRepository
+import com.geode.launcher.utils.DownloadUtils
+import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -32,7 +33,7 @@ class ReleaseManager private constructor(
         private lateinit var managerInstance: ReleaseManager
 
         fun get(context: Context): ReleaseManager {
-            if (!::managerInstance.isInitialized) {
+            if (!Companion::managerInstance.isInitialized) {
                 val applicationContext = context.applicationContext
 
                 val httpClient = OkHttpClient.Builder()
@@ -90,13 +91,7 @@ class ReleaseManager private constructor(
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
 
-        val latestRelease = if (useNightly) {
-            releaseRepository.getLatestNightlyRelease()
-        } else {
-            releaseRepository.getLatestRelease()
-        }
-
-        return latestRelease
+        return releaseRepository.getLatestGeodeRelease(useNightly)
     }
 
     private suspend fun performUpdate(release: Release) {
@@ -112,7 +107,10 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
 
         try {
-            val fileStream = DownloadUtils.downloadStream(httpClient, releaseAsset.browserDownloadUrl) { progress, outOf ->
+            val fileStream = DownloadUtils.downloadStream(
+                httpClient,
+                releaseAsset.browserDownloadUrl
+            ) { progress, outOf ->
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
             }
 

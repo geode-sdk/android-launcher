@@ -1,4 +1,4 @@
-package com.geode.launcher.api
+package com.geode.launcher.updater
 
 import com.geode.launcher.utils.LaunchUtils
 import kotlinx.datetime.Instant

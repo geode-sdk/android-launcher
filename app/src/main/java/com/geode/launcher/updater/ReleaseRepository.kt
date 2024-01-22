@@ -1,4 +1,4 @@
-package com.geode.launcher.api
+package com.geode.launcher.updater
 
 import com.geode.launcher.utils.DownloadUtils.executeCoroutine
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -12,20 +12,15 @@ import java.net.URL
 
 class ReleaseRepository(private val httpClient: OkHttpClient) {
     companion object {
-        private const val GITHUB_API_BASE = "https://api.github.com/repos/geode-sdk/geode"
+        private const val GITHUB_API_BASE = "https://api.github.com"
         private const val GITHUB_API_HEADER = "X-GitHub-Api-Version"
         private const val GITHUB_API_VERSION = "2022-11-28"
     }
 
-    suspend fun getLatestNightlyRelease(): Release? {
-        val nightlyPath = "$GITHUB_API_BASE/releases/tags/nightly"
-        val url = URL(nightlyPath)
+    suspend fun getLatestGeodeRelease(isNightly: Boolean = false): Release? {
+        val releasePath = if (isNightly) "$GITHUB_API_BASE/releases/tags/nightly"
+            else "$GITHUB_API_BASE/repos/geode-sdk/geode/releases/latest"
 
-        return getReleaseByUrl(url)
-    }
-
-    suspend fun getLatestRelease(): Release? {
-        val releasePath = "$GITHUB_API_BASE/releases/latest"
         val url = URL(releasePath)
 
         return getReleaseByUrl(url)
