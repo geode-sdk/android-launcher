@@ -63,11 +63,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             // generates helpful information for use in debugging library load failures
             val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-            val failureReason = LaunchUtils.diagnoseLoadErrors(this, gdPackageInfo)
+            val abiMismatch = LaunchUtils.detectAbiMismatch(this, gdPackageInfo, e)
+
+            val errorMessage = if (abiMismatch) getString(R.string.load_failed_abi_error_description) else
+                getString(R.string.load_failed_link_error_description)
 
             returnToMain(
                 getString(R.string.load_failed_link_error),
-                getString(R.string.load_failed_link_error_description, failureReason.name)
+                errorMessage
             )
 
             return

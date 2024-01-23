@@ -11,10 +11,6 @@ import android.util.Log
 import java.io.File
 
 object LaunchUtils {
-    enum class FailureReason {
-        NOT_FOUND, ABI_MISMATCH, UNKNOWN
-    }
-
     fun isGeometryDashInstalled(packageManager: PackageManager): Boolean {
         return try {
             packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
@@ -40,7 +36,7 @@ object LaunchUtils {
         return game.versionName
     }
 
-    fun diagnoseLoadErrors(context: Context, packageInfo: PackageInfo): FailureReason {
+    fun detectAbiMismatch(context: Context, packageInfo: PackageInfo, loadException: Error): Boolean {
         val abi = applicationArchitecture
         val isExtracted =
             packageInfo.applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
@@ -50,33 +46,42 @@ object LaunchUtils {
             "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
         Log.i("GeodeLauncher", metadata)
 
+        // easiest check! these messages are hardcoded in bionic/linker/linker_phdr.cpp
+        if (loadException.message?.contains("32-bit instead of 64-bit") == true) {
+            return true
+        }
+
+        if (loadException.message?.contains("64-bit instead of 32-bit") == true) {
+            return true
+        }
+
         // determine if it can find gd libraries for the opposite architecture
         val gdBinaryName = "lib${Constants.COCOS_LIB_NAME}.so"
         val oppositeArchitecture = if (abi == "arm64-v8a") "armeabi-v7a" else "arm64-v8a"
 
-        if (packageInfo.applicationInfo.nativeLibraryDir.contains(oppositeArchitecture)) {
-            return FailureReason.ABI_MISMATCH
+        // detect issues using native library directory (only works on extracted libraries)
+        val nativeLibraryDir = packageInfo.applicationInfo.nativeLibraryDir
+
+        if (nativeLibraryDir.contains(oppositeArchitecture)) {
+            return true
+        }
+
+        // android has some odd behavior where 32bit libraries get installed to the arm directory instead of armeabi-v7a
+        // detect it, ig
+        if (oppositeArchitecture == "armeabi-v7a" && nativeLibraryDir.contains("/lib/arm/")) {
+            return true
         }
 
         if (!isExtracted) {
             try {
                 context.assets.openNonAssetFd("lib/$oppositeArchitecture/$gdBinaryName")
-                return FailureReason.ABI_MISMATCH
+                return true
             } catch (_: Exception) {
                 // this is good, actually!
             }
         }
 
-        // try fetching for its own libraries (only for uncompressed libraries)
-        if (!isExtracted) {
-            try {
-                context.assets.openNonAssetFd("lib/$abi/$gdBinaryName")
-            } catch (_: Exception) {
-                return FailureReason.NOT_FOUND
-            }
-        }
-
-        return FailureReason.UNKNOWN
+        return false
     }
 
     // supposedly CPU_ABI returns the current arch for the running application
