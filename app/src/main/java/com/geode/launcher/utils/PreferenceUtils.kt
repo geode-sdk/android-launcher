@@ -13,6 +13,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.geode.launcher.BuildConfig
 
 /**
  * Extension object for SharedPreferences to add better key safety and default values.
@@ -103,6 +104,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY -> true
+            Key.RELEASE_CHANNEL -> BuildConfig.DEBUG
             else -> false
         }
     }
