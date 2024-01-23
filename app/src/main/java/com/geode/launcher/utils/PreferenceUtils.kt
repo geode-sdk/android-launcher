@@ -24,36 +24,69 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
         @Composable
         fun useBooleanPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
-            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
-                p.getBoolean(k)
-            }
+            return usePreference(
+                preferenceKey,
+                lifecycleOwner,
+                preferenceGet = { p, k -> p.getBoolean(k) },
+                preferenceSet = { p, k, v -> p.setBoolean(k, v) }
+            )
         }
 
         @Composable
         fun useStringPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<String?> {
-            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
-                p.getString(k)
-            }
+            return usePreference(
+                preferenceKey,
+                lifecycleOwner,
+                preferenceGet = { p, k -> p.getString(k) },
+                preferenceSet = { p, k, v -> p.setString(k, v) }
+            )
         }
 
         @Composable
         fun useIntPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Int> {
-            return usePreference(preferenceKey, lifecycleOwner) { p, k ->
-                p.getInt(k)
-            }
+            return usePreference(
+                preferenceKey,
+                lifecycleOwner,
+                preferenceGet = { p, k -> p.getInt(k) },
+                preferenceSet = { p, k, v -> p.setInt(k, v) }
+            )
         }
 
         @Composable
-        private fun <T> usePreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current, preferenceGet: (PreferenceUtils, Key) -> T): MutableState<T> {
+        fun useLongPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Long> {
+            return usePreference(
+                preferenceKey,
+                lifecycleOwner,
+                preferenceGet = { p, k -> p.getLong(k) },
+                preferenceSet = { p, k, v -> p.setLong(k, v) }
+            )
+        }
+
+        @Composable
+        private fun <T> usePreference(
+            preferenceKey: Key,
+            lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+            preferenceGet: (PreferenceUtils, Key) -> T,
+            preferenceSet: (PreferenceUtils, Key, T) -> Unit
+        ): MutableState<T> {
             val context = LocalContext.current
             val sharedPreferences = context.getSharedPreferences(FILE_KEY, Context.MODE_PRIVATE)
 
             val preferences = get(sharedPreferences)
 
             val preferenceValue = remember {
-                mutableStateOf(
-                    preferenceGet(preferences, preferenceKey)
-                )
+                val state = mutableStateOf(preferenceGet(preferences, preferenceKey))
+                object : MutableState<T> by state {
+                    override var value: T
+                        get() = state.value
+                        set(value) {
+                            // ignore setting the same thing (messes up default preferences)
+                            if (state.value == value) { return }
+
+                            println("setting value $preferenceKey -> $value")
+                            preferenceSet(preferences, preferenceKey, value)
+                        }
+                }
             }
 
             val listener = SharedPreferences.OnSharedPreferenceChangeListener {
@@ -99,7 +132,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         THEME,
         BLACK_BACKGROUND,
         CURRENT_RELEASE_MODIFIED,
-        LAST_DISMISSED_UPDATE
+        LAST_DISMISSED_UPDATE,
+        DISMISSED_GJ_UPDATE
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -122,6 +156,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.BLACK_BACKGROUND -> "PreferenceBlackBackground"
             Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModifiedHash"
             Key.LAST_DISMISSED_UPDATE -> "PreferenceLastDismissedUpdate"
+            Key.DISMISSED_GJ_UPDATE -> "PreferenceDismissedGJUpdate"
         }
     }
 
@@ -130,6 +165,13 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         val keyName = keyToName(key)
 
         return sharedPreferences.getBoolean(keyName, defaultValue)
+    }
+
+    fun setBoolean(key: Key, value: Boolean) {
+        val keyName = keyToName(key)
+        sharedPreferences.edit {
+            putBoolean(keyName, value)
+        }
     }
 
     fun toggleBoolean(key: Key): Boolean {
@@ -148,7 +190,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         return sharedPreferences.getString(keyName, null)
     }
 
-    fun setString(key: Key, value: String) {
+    fun setString(key: Key, value: String?) {
         val keyName = keyToName(key)
         sharedPreferences.edit {
             putString(keyName, value)
