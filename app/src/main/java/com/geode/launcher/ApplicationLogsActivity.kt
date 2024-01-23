@@ -9,8 +9,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,8 +24,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,7 +44,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -174,6 +182,24 @@ fun ApplicationLogsScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
 
+    var showMoreOptions by remember { mutableStateOf(false) }
+    val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                val logs = logViewModel.getLogData()
+
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.bufferedWriter().use { writer ->
+                        writer.write(logs)
+                    }
+                }
+
+                Toast.makeText(context, R.string.application_logs_export_completed, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
     LaunchedEffect(logLines.size) {
         listState.scrollToItem(logLines.size)
     }
@@ -213,13 +239,48 @@ fun ApplicationLogsScreen(
                                 contentDescription = stringResource(R.string.application_logs_share)
                             )
                         }
-                        IconButton(onClick = {
-                            logViewModel.clearLogs()
-                            onBackPressedDispatcher?.onBackPressed()
-                        }) {
+                        IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
                             Icon(
-                                painterResource(R.drawable.icon_delete),
-                                contentDescription = stringResource(R.string.application_logs_delete)
+                                Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.application_logs_more)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showMoreOptions,
+                            onDismissRequest = { showMoreOptions = false }
+                        ) {
+                            DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(R.drawable.icon_save),
+                                        contentDescription = stringResource(R.string.application_logs_export)
+                                    )
+                                },
+                                text = {
+                                    Text(stringResource(R.string.application_logs_export))
+                                }, onClick = {
+                                    if (!logLines.isEmpty()) {
+                                        saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
+                                    }
+                                    showMoreOptions = false
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(R.drawable.icon_delete),
+                                        contentDescription = stringResource(R.string.application_logs_delete)
+                                    )
+                                },
+                                text = {
+                                    Text(stringResource(R.string.application_logs_delete))
+                                }, onClick = {
+                                    logViewModel.clearLogs()
+                                    onBackPressedDispatcher?.onBackPressed()
+                                    showMoreOptions = false
+                                }
                             )
                         }
                     },

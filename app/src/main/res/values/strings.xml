@@ -87,7 +87,11 @@
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
     <string name="application_logs_no_logs">No logs available.</string>
-    <string name="application_logs_delete">Clear</string>
+    <string name="application_logs_delete">Clear All</string>
     <string name="application_logs_share">Share</string>
     <string name="application_log_copy_label">Log Message</string>
+    <string name="application_logs_more">More</string>
+    <string name="application_logs_export">Save To</string>
+    <string name="application_logs_export_completed">Log export complete.</string>
+    <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
 </resources>
