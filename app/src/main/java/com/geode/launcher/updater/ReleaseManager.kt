@@ -2,7 +2,6 @@ package com.geode.launcher.updater
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.LaunchUtils
