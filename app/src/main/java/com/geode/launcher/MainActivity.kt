@@ -235,7 +235,11 @@ fun UpdateWarning() {
 
     var showUpdateWarning by remember { mutableStateOf(true) }
 
-    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE) {
+    var lastDismissedVersion by PreferenceUtils.useLongPreference(
+        preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
+    )
+
+    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE && gdVersionCode != lastDismissedVersion) {
         if (showUpdateWarning) {
             AlertDialog(
                 icon = {
@@ -256,6 +260,8 @@ fun UpdateWarning() {
                 confirmButton = {
                     TextButton(onClick = {
                         showUpdateWarning = false
+                        lastDismissedVersion = gdVersionCode
+
                         onLaunch(context)
                     }) {
                         Text(stringResource(R.string.message_box_accept))
