@@ -23,7 +23,8 @@ class Release(
     val tagName: String,
     val createdAt: Instant,
     val publishedAt: Instant,
-    val assets: List<Asset>
+    val assets: List<Asset>,
+    val htmlUrl: String
 ) {
     fun getDescription(): String {
         if (tagName == "nightly") {
@@ -42,13 +43,31 @@ class Release(
         return createdAt.epochSeconds
     }
 
-    fun getAndroidDownload(): Asset? {
+    fun getGeodeDownload(): Asset? {
         // try to find an asset that matches the architecture first
         val platform = LaunchUtils.platformName
 
         val releaseSuffix = "$platform.zip"
         return assets.find {
             it.name.endsWith(releaseSuffix)
+        }
+    }
+
+    fun getLauncherDownload(): Asset? {
+        val platform = LaunchUtils.platformName
+        val use32BitPlatform = platform == "android32"
+
+        return assets.find { asset ->
+            /* you know it's good when you pull out the truth table
+             * u32bp | contains | found
+             * 1     | 1        | 1
+             * 0     | 1        | 0
+             * 1     | 0        | 0
+             * 0     | 0        | 1
+             * surprise! it's an xnor
+             */
+
+            (asset.name.contains("android32")) == use32BitPlatform
         }
     }
 }

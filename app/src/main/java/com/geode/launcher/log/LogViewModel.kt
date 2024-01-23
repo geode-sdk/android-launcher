@@ -27,10 +27,10 @@ class LogViewModel: ViewModel() {
     private val _lineState = mutableStateListOf<LogLine>()
     val lineState = _lineState
 
-    private var _isLoading = MutableStateFlow(false)
-    var isLoading = _isLoading.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
-    var logJob: Job? = null
+    private var logJob: Job? = null
 
     var filterCrashes = false
         private set

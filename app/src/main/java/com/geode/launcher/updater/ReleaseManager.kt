@@ -2,6 +2,8 @@ package com.geode.launcher.updater
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import com.geode.launcher.BuildConfig
 import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -77,6 +79,9 @@ class ReleaseManager private constructor(
     val isInUpdate: Boolean
         get() = _uiState.value !is ReleaseManagerState.Failure && _uiState.value !is ReleaseManagerState.Finished
 
+    private val _availableLauncherUpdate = MutableStateFlow<Release?>(null)
+    val availableLauncherUpdate = _availableLauncherUpdate.asStateFlow()
+
     private fun sendError(e: Exception) {
         _uiState.value = ReleaseManagerState.Failure(e)
 
@@ -87,6 +92,15 @@ class ReleaseManager private constructor(
         }
     }
 
+    fun dismissLauncherUpdate() {
+        val update = availableLauncherUpdate.value ?: return
+
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+        sharedPreferences.setString(PreferenceUtils.Key.LAST_DISMISSED_UPDATE, update.tagName)
+
+        _availableLauncherUpdate.value = null
+    }
+
     private suspend fun getLatestRelease(): Release? {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
@@ -95,7 +109,7 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun performUpdate(release: Release) {
-        val releaseAsset = release.getAndroidDownload()
+        val releaseAsset = release.getGeodeDownload()
         if (releaseAsset == null) {
             val noAssetException = Exception("missing Android download")
             _uiState.value = ReleaseManagerState.Failure(noAssetException)
@@ -153,12 +167,41 @@ class ReleaseManager private constructor(
         return originalFileHash != currentFileHash
     }
 
+    private fun checkLauncherUpdate(launcherUpdate: Release) {
+        if (BuildConfig.DEBUG) {
+            println("ignoring launcher update check - in debug mode!")
+            return
+        }
+
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+        val lastDismissedVersion = sharedPreferences.getString(PreferenceUtils.Key.LAST_DISMISSED_UPDATE)
+
+        if (!lastDismissedVersion.isNullOrEmpty() && launcherUpdate.tagName == lastDismissedVersion) {
+            return
+        }
+
+        if (launcherUpdate.tagName != BuildConfig.VERSION_NAME) {
+            _availableLauncherUpdate.value = launcherUpdate
+        }
+    }
+
     private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
             sendError(e)
             return
+        }
+
+        val launcherRelease = try {
+            releaseRepository.getLatestLauncherRelease()
+        } catch (e: Exception) {
+            sendError(e)
+            return
+        }
+
+        if (launcherRelease != null) {
+            checkLauncherUpdate(launcherRelease)
         }
 
         if (release == null) {

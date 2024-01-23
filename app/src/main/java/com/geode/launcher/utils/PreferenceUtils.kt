@@ -99,6 +99,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         THEME,
         BLACK_BACKGROUND,
         CURRENT_RELEASE_MODIFIED,
+        LAST_DISMISSED_UPDATE
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -120,6 +121,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.THEME -> "PreferenceTheme"
             Key.BLACK_BACKGROUND -> "PreferenceBlackBackground"
             Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModifiedHash"
+            Key.LAST_DISMISSED_UPDATE -> "PreferenceLastDismissedUpdate"
         }
     }
 

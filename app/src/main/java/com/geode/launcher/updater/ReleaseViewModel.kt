@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +53,8 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     val isInUpdate
         get() = ReleaseManager.get(application).isInUpdate
 
+    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
+
     var hasPerformedCheck = false
         private set
 
@@ -77,7 +80,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     fun useGlobalCheckState() {
         hasPerformedCheck = true
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val releaseFlow = ReleaseManager.get(application)
                 .uiState
 
@@ -88,11 +91,17 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     fun runReleaseCheck(isManual: Boolean = false) {
         hasPerformedCheck = true
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val releaseFlow = ReleaseManager.get(application)
                 .checkForUpdates(isManual)
 
             syncUiState(releaseFlow)
+        }
+    }
+
+    fun dismissLauncherUpdate() {
+        viewModelScope.launch(Dispatchers.IO) {
+            ReleaseManager.get(application).dismissLauncherUpdate()
         }
     }
 }

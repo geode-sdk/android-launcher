@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -90,6 +91,43 @@ class MainActivity : ComponentActivity() {
                     onLaunch(this)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+
+    ElevatedCard(modifier) {
+        Column(
+            // buttons add enough padding already, lower to compensate
+            modifier = Modifier.padding(
+                top = 20.dp,
+                start = 12.dp,
+                end = 12.dp,
+                bottom = 8.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                stringResource(R.string.launcher_update_available),
+                modifier = Modifier.padding(horizontal = 10.dp)
+            )
+
+            Row(modifier = Modifier.align(Alignment.End)) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.launcher_update_dismiss))
+                }
+
+                Spacer(Modifier.size(4.dp))
+
+                TextButton(onClick = { uriHandler.openUri(openTo) },) {
+                    Text(stringResource(R.string.launcher_download))
+                }
+            }
+
+
         }
     }
 }
@@ -322,6 +360,22 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
             }
         }
     }
+
+    val nextUpdate by releaseViewModel.nextLauncherUpdate.collectAsState()
+    val nextUpdateValue = nextUpdate
+
+    if (!releaseViewModel.isInUpdate && nextUpdateValue != null) {
+        val updateUrl = nextUpdateValue.getLauncherDownload()?.browserDownloadUrl
+            ?: nextUpdateValue.htmlUrl
+
+        LauncherUpdateIndicator(
+            modifier = modifier,
+            openTo = updateUrl,
+            onDismiss = {
+                releaseViewModel.dismissLauncherUpdate()
+            }
+        )
+    }
 }
 
 fun onLaunch(context: Context) {
@@ -474,7 +528,8 @@ fun MainScreen(
 
         UpdateCard(
             releaseViewModel,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier
+                .padding(12.dp)
         )
     }
 

@@ -43,8 +43,6 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .addHeader(GITHUB_API_HEADER, GITHUB_API_VERSION)
             .build()
 
-        println("fetching url $url")
-
         val call = httpClient.newCall(request)
         val response = call.executeCoroutine()
 
