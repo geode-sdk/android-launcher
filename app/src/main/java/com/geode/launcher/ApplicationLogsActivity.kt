@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Divider
@@ -219,27 +220,25 @@ fun ApplicationLogsScreen(
                     },
                     actions = {
                         IconButton(onClick = {
-                            if (!logLines.isEmpty()) {
-                                coroutineScope.launch {
-                                    val data = logViewModel.getLogData()
+                            coroutineScope.launch {
+                                val data = logViewModel.getLogData()
 
-                                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                        putExtra(Intent.EXTRA_TEXT, data)
-                                        type = "text/plain"
-                                    }
-
-                                    val shareIntent = Intent.createChooser(sendIntent, null)
-
-                                    context.startActivity(shareIntent)
+                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(Intent.EXTRA_TEXT, data)
+                                    type = "text/plain"
                                 }
+
+                                val shareIntent = Intent.createChooser(sendIntent, null)
+
+                                context.startActivity(shareIntent)
                             }
-                        }) {
+                        }, enabled = !logLines.isEmpty()) {
                             Icon(
                                 Icons.Filled.Share,
                                 contentDescription = stringResource(R.string.application_logs_share)
                             )
                         }
-                        IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
+                        IconButton(onClick = { showMoreOptions = !showMoreOptions },) {
                             Icon(
                                 Icons.Filled.MoreVert,
                                 contentDescription = stringResource(R.string.application_logs_more)
@@ -253,16 +252,22 @@ fun ApplicationLogsScreen(
                             DropdownMenuItem(
                                 leadingIcon = {
                                     Icon(
-                                        painterResource(R.drawable.icon_save),
-                                        contentDescription = stringResource(R.string.application_logs_export)
+                                        painterResource(R.drawable.icon_filter_list),
+                                        contentDescription = null,
                                     )
                                 },
-                                text = {
-                                    Text(stringResource(R.string.application_logs_export))
-                                }, onClick = {
-                                    if (!logLines.isEmpty()) {
-                                        saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
+                                trailingIcon = {
+                                    if (logViewModel.filterCrashes) {
+                                        Icon(
+                                            Icons.Filled.Check,
+                                            contentDescription = stringResource(R.string.application_logs_crash_only_enabled_alt)
+                                        )
                                     }
+                                },
+                                text = {
+                                    Text(stringResource(R.string.application_logs_crash_only))
+                                }, onClick = {
+                                    logViewModel.toggleCrashBuffer()
                                     showMoreOptions = false
                                 }
                             )
@@ -270,15 +275,31 @@ fun ApplicationLogsScreen(
                             DropdownMenuItem(
                                 leadingIcon = {
                                     Icon(
+                                        painterResource(R.drawable.icon_save),
+                                        contentDescription = null,
+                                    )
+                                },
+                                text = {
+                                    Text(stringResource(R.string.application_logs_export))
+                                },
+                                onClick = {
+                                    saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
+                                    showMoreOptions = false
+                                },
+                                enabled = !logLines.isEmpty()
+                            )
+
+                            DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(
                                         painterResource(R.drawable.icon_delete),
-                                        contentDescription = stringResource(R.string.application_logs_delete)
+                                        contentDescription = null
                                     )
                                 },
                                 text = {
                                     Text(stringResource(R.string.application_logs_delete))
                                 }, onClick = {
                                     logViewModel.clearLogs()
-                                    onBackPressedDispatcher?.onBackPressed()
                                     showMoreOptions = false
                                 }
                             )

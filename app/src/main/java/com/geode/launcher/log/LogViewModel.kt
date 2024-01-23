@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,11 +30,26 @@ class LogViewModel: ViewModel() {
     private var _isLoading = MutableStateFlow(false)
     var isLoading = _isLoading.asStateFlow()
 
+    var logJob: Job? = null
+
+    var filterCrashes = false
+        private set
+
+    fun toggleCrashBuffer() {
+        filterCrashes = !filterCrashes
+
+        _lineState.clear()
+        loadLogs()
+    }
+
     private suspend fun logOutput(): List<LogLine> {
         val logLines = LinkedList<LogLine>()
 
+        val logCommand = if (filterCrashes) "logcat -b crash -B -d"
+            else "logcat -B -d"
+
         // -B = binary format, -d = dump logs
-        val logSource = Runtime.getRuntime().exec("logcat -B -d")
+        val logSource = Runtime.getRuntime().exec(logCommand)
             .inputStream.source().buffer()
 
         try {
@@ -61,6 +77,8 @@ class LogViewModel: ViewModel() {
     }
 
     fun clearLogs() {
+        logJob?.cancel()
+
         viewModelScope.launch(Dispatchers.IO) {
             // -c = clear
             Runtime.getRuntime().exec("logcat -c")
@@ -74,13 +92,20 @@ class LogViewModel: ViewModel() {
         return _lineState.joinToString("\n") { it.asSimpleString }
     }
 
-    init {
+    private fun loadLogs() {
         _isLoading.value = true
 
-        viewModelScope.launch(Dispatchers.IO) {
+        logJob?.cancel()
+        logJob = viewModelScope.launch(Dispatchers.IO) {
             val lines = logOutput()
             _lineState.addAll(lines)
             _isLoading.value = false
+
+            logJob = null
         }
+    }
+
+    init {
+        loadLogs()
     }
 }

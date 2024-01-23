@@ -94,4 +94,6 @@
     <string name="application_logs_export">Save To</string>
     <string name="application_logs_export_completed">Log export complete.</string>
     <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
+    <string name="application_logs_crash_only">Show Crash Buffer</string>
+    <string name="application_logs_crash_only_enabled_alt">Enabled</string>
 </resources>
