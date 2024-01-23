@@ -82,8 +82,6 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
                         set(value) {
                             // ignore setting the same thing (messes up default preferences)
                             if (state.value == value) { return }
-
-                            println("setting value $preferenceKey -> $value")
                             preferenceSet(preferences, preferenceKey, value)
                         }
                 }
