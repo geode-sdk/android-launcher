@@ -161,7 +161,7 @@ fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
         )
 
         Text(
-            "[${logLine.tag}]: ${logLine.message}",
+            "[${logLine.tag}]: ${logLine.messageTrimmed}",
             fontFamily = FontFamily.Monospace,
             style = Typography.bodyMedium
         )

@@ -153,8 +153,10 @@ data class LogLine(
 
     val identifier = time.toJavaInstant()
 
+    val messageTrimmed by lazy { this.message.trim() }
+
     val formattedTime by lazy { this.time.toLocalDateTime(TimeZone.currentSystemDefault()) }
     val asSimpleString by lazy {
-        "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.message}"
+        "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.messageTrimmed}"
     }
 }
