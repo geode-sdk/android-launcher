@@ -14,7 +14,7 @@ object Constants {
     const val GJ_DATA_DIR = "/data/data/${PACKAGE_NAME}"
 
     const val SUPPORTED_VERSION_CODE = 38L
-    const val SUPPORTED_VERSION_STRING = "2.2.13"
+    const val SUPPORTED_VERSION_STRING = "2.205"
 
     const val LAUNCHER_KEY_RETURN_TITLE = "return_title"
     const val LAUNCHER_KEY_RETURN_MESSAGE = "return_message"
