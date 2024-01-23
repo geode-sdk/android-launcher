@@ -23,7 +23,7 @@
     <string name="launcher_error_icon_alt">error</string>
     <string name="launcher_unsupported_version_title">Unsupported version</string>
     <string name="launcher_unsupported_version_description">
-        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s).\nLaunch will continue, but crashes may occur!
+        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s). A launcher update is required to fix this.\nLaunch will continue, but crashes may occur!
     </string>
 
     <!-- Updater strings -->
