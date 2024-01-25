@@ -13,6 +13,8 @@ open class GeodeOpenFilesActivityResult : ActivityResultContract<GeodeOpenFilesA
     override fun createIntent(context: Context, input: OpenFileParams): Intent {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             .putExtra(Intent.EXTRA_MIME_TYPES, input.extraMimes)
+            .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             .setType("*/*")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
