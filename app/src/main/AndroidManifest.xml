@@ -4,10 +4,6 @@
 
     <queries>
         <package android:name="com.robtopx.geometryjump" />
-        <intent>
-            <action android:name="android.intent.action.OPEN_DOCUMENT" />
-            <category android:name="android.intent.category.OPENABLE" />
-        </intent>
     </queries>
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -17,6 +13,7 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />

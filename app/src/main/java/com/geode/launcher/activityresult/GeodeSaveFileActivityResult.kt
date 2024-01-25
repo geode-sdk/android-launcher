@@ -12,6 +12,7 @@ open class GeodeSaveFileActivityResult : ActivityResultContract<GeodeSaveFileAct
     class SaveFileParams(val mimeType: String?, val defaultPath: Uri?) {}
     override fun createIntent(context: Context, input: SaveFileParams): Intent {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+            .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             .setType(input.mimeType ?: "*/*")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (input.defaultPath != null) {
