@@ -12,10 +12,8 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
-import com.geode.launcher.GeometryDashActivity
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
 import com.geode.launcher.activityresult.GeodeSaveFileActivityResult
