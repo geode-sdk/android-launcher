@@ -265,22 +265,23 @@ object GeodeUtils {
     }
 
     @JvmStatic
-    fun requestPermission(permission: String): Boolean {
+    fun requestPermission(permission: String) {
         if (getPermissionStatus(permission)) {
             permissionCallback(true)
-            return true
+            return
         }
 
         activity.get()?.run {
             try {
                 requestPermissionLauncher.launch(permission)
-                return true
             } catch (e: ActivityNotFoundException) {
-                return false
+                permissionCallback(false)
             }
+
+            return
         }
 
-        return false
+        permissionCallback(false)
     }
 
     @Suppress("KotlinJniMissingFunction")
