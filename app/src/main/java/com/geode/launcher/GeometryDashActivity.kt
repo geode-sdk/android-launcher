@@ -45,16 +45,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mHasWindowFocus = false
     private var mReceiver: BroadcastReceiver? = null
 
-    companion object {
-        var instance: GeometryDashActivity? = null
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
 
         super.onCreate(savedInstanceState)
-
-        instance = this
 
         // return back to main if Geometry Dash isn't found
         if (!LaunchUtils.isGeometryDashInstalled(packageManager)) {
@@ -319,7 +313,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         super.onDestroy()
         unregisterReceivers()
         FMOD.close()
-        instance = null
     }
 
     private fun resumeGame() {

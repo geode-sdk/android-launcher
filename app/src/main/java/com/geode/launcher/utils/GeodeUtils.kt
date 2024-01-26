@@ -30,6 +30,7 @@ object GeodeUtils {
     private lateinit var openDirectoryResultLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openFilesResultLauncher: ActivityResultLauncher<GeodeOpenFilesActivityResult.OpenFileParams>
     private lateinit var saveFileResultLauncher: ActivityResultLauncher<GeodeSaveFileActivityResult.SaveFileParams>
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     fun setContext(activity: AppCompatActivity) {
         this.activity = WeakReference(activity)
@@ -76,6 +77,9 @@ object GeodeUtils {
                 }
             }
             failedCallback()
+        }
+        requestPermissionLauncher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            permissionCallback(isGranted)
         }
     }
 
@@ -257,19 +261,30 @@ object GeodeUtils {
     @JvmStatic
     fun getPermissionStatus(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
-            GeometryDashActivity.instance?.applicationContext ?: return false,
+            activity.get()?.applicationContext ?: return false,
             permission
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     @JvmStatic
-    fun requestPermission(permission: String) {
-        if (!getPermissionStatus(permission)) {
-            ActivityCompat.requestPermissions(
-                GeometryDashActivity.instance!!,
-                arrayOf(permission),
-                12345
-            )
+    fun requestPermission(permission: String): Boolean {
+        if (getPermissionStatus(permission)) {
+            permissionCallback(true)
+            return true
         }
+
+        activity.get()?.run {
+            try {
+                requestPermissionLauncher.launch(permission)
+                return true
+            } catch (e: ActivityNotFoundException) {
+                return false
+            }
+        }
+
+        return false
     }
+
+    @Suppress("KotlinJniMissingFunction")
+    external fun permissionCallback(granted: Boolean)
 }
