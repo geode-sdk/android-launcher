@@ -5,12 +5,14 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
@@ -26,6 +28,7 @@ object GeodeUtils {
     private lateinit var openDirectoryResultLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openFilesResultLauncher: ActivityResultLauncher<GeodeOpenFilesActivityResult.OpenFileParams>
     private lateinit var saveFileResultLauncher: ActivityResultLauncher<GeodeSaveFileActivityResult.SaveFileParams>
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     fun setContext(activity: AppCompatActivity) {
         this.activity = WeakReference(activity)
@@ -72,6 +75,9 @@ object GeodeUtils {
                 }
             }
             failedCallback()
+        }
+        requestPermissionLauncher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            permissionCallback(isGranted)
         }
     }
 
@@ -249,4 +255,35 @@ object GeodeUtils {
     fun isGeodeUri(uri: Uri): Boolean {
         return "com.geode.launcher.user" == uri.authority
     }
+
+    @JvmStatic
+    fun getPermissionStatus(permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(
+            activity.get()?.applicationContext ?: return false,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @JvmStatic
+    fun requestPermission(permission: String) {
+        if (getPermissionStatus(permission)) {
+            permissionCallback(true)
+            return
+        }
+
+        activity.get()?.run {
+            try {
+                requestPermissionLauncher.launch(permission)
+            } catch (e: ActivityNotFoundException) {
+                permissionCallback(false)
+            }
+
+            return
+        }
+
+        permissionCallback(false)
+    }
+
+    @Suppress("KotlinJniMissingFunction")
+    external fun permissionCallback(granted: Boolean)
 }
