@@ -13,7 +13,7 @@ import kotlinx.coroutines.yield
 import okio.buffer
 import okio.source
 import java.io.EOFException
-import java.util.LinkedList
+import java.io.IOException
 
 /**
  * ViewModel to manage log output from logcat.
@@ -30,6 +30,8 @@ class LogViewModel: ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private var failedToLoad = false
+
     private var logJob: Job? = null
 
     var filterCrashes = false
@@ -43,14 +45,24 @@ class LogViewModel: ViewModel() {
     }
 
     private suspend fun logOutput(): List<LogLine> {
-        val logLines = LinkedList<LogLine>()
+        val logLines = ArrayList<LogLine>()
 
+        // -B = binary format, -d = dump logs
         val logCommand = if (filterCrashes) "logcat -b crash -B -d"
             else "logcat -B -d"
 
-        // -B = binary format, -d = dump logs
-        val logSource = Runtime.getRuntime().exec(logCommand)
-            .inputStream.source().buffer()
+        val logProcess = try {
+            Runtime.getRuntime().exec(logCommand)
+        } catch (ioe: IOException) {
+            ioe.printStackTrace()
+            logLines += LogLine.showException(ioe)
+
+            failedToLoad = true
+
+            return logLines
+        }
+
+        val logSource = logProcess.inputStream.source().buffer()
 
         try {
             coroutineScope {
@@ -71,6 +83,9 @@ class LogViewModel: ViewModel() {
         } catch (e: Exception) {
             e.printStackTrace()
             logLines += LogLine.showException(e)
+
+            // technically it maybe didn't completely fail...
+            failedToLoad = true
         }
 
         return logLines
@@ -88,9 +103,25 @@ class LogViewModel: ViewModel() {
         _lineState.clear()
     }
 
-    fun getLogData(): String {
-        return _lineState.joinToString("\n") { it.asSimpleString }
+    private fun dumpLogcatText(): String {
+        val logCommand = if (filterCrashes) "logcat -b crash -d"
+            else "logcat -d"
+
+        val logProcess = try {
+            Runtime.getRuntime().exec(logCommand)
+        } catch (ioe: IOException) {
+            ioe.printStackTrace()
+            return ioe.stackTraceToString()
+        }
+
+        return logProcess.inputStream.bufferedReader().readText()
     }
+
+    fun getLogData(): String = if (failedToLoad) {
+            dumpLogcatText()
+        } else {
+            _lineState.joinToString("\n") { it.asSimpleString }
+        }
 
     private fun loadLogs() {
         _isLoading.value = true
