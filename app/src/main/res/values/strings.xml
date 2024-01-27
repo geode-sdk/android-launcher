@@ -22,8 +22,11 @@
     <string name="launcher_warning_icon_alt">warning</string>
     <string name="launcher_error_icon_alt">error</string>
     <string name="launcher_unsupported_version_title">Unsupported version</string>
+    <string name="launcher_outdated_version_description">
+        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s). You must update Geometry Dash to fix this.\nLaunch will continue, but crashes may occur!
+    </string>
     <string name="launcher_unsupported_version_description">
-        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s). A launcher update is required to fix this.\nLaunch will continue, but crashes may occur!
+        The current version of Geometry Dash is not compatible with the version supported by the launcher. A launcher update is required to fix this.\nLaunch will continue, but crashes may occur!
     </string>
     <string name="launcher_update_available">A new launcher update is available!</string>
     <string name="launcher_update_dismiss">Dismiss</string>
@@ -44,7 +47,8 @@
     <!-- GeometryDashActivity strings -->
     <string name="load_failed_link_error">Failed to link libraries</string>
     <string name="load_failed_link_error_description">Game libraries could not be found. This may occur if the architecture of the launcher and Geometry Dash do not match, or from a system bug.\nCheck application logs for more details.</string>
-    <string name="load_failed_abi_error_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the \"android32\" version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
+    <string name="load_failed_abi_error_need_64bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 64-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
+    <string name="load_failed_abi_error_need_32bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 32-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
     <string name="load_failed_generic_error">Load failed</string>
     <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details. Please report this issue!</string>
     <string name="message_box_cancel">Cancel</string>

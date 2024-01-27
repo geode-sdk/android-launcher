@@ -65,8 +65,12 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
             val abiMismatch = LaunchUtils.detectAbiMismatch(this, gdPackageInfo, e)
 
-            val errorMessage = if (abiMismatch) getString(R.string.load_failed_abi_error_description) else
-                getString(R.string.load_failed_link_error_description)
+            val is64bit = LaunchUtils.is64bit
+            val errorMessage = when {
+                abiMismatch && is64bit -> getString(R.string.load_failed_abi_error_need_32bit_description)
+                abiMismatch -> getString(R.string.load_failed_abi_error_need_64bit_description)
+                else -> getString(R.string.load_failed_link_error_description)
+            }
 
             returnToMain(
                 getString(R.string.load_failed_link_error),

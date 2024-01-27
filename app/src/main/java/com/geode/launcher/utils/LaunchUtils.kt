@@ -89,8 +89,9 @@ object LaunchUtils {
     @Suppress("DEPRECATION")
     val applicationArchitecture: String = Build.CPU_ABI
 
-    val platformName: String = if (applicationArchitecture == "arm64-v8a")
-        "android64" else "android32"
+    val is64bit = applicationArchitecture == "arm64-v8a"
+
+    val platformName: String = if (is64bit) "android64" else "android32"
 
     val geodeFilename: String = "Geode.$platformName.so"
 
