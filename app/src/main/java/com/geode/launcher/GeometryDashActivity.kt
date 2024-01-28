@@ -59,7 +59,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         try {
             tryLoadGame()
         } catch (e: UnsatisfiedLinkError) {
-            e.printStackTrace()
+            Log.e("GeodeLauncher", "Library linkage failure", e)
 
             // generates helpful information for use in debugging library load failures
             val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
@@ -79,7 +79,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             return
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("GeodeLauncher", "Uncaught error during game load", e)
 
             returnToMain(
                 getString(R.string.load_failed_generic_error),
@@ -148,7 +148,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         try {
             LaunchUtils.addAssetsFromPackage(assets, packageInfo)
         } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
+            Log.e("GeodeLauncher", "Failed to add asset redirection", e)
         }
 
         try {
@@ -160,7 +160,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
             LauncherFix.setDataPath(saveDir.path)
         } catch (e: UnsatisfiedLinkError) {
-            e.printStackTrace()
+            Log.e("GeodeLauncher", "Failed to load LauncherFix", e)
         }
     }
 
