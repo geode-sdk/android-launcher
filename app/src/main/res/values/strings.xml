@@ -53,6 +53,7 @@
     <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details.</string>
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>
+    <string name="missing_permissions">Missing required permissions for this action!</string>
 
     <!-- SettingsActivity strings -->
     <string name="title_activity_settings">Settings</string>

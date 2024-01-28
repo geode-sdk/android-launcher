@@ -108,20 +108,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         setupRedirection(gdPackageInfo)
 
-        // request read and write permissions
-        val hasStoragePerms = (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) and
-                (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-
-        if (!hasStoragePerms) {
-            requestPermissions(
-                arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ),
-                0
-            )
-        }
-
         Cocos2dxHelper.init(this, this)
         GeodeUtils.setContext(this)
 
