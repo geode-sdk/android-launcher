@@ -133,7 +133,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         BLACK_BACKGROUND,
         CURRENT_RELEASE_MODIFIED,
         LAST_DISMISSED_UPDATE,
-        DISMISSED_GJ_UPDATE
+        DISMISSED_GJ_UPDATE,
+        LAUNCH_ARGUMENTS
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -157,6 +158,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.CURRENT_RELEASE_MODIFIED -> "PreferenceReleaseModifiedHash"
             Key.LAST_DISMISSED_UPDATE -> "PreferenceLastDismissedUpdate"
             Key.DISMISSED_GJ_UPDATE -> "PreferenceDismissedGJUpdate"
+            Key.LAUNCH_ARGUMENTS -> "PreferenceLaunchArguments"
         }
     }
 

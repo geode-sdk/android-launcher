@@ -21,7 +21,7 @@ import java.io.File
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
-@Suppress("unused")
+@Suppress("unused", "KotlinJniMissingFunction")
 object GeodeUtils {
     private lateinit var activity: WeakReference<AppCompatActivity>
     private lateinit var openFileResultLauncher: ActivityResultLauncher<GeodeOpenFileActivityResult.OpenFileParams>
@@ -146,14 +146,11 @@ object GeodeUtils {
         return false
     }
 
-    @Suppress("KotlinJniMissingFunction")
-    external fun selectFileCallback(path: String)
+    private external fun selectFileCallback(path: String)
 
-    @Suppress("KotlinJniMissingFunction")
-    external fun selectFilesCallback(paths: Array<String>)
+    private external fun selectFilesCallback(paths: Array<String>)
 
-    @Suppress("KotlinJniMissingFunction")
-    external fun failedCallback()
+    private external fun failedCallback()
 
     @JvmStatic
     fun selectFile(path: String): Boolean {
@@ -284,6 +281,15 @@ object GeodeUtils {
         permissionCallback(false)
     }
 
-    @Suppress("KotlinJniMissingFunction")
-    external fun permissionCallback(granted: Boolean)
+    private external fun permissionCallback(granted: Boolean)
+
+    @JvmStatic
+    fun getLaunchArguments(): String? {
+        activity.get()?.apply {
+            val preferences = PreferenceUtils.get(this)
+            return preferences.getString(PreferenceUtils.Key.LAUNCH_ARGUMENTS)
+        }
+
+        return null
+    }
 }

@@ -90,6 +90,10 @@
     <string name="preference_check_for_updates_no_internet">No internet found.</string>
     <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 
+    <string name="preference_category_developer">Developer</string>
+    <string name="preference_launch_arguments_name">Launch arguments</string>
+    <string name="preference_launch_arguments_set_title">Set launch arguments</string>
+
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
     <string name="application_logs_no_logs">No logs available.</string>

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -42,6 +43,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -316,17 +318,8 @@ fun SettingsScreen(
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
                     OptionsButton(
-                        title = context.getString(R.string.preferences_copy_external_button),
-                        description = LaunchUtils.getBaseDirectory(context).path,
-                        onClick = { onOpenFolder(context) }
-                    )
-                    OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         onClick = { onOpenFileManager(context) }
-                    )
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_view_logs),
-                        onClick = { onOpenLogs(context) }
                     )
                 }
 
@@ -363,6 +356,27 @@ fun SettingsScreen(
                     ) {
                         UpdateIndicator(snackbarHostState, updateStatus)
                     }
+                }
+
+                OptionsGroup(stringResource(R.string.preference_category_developer)) {
+                    SettingsStringCard(
+                        title = stringResource(R.string.preference_launch_arguments_name),
+                        dialogTitle = stringResource(R.string.preference_launch_arguments_set_title),
+                        preferenceKey = PreferenceUtils.Key.LAUNCH_ARGUMENTS,
+                        filterInput = { it.filter { c ->
+                            // if only there was a better way to define this!
+                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
+                        }}
+                    )
+                    OptionsButton(
+                        title = context.getString(R.string.preferences_copy_external_button),
+                        description = LaunchUtils.getBaseDirectory(context).path,
+                        onClick = { onOpenFolder(context) }
+                    )
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_logs),
+                        onClick = { onOpenLogs(context) }
+                    )
                 }
 
                 Text(
@@ -444,6 +458,85 @@ fun SettingsSelectCard(
             optionsCount = maxVal
         )
     }
+}
+
+@Composable
+fun SettingsStringCard(
+    title: String,
+    dialogTitle: String,
+    preferenceKey: PreferenceUtils.Key,
+    filterInput: ((String) -> String)? = null
+) {
+    var preferenceValue by PreferenceUtils.useStringPreference(preferenceKey)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsCard(
+        title = {
+            OptionsTitle(title = title, description = preferenceValue)
+        },
+        modifier = Modifier
+            .clickable(
+                onClick = {
+                    showDialog = true
+                },
+                role = Role.Button
+            )
+    ) { }
+
+    if (showDialog) {
+        StringDialog(
+            title = dialogTitle,
+            onDismissRequest = { showDialog = false },
+            onSelect = {
+                preferenceValue = it
+                showDialog = false
+            },
+            initialValue = preferenceValue ?: "",
+            filterInput = filterInput
+        )
+    }
+}
+
+@Composable
+fun StringDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onSelect: (String) -> Unit,
+    initialValue: String,
+    filterInput: ((String) -> String)? = null
+) {
+    var enteredValue by remember { mutableStateOf(initialValue) }
+
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = {
+            Text(title)
+        },
+        text = {
+            OutlinedTextField(
+                value = enteredValue,
+                onValueChange = {
+                    enteredValue = filterInput?.invoke(it) ?: it
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Ascii,
+                    autoCorrect = false
+                ),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onSelect(enteredValue) }) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+    )
 }
 
 @Composable
