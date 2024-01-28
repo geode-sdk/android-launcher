@@ -46,11 +46,11 @@
 
     <!-- GeometryDashActivity strings -->
     <string name="load_failed_link_error">Failed to link libraries</string>
-    <string name="load_failed_link_error_description">Game libraries could not be found. This may occur if the architecture of the launcher and Geometry Dash do not match, or from a system bug.\nCheck application logs for more details.</string>
+    <string name="load_failed_link_error_description">Game libraries could not be found. This may occur if the architecture or version of the launcher and Geometry Dash do not match, or from a system bug.\nCheck application logs for more details.</string>
     <string name="load_failed_abi_error_need_64bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 64-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
     <string name="load_failed_abi_error_need_32bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 32-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
     <string name="load_failed_generic_error">Load failed</string>
-    <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details. Please report this issue!</string>
+    <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details.</string>
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>
 
@@ -93,6 +93,7 @@
     <string name="preference_category_developer">Developer</string>
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
+    <string name="preference_ignore_load_failure_name">Ignore loader errors</string>
 
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>

@@ -136,8 +136,25 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         setupPostLibraryLoad(gdPackageInfo)
 
-        if (!loadGeodeLibrary()) {
+        try {
+            loadGeodeLibrary()
+        } catch (e: UnsatisfiedLinkError) {
+            handleGeodeException(e)
+        } catch (e: Exception) {
+            handleGeodeException(e)
+        }
+    }
+
+    private fun handleGeodeException(e: Throwable) {
+        e.printStackTrace()
+
+        val ignoreFailure = PreferenceUtils.get(this)
+            .getBoolean(PreferenceUtils.Key.IGNORE_LOAD_FAILURE)
+
+        if (ignoreFailure) {
             Log.w("GeodeLauncher", "could not load Geode object!")
+        } else {
+            throw e
         }
     }
 
@@ -209,26 +226,26 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadGeodeLibrary(): Boolean {
+    private fun loadGeodeLibrary() {
         // Load Geode if exists
         // bundling the object with the application allows for nicer backtraces
         try {
             // put libgeode.so in jniLibs/armeabi-v7a to get this
             System.loadLibrary("geode")
-            return true
+            return
         } catch (e: UnsatisfiedLinkError) {
             // but users may prefer it stored with data
             val geodeFilename = LaunchUtils.geodeFilename
             val geodePath = File(filesDir.path, "launcher/$geodeFilename")
             if (geodePath.exists()) {
                 System.load(geodePath.path)
-                return true
+                return
             }
 
             // you know zmx i have 0 clue what this does so im
             // just gonna like copy the binary from external
             // also i get 20 million permission denied errors
-            val externalGeodePath = LaunchUtils.getInstalledGeodePath(this) ?: return false
+            val externalGeodePath = LaunchUtils.getInstalledGeodePath(this)!!
 
             val copiedPath = File(filesDir.path, "copied")
             if (copiedPath.exists()) {
@@ -245,17 +262,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 )
 
                 if (copiedGeodePath.exists()) {
-                    try {
-                        println("Loading Geode from ${externalGeodePath.name}")
-                        System.load(copiedGeodePath.path)
-                    } catch (e: UnsatisfiedLinkError) {
-                        e.printStackTrace()
-                    }
+                    println("Loading Geode from ${externalGeodePath.name}")
+                    System.load(copiedGeodePath.path)
+                    return
                 }
             }
-        }
 
-        return false
+            throw e
+        }
     }
 
     private fun createView(): FrameLayout {
