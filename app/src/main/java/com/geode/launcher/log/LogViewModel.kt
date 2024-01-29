@@ -37,6 +37,15 @@ class LogViewModel: ViewModel() {
     var filterCrashes = false
         private set
 
+    // skip debug/verbose lines by default
+    var logLevel = LogPriority.INFO
+        set(value) {
+            field = value
+
+            _lineState.clear()
+            loadLogs()
+        }
+
     fun toggleCrashBuffer() {
         filterCrashes = !filterCrashes
 
@@ -70,8 +79,7 @@ class LogViewModel: ViewModel() {
                 while (true) {
                     val line = LogLine.fromBufferedSource(logSource)
 
-                    // skip debug/verbose lines
-                    if (line.priority >= LogPriority.INFO) {
+                    if (line.priority >= logLevel) {
                         logLines += line
                     }
 

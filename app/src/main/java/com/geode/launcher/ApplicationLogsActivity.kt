@@ -104,16 +104,20 @@ fun getLogColor(priority: LogPriority): Color {
     // i just copied these from my ide tbh
     return if (isDark) {
         when (priority) {
-            LogPriority.ERROR -> Color(0xffdf5151)
-            LogPriority.WARN -> Color(0xffbcb500)
-            LogPriority.FATAL -> Color(0xffb8b6fc)
+            LogPriority.ERROR -> Color(0xff_df_51_51)
+            LogPriority.WARN -> Color(0xff_bc_b5_00)
+            LogPriority.FATAL -> Color(0xff_b8_b6_fc)
+            LogPriority.DEBUG -> Color(0xff_aa_aa_aa)
+            LogPriority.VERBOSE -> Color(0xff_77_77_77)
             else -> Color.Unspecified
         }
     } else {
         when (priority) {
-            LogPriority.ERROR -> Color(0xffdf5151)
-            LogPriority.WARN -> Color(0xffeab700)
-            LogPriority.FATAL -> Color(0xffa142f4)
+            LogPriority.ERROR -> Color(0xff_df_51_51)
+            LogPriority.WARN -> Color(0xff_ea_b7_00)
+            LogPriority.FATAL -> Color(0xff_a1_42_f4)
+            LogPriority.DEBUG -> Color(0xff_77_77_77)
+            LogPriority.VERBOSE -> Color(0xff_aa_aa_aa)
             else -> Color.Unspecified
         }
     }
@@ -136,6 +140,25 @@ fun copyLogText(context: Context, logMessage: String) {
             Toast.LENGTH_SHORT
         ).show()
     }
+}
+
+@Composable
+fun SelectLogLevelDialog(
+    onDismissRequest: () -> Unit,
+    onSelect: (LogPriority) -> Unit,
+    initialValue: LogPriority
+) {
+    SelectDialog(
+        title = stringResource(R.string.application_logs_level_dialog_name),
+        onDismissRequest = onDismissRequest,
+        onSelect = { onSelect(it) },
+        initialValue = initialValue,
+        toLabel = {
+            // i'm lazy
+            it.name.lowercase().replaceFirstChar { c -> c.uppercaseChar() }
+        },
+        optionsCount = LogPriority.FATAL downTo LogPriority.VERBOSE
+    )
 }
 
 @Composable
@@ -205,6 +228,18 @@ fun ApplicationLogsScreen(
         listState.scrollToItem(logLines.size)
     }
 
+    var showLogLevelSelect by remember { mutableStateOf(false) }
+    if (showLogLevelSelect) {
+        SelectLogLevelDialog(
+            onDismissRequest = { showLogLevelSelect = false },
+            onSelect = {
+                logViewModel.logLevel = it
+                showLogLevelSelect = false
+            },
+            initialValue = logViewModel.logLevel
+        )
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -238,7 +273,7 @@ fun ApplicationLogsScreen(
                                 contentDescription = stringResource(R.string.application_logs_share)
                             )
                         }
-                        IconButton(onClick = { showMoreOptions = !showMoreOptions },) {
+                        IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
                             Icon(
                                 Icons.Filled.MoreVert,
                                 contentDescription = stringResource(R.string.application_logs_more)
@@ -252,7 +287,7 @@ fun ApplicationLogsScreen(
                             DropdownMenuItem(
                                 leadingIcon = {
                                     Icon(
-                                        painterResource(R.drawable.icon_filter_list),
+                                        painterResource(R.drawable.icon_bug_report),
                                         contentDescription = null,
                                     )
                                 },
@@ -269,6 +304,21 @@ fun ApplicationLogsScreen(
                                 }, onClick = {
                                     logViewModel.toggleCrashBuffer()
                                     showMoreOptions = false
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(R.drawable.icon_filter_list),
+                                        contentDescription = null,
+                                    )
+                                },
+                                text = {
+                                    Text(stringResource(R.string.application_logs_level))
+                                },
+                                onClick = {
+                                    showLogLevelSelect = true
                                 }
                             )
 

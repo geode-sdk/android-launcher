@@ -29,9 +29,50 @@ data class ProcessInformation(val processId: Int, val threadId: Int, val process
 enum class LogPriority {
     UNKNOWN, DEFAULT, VERBOSE, DEBUG, INFO, WARN, ERROR, FATAL, SILENT;
 
+    class LogPriorityIterator(
+        start: LogPriority,
+        private val end: LogPriority,
+        private val step: Int
+    ) : Iterator<LogPriority> {
+        private var hasNext: Boolean = if (step > 0) start <= end else start >= end
+        private var next = if (hasNext) start else end
+
+        override fun hasNext() = hasNext
+
+        override fun next(): LogPriority {
+            val current = next
+            if (current == end) {
+                if (!hasNext) {
+                    throw NoSuchElementException()
+                }
+
+                hasNext = false
+            } else {
+                next = LogPriority.fromInt(next.toInt() + step)
+            }
+
+            return current
+        }
+    }
+
+    class LogPriorityProgression(
+        override val start: LogPriority,
+        override val endInclusive: LogPriority,
+        private val step: Int = 1
+    ) : Iterable<LogPriority>, ClosedRange<LogPriority> {
+        override fun iterator(): Iterator<LogPriority> {
+            return LogPriorityIterator(start, endInclusive, step)
+        }
+    }
+
+    infix fun downTo(to: LogPriority) = LogPriorityProgression(this, to, -1)
+
+    operator fun rangeTo(to: LogPriority) = LogPriorityProgression(this, to)
+
     companion object {
-        fun fromByte(byte: Byte): LogPriority {
-            return when (byte.toInt()) {
+        fun fromByte(byte: Byte): LogPriority = fromInt(byte.toInt())
+
+        fun fromInt(int: Int) = when (int) {
                 0x1 -> DEFAULT
                 0x2 -> VERBOSE
                 0x3 -> DEBUG
@@ -41,8 +82,19 @@ enum class LogPriority {
                 0x7 -> FATAL
                 0x8 -> SILENT
                 else -> UNKNOWN
-            }
         }
+    }
+
+    fun toInt() = when (this) {
+        DEFAULT -> 0x1
+        VERBOSE -> 0x2
+        DEBUG -> 0x3
+        INFO -> 0x4
+        WARN -> 0x5
+        ERROR -> 0x6
+        FATAL -> 0x7
+        SILENT -> 0x8
+        else -> 0x0
     }
 
     fun toChar(): Char {

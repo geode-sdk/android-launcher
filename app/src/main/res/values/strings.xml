@@ -104,6 +104,8 @@
     <string name="application_log_copy_label">Log Message</string>
     <string name="application_logs_more">More</string>
     <string name="application_logs_export">Save To</string>
+    <string name="application_logs_level">Set Log Level</string>
+    <string name="application_logs_level_dialog_name">Set minimum log level</string>
     <string name="application_logs_export_completed">Log export complete.</string>
     <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
     <string name="application_logs_crash_only">Show Crash Buffer</string>

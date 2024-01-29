@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -105,7 +104,7 @@ fun SettingsSelectCard(
             },
             initialValue = preferenceValue,
             toLabel = toLabel,
-            optionsCount = maxVal
+            optionsCount = 0..maxVal
         )
     }
 }
@@ -190,15 +189,15 @@ fun StringDialog(
 }
 
 @Composable
-fun SelectDialog(
+fun <T> SelectDialog(
     title: String,
     onDismissRequest: () -> Unit,
-    onSelect: (Int) -> Unit,
-    initialValue: Int,
-    toLabel: @Composable (Int) -> String,
-    optionsCount: Int,
+    onSelect: (T) -> Unit,
+    initialValue: T,
+    toLabel: @Composable (T) -> String,
+    optionsCount: Iterable<T>,
 ) {
-    var selectedValue by remember { mutableIntStateOf(initialValue) }
+    var selectedValue by remember { mutableStateOf(initialValue) }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
@@ -218,7 +217,7 @@ fun SelectDialog(
                 )
 
                 // do not give the row or column padding!! it messes up the selection effect
-                (0..optionsCount).forEach { id ->
+                optionsCount.forEach { id ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
