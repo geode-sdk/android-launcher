@@ -217,7 +217,7 @@ class ReleaseManager private constructor(
         val geodeFile = getGeodeOutputPath()
 
         // check if an update is needed
-        if (latestVersion <= currentVersion && geodeFile.exists()) {
+        if (latestVersion == currentVersion && geodeFile.exists()) {
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
