@@ -319,6 +319,7 @@ fun ApplicationLogsScreen(
                                 },
                                 onClick = {
                                     showLogLevelSelect = true
+                                    showMoreOptions = false
                                 }
                             )
 
