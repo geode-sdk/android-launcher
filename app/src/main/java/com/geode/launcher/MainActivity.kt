@@ -46,7 +46,6 @@ import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.updater.ReleaseManager
-import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.useCountdownTimer
 import java.net.ConnectException
 import java.net.UnknownHostException
