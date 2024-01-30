@@ -61,7 +61,7 @@ jobs:
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
     - name: Upload development build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: geode-launcher-${{ matrix.config.lower }}
         path: |
