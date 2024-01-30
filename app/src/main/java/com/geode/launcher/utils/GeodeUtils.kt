@@ -195,6 +195,7 @@ object GeodeUtils {
         if (needsPermissions.isNotEmpty()) {
             internalRequestPermissionsLauncher.launch(needsPermissions.toTypedArray())
             afterRequestPermissions = onSuccess
+            afterRequestPermissionsFailure = onFailure
         } else {
             onSuccess()
         }
