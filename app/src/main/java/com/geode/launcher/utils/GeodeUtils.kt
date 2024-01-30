@@ -347,11 +347,26 @@ object GeodeUtils {
 
     private external fun permissionCallback(granted: Boolean)
 
+    const val ARGUMENT_SAFE_MODE = "--geode:safe-mode"
+
+    private var additionalLaunchArguments = arrayListOf<String>()
+    fun setAdditionalLaunchArguments(vararg args: String) {
+        additionalLaunchArguments.addAll(args)
+    }
+
+    fun clearLaunchArguments() = setAdditionalLaunchArguments()
+
     @JvmStatic
     fun getLaunchArguments(): String? {
         activity.get()?.apply {
             val preferences = PreferenceUtils.get(this)
-            return preferences.getString(PreferenceUtils.Key.LAUNCH_ARGUMENTS)
+
+            val userArgs = preferences.getString(PreferenceUtils.Key.LAUNCH_ARGUMENTS)
+            val args = if (!userArgs.isNullOrEmpty()) {
+                listOf(userArgs) + additionalLaunchArguments
+            } else additionalLaunchArguments
+
+            return args.joinToString(" ")
         }
 
         return null

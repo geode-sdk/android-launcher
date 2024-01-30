@@ -46,6 +46,7 @@ import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.useCountdownTimer
 import java.net.ConnectException
 import java.net.UnknownHostException
@@ -389,7 +390,13 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
     }
 }
 
-fun onLaunch(context: Context) {
+fun onLaunch(context: Context, safeMode: Boolean = false) {
+    if (safeMode) {
+        GeodeUtils.setAdditionalLaunchArguments(GeodeUtils.ARGUMENT_SAFE_MODE)
+    } else {
+        GeodeUtils.clearLaunchArguments()
+    }
+
     val launchIntent = Intent(context, GeometryDashActivity::class.java)
     launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
 
