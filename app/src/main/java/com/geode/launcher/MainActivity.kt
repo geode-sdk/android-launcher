@@ -390,13 +390,7 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
     }
 }
 
-fun onLaunch(context: Context, safeMode: Boolean = false) {
-    if (safeMode) {
-        GeodeUtils.setAdditionalLaunchArguments(GeodeUtils.ARGUMENT_SAFE_MODE)
-    } else {
-        GeodeUtils.clearLaunchArguments()
-    }
-
+fun onLaunch(context: Context) {
     val launchIntent = Intent(context, GeometryDashActivity::class.java)
     launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
 
