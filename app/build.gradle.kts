@@ -20,12 +20,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments("-DUSE_TULIPHOOK:BOOL=OFF")
             }
         }
 
+        //noinspection ChromeOsAbiSupport (not my fault)
         ndk.abiFilters += listOf("arm64-v8a", "armeabi-v7a")
     }
 
@@ -34,7 +37,7 @@ android {
             isEnable = true
             reset()
 
-            //noinspection ChromeOsAbiSupport (not my fault)
+            //noinspection ChromeOsAbiSupport. i'm sorry!
             include("arm64-v8a", "armeabi-v7a")
 
             isUniversalApk = true
@@ -92,9 +95,9 @@ dependencies {
     implementation ("androidx.documentfile:documentfile:1.0.1")
     implementation ("com.squareup.okio:okio:3.7.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.6.2")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.6.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     debugImplementation ("androidx.compose.ui:ui-test-manifest")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
