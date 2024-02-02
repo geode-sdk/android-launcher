@@ -8,6 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,8 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -46,7 +51,10 @@ import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.useCountdownTimer
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.net.ConnectException
 import java.net.UnknownHostException
 
@@ -122,7 +130,7 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDis
 
                 Spacer(Modifier.size(4.dp))
 
-                TextButton(onClick = { uriHandler.openUri(openTo) },) {
+                TextButton(onClick = { uriHandler.openUri(openTo) }) {
                     Text(stringResource(R.string.launcher_download))
                 }
             }
@@ -226,7 +234,7 @@ fun LoadFailedDialog(returnTitle: String, returnMessage: String) {
 }
 
 @Composable
-fun UpdateWarning() {
+fun UpdateWarning(inSafeMode: Boolean = false) {
     val context = LocalContext.current
     val packageManager = context.packageManager
 
@@ -267,7 +275,7 @@ fun UpdateWarning() {
                         showUpdateWarning = false
                         lastDismissedVersion = gdVersionCode
 
-                        onLaunch(context)
+                        onLaunch(context, inSafeMode)
                     }) {
                         Text(stringResource(R.string.message_box_accept))
                     }
@@ -282,9 +290,34 @@ fun UpdateWarning() {
         }
     } else {
         LaunchedEffect(gdVersionCode) {
-            onLaunch(context)
+            onLaunch(context, inSafeMode)
         }
     }
+}
+
+@Composable
+fun SafeModeDialog(onDismiss: () -> Unit, onLaunch: () -> Unit) {
+    AlertDialog(
+        icon = {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+            )
+        },
+        title = { Text(stringResource(R.string.safe_mode_enable_title)) },
+        text = { Text(stringResource(R.string.safe_mode_enable_description)) },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onLaunch) {
+                Text(stringResource(R.string.message_box_continue))
+            }
+        },
+        onDismissRequest = onDismiss
+    )
 }
 
 @Composable
@@ -389,7 +422,13 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
     }
 }
 
-fun onLaunch(context: Context) {
+fun onLaunch(context: Context, safeMode: Boolean = false) {
+    if (safeMode) {
+        GeodeUtils.setAdditionalLaunchArguments(GeodeUtils.ARGUMENT_SAFE_MODE)
+    } else {
+        GeodeUtils.clearLaunchArguments()
+    }
+
     val launchIntent = Intent(context, GeometryDashActivity::class.java)
     launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
 
@@ -423,6 +462,8 @@ fun MainScreen(
     val geodeInstalled = geodePreinstalled || geodeJustInstalled
 
     var beginLaunch by remember { mutableStateOf(false) }
+    var showSafeModeDialog by remember { mutableStateOf(false) }
+    var launchInSafeMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(shouldUpdate) {
         if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
@@ -476,10 +517,43 @@ fun MainScreen(
                 }
             }
 
+            // compose apis don't provide a good way of adding long press to a button
+            val interactionSource = remember { MutableInteractionSource() }
+            val viewConfiguration = LocalViewConfiguration.current
+            val haptics = LocalHapticFeedback.current
+
+            LaunchedEffect(interactionSource) {
+                interactionSource.interactions.collectLatest { interaction ->
+                    when (interaction) {
+                        is PressInteraction.Press -> {
+                            launchInSafeMode = false
+
+                            delay(viewConfiguration.longPressTimeoutMillis)
+
+                            // perform a second delay to make the action more obvious
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            delay(viewConfiguration.longPressTimeoutMillis)
+
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                            showSafeModeDialog = true
+                        }
+
+                        is PressInteraction.Release -> {
+                            if (!showSafeModeDialog) {
+                                beginLaunch = true
+                            }
+                        }
+                    }
+                }
+            }
+
+
             Row {
                 Button(
-                    onClick = { beginLaunch = true },
-                    enabled = !releaseViewModel.isInUpdate
+                    onClick = { },
+                    enabled = !releaseViewModel.isInUpdate,
+                    interactionSource = interactionSource
                 ) {
                     Icon(
                         Icons.Filled.PlayArrow,
@@ -545,7 +619,19 @@ fun MainScreen(
     }
 
     if (beginLaunch) {
-        UpdateWarning()
+        UpdateWarning(launchInSafeMode)
+    }
+
+    if (showSafeModeDialog) {
+        SafeModeDialog(
+            onDismiss = {
+                showSafeModeDialog = false
+            },
+            onLaunch = {
+                launchInSafeMode = true
+                beginLaunch = true
+            }
+        )
     }
 }
 

@@ -30,6 +30,8 @@
     </string>
     <string name="launcher_update_available">A new launcher update is available!</string>
     <string name="launcher_update_dismiss">Dismiss</string>
+    <string name="safe_mode_enable_title">Enable safe mode?</string>
+    <string name="safe_mode_enable_description">Safe mode disables loading of all mods, allowing one to remove problematic mods or diagnose crashes. If you\'re not experiencing issues with Geode, you should probably not be using safe mode.</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
@@ -53,6 +55,7 @@
     <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details.</string>
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>
+    <string name="message_box_continue">Continue</string>
     <string name="missing_permissions">Missing required permissions for this action!</string>
 
     <!-- SettingsActivity strings -->
