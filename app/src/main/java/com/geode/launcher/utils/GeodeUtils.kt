@@ -9,7 +9,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.DocumentsContract
+import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -17,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
@@ -34,6 +37,7 @@ object GeodeUtils {
     private lateinit var saveFileResultLauncher: ActivityResultLauncher<GeodeSaveFileActivityResult.SaveFileParams>
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var internalRequestPermissionsLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var internalRequestAllFilesLauncher: ActivityResultLauncher<Intent>
 
     private var afterRequestPermissions: (() -> Unit)? = null
     private var afterRequestPermissionsFailure: (() -> Unit)? = null
@@ -93,10 +97,24 @@ object GeodeUtils {
             if (isGranted) {
                 afterRequestPermissions?.invoke()
             } else {
-                Toast.makeText(activity, activity.getString(R.string.missing_permissions), Toast.LENGTH_SHORT)
+                Toast.makeText(activity, R.string.missing_permissions, Toast.LENGTH_SHORT)
                     .show()
 
                 afterRequestPermissionsFailure?.invoke()
+            }
+        }
+
+        // only necessary on newer android versions
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+            internalRequestAllFilesLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+                if (Environment.isExternalStorageManager()) {
+                    afterRequestPermissions?.invoke()
+                } else {
+                    Toast.makeText(activity, R.string.missing_permissions, Toast.LENGTH_SHORT)
+                        .show()
+
+                    afterRequestPermissionsFailure?.invoke()
+                }
             }
         }
     }
@@ -153,9 +171,12 @@ object GeodeUtils {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.addCategory(Intent.CATEGORY_OPENABLE)
-            DocumentFile.fromFile(File(path)).also {
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it.uri)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val documentFile = DocumentFile.fromFile(File(path))
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentFile.uri)
             }
+
             intent.setType("*/*")
 
             if (intent.resolveActivity(packageManager) != null) {
@@ -173,31 +194,38 @@ object GeodeUtils {
     private external fun failedCallback()
 
     private fun checkForFilePermissions(onSuccess: () -> Unit, onFailure: () -> Unit) {
-        val permissions = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
-            listOf(
-                Manifest.permission.READ_MEDIA_AUDIO,
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.READ_MEDIA_VIDEO
-            )
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+            if (Environment.isExternalStorageManager()) {
+                onSuccess()
+            } else {
+                val intent = Intent(
+                    ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                )
+
+                internalRequestAllFilesLauncher.launch(intent)
+                afterRequestPermissions = onSuccess
+                afterRequestPermissionsFailure = onFailure
+            }
         } else {
-            listOf(
+            val permissions = listOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
-        }
 
-        val context = activity.get()!!
+            val context = activity.get()!!
 
-        val needsPermissions = permissions.filter {
-            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
-        }
+            val needsPermissions = permissions.filter {
+                ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+            }
 
-        if (needsPermissions.isNotEmpty()) {
-            internalRequestPermissionsLauncher.launch(needsPermissions.toTypedArray())
-            afterRequestPermissions = onSuccess
-            afterRequestPermissionsFailure = onFailure
-        } else {
-            onSuccess()
+            if (needsPermissions.isNotEmpty()) {
+                internalRequestPermissionsLauncher.launch(needsPermissions.toTypedArray())
+                afterRequestPermissions = onSuccess
+                afterRequestPermissionsFailure = onFailure
+            } else {
+                onSuccess()
+            }
         }
     }
 
