@@ -98,6 +98,7 @@
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
     <string name="preference_ignore_load_failure_name">Ignore loader errors</string>
+    <string name="preference_text_clear">Clear</string>
 
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
