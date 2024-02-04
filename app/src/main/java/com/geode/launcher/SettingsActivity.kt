@@ -351,10 +351,6 @@ fun SettingsScreen(
                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
                         }}
                     )
-                    SettingsCard(
-                        title = stringResource(R.string.preference_ignore_load_failure_name),
-                        preferenceKey = PreferenceUtils.Key.IGNORE_LOAD_FAILURE,
-                    )
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
                         description = LaunchUtils.getBaseDirectory(context).path,
