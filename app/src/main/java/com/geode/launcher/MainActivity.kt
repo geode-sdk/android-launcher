@@ -234,14 +234,12 @@ fun LoadFailedDialog(returnTitle: String, returnMessage: String) {
 }
 
 @Composable
-fun UpdateWarning(inSafeMode: Boolean = false) {
+fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val packageManager = context.packageManager
 
     val gdVersionCode = remember { LaunchUtils.getGeometryDashVersionCode(packageManager) }
     val gdVersionString = remember { LaunchUtils.getGeometryDashVersionString(packageManager) }
-
-    var showUpdateWarning by remember { mutableStateOf(true) }
 
     var lastDismissedVersion by PreferenceUtils.useLongPreference(
         preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
@@ -251,46 +249,44 @@ fun UpdateWarning(inSafeMode: Boolean = false) {
     val shouldDismiss = canDismissRelease && gdVersionCode == lastDismissedVersion
 
     if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE && !shouldDismiss) {
-        if (showUpdateWarning) {
-            AlertDialog(
-                icon = {
-                    Icon(
-                        Icons.Filled.Warning,
-                        contentDescription = stringResource(R.string.launcher_warning_icon_alt)
-                    )
-                },
-                title = {
-                    Text(stringResource(R.string.launcher_unsupported_version_title))
-                },
-                text = {
-                    val message = if (gdVersionCode >= Constants.SUPPORTED_VERSION_CODE) {
-                        R.string.launcher_unsupported_version_description
-                    } else {
-                        R.string.launcher_outdated_version_description
-                    }
+        AlertDialog(
+            icon = {
+                Icon(
+                    Icons.Filled.Warning,
+                    contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                )
+            },
+            title = {
+                Text(stringResource(R.string.launcher_unsupported_version_title))
+            },
+            text = {
+                val message = if (gdVersionCode >= Constants.SUPPORTED_VERSION_CODE) {
+                    R.string.launcher_unsupported_version_description
+                } else {
+                    R.string.launcher_outdated_version_description
+                }
 
-                    Text(stringResource(
-                        message, gdVersionString, Constants.SUPPORTED_VERSION_STRING
-                    ))
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showUpdateWarning = false
-                        lastDismissedVersion = gdVersionCode
+                Text(stringResource(
+                    message, gdVersionString, Constants.SUPPORTED_VERSION_STRING
+                ))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDismiss()
+                    lastDismissedVersion = gdVersionCode
 
-                        onLaunch(context, inSafeMode)
-                    }) {
-                        Text(stringResource(R.string.message_box_accept))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showUpdateWarning = false }) {
-                        Text(stringResource(R.string.message_box_cancel))
-                    }
-                },
-                onDismissRequest = { showUpdateWarning = false }
-            )
-        }
+                    onLaunch(context, inSafeMode)
+                }) {
+                    Text(stringResource(R.string.message_box_accept))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onDismiss() }) {
+                    Text(stringResource(R.string.message_box_cancel))
+                }
+            },
+            onDismissRequest = { onDismiss() }
+        )
     } else {
         LaunchedEffect(gdVersionCode) {
             onLaunch(context, inSafeMode)
@@ -621,7 +617,10 @@ fun MainScreen(
     }
 
     if (beginLaunch) {
-        UpdateWarning(launchInSafeMode)
+        UpdateWarning(launchInSafeMode) {
+            beginLaunch = false
+            launchInSafeMode = false
+        }
     }
 
     if (showSafeModeDialog) {
@@ -632,6 +631,8 @@ fun MainScreen(
             onLaunch = {
                 launchInSafeMode = true
                 beginLaunch = true
+
+                showSafeModeDialog = false
             }
         )
     }
