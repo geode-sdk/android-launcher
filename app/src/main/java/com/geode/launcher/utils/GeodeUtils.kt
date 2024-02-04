@@ -371,32 +371,53 @@ object GeodeUtils {
         return "com.geode.launcher.user" == uri.authority
     }
 
+    private const val INTERNAL_PERMISSION_PREFIX = "geode.permission_internal"
+    private const val MANAGE_ALL_FILES = "${INTERNAL_PERMISSION_PREFIX}.MANAGE_ALL_FILES"
+
     @JvmStatic
     fun getPermissionStatus(permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(
-            activity.get()?.applicationContext ?: return false,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
+        val context = activity.get() ?: return false
+
+        return when (permission) {
+            MANAGE_ALL_FILES -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+                Environment.isExternalStorageManager()
+            } else {
+                val permissions = listOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+
+                return permissions.all {
+                    ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+            else -> ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        }
     }
 
     @JvmStatic
     fun requestPermission(permission: String) {
+        if (permission == MANAGE_ALL_FILES) {
+            // this function handles already having perms for us
+            checkForFilePermissions(onSuccess = {
+                permissionCallback(true)
+            }, onFailure = {
+                permissionCallback(false)
+            })
+
+            return
+        }
+
         if (getPermissionStatus(permission)) {
             permissionCallback(true)
             return
         }
 
-        activity.get()?.run {
-            try {
-                requestPermissionLauncher.launch(permission)
-            } catch (e: ActivityNotFoundException) {
-                permissionCallback(false)
-            }
-
-            return
+        try {
+            requestPermissionLauncher.launch(permission)
+        } catch (e: ActivityNotFoundException) {
+            permissionCallback(false)
         }
-
-        permissionCallback(false)
     }
 
     private external fun permissionCallback(granted: Boolean)
