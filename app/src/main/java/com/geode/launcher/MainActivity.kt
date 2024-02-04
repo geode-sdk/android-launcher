@@ -247,7 +247,10 @@ fun UpdateWarning(inSafeMode: Boolean = false) {
         preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
     )
 
-    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE && gdVersionCode != lastDismissedVersion) {
+    val canDismissRelease = gdVersionCode >= Constants.SUPPORTED_VERSION_CODE
+    val shouldDismiss = canDismissRelease && gdVersionCode == lastDismissedVersion
+
+    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE && !shouldDismiss) {
         if (showUpdateWarning) {
             AlertDialog(
                 icon = {
@@ -547,7 +550,6 @@ fun MainScreen(
                     }
                 }
             }
-
 
             Row {
                 Button(
