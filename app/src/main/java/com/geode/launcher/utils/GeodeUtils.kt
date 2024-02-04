@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
+import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
 import com.geode.launcher.activityresult.GeodeSaveFileActivityResult
@@ -167,24 +168,48 @@ object GeodeUtils {
     // TODO As of now this is unused
     @JvmStatic
     fun openFolder(path: String): Boolean {
-        activity.get()?.run {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
+        val context = activity.get()!!
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val documentFile = DocumentFile.fromFile(File(path))
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentFile.uri)
+        val pathFile = File(path)
+        val baseDirectory = LaunchUtils.getBaseDirectory(context)
+        val isInternalPath = pathFile.startsWith(baseDirectory)
+
+        val intent = if (isInternalPath) {
+            // TODO: figure out how to get this to point to the path it should be pointing at
+            // (the best i got was pointing at a file)
+            // val relativePath = pathFile.relativeTo(baseDirectory)
+
+            Intent(Intent.ACTION_VIEW).apply {
+                data = DocumentsContract.buildRootUri(
+                    "${context.packageName}.user", UserDirectoryProvider.ROOT
+                )
+
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                        Intent.FLAG_GRANT_PREFIX_URI_PERMISSION or
+                        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                )
             }
+        } else {
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addCategory(Intent.CATEGORY_OPENABLE)
 
-            intent.setType("*/*")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val documentFile = DocumentFile.fromFile(File(path))
+                    putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentFile.uri)
+                }
 
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-                return true
+                type = "*/*"
             }
         }
-        return false
+
+        return try {
+            context.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
     }
 
     private external fun selectFileCallback(path: String)

@@ -3,11 +3,13 @@ package com.geode.launcher
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Build
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.webkit.MimeTypeMap
+import androidx.annotation.RequiresApi
 import com.geode.launcher.utils.LaunchUtils
 import java.io.File
 
@@ -150,7 +152,7 @@ class UserDirectoryProvider : DocumentsProvider() {
         notifyFileChange(file)
      }
 
-    override fun renameDocument(documentId: String, displayName: String): String? {
+    override fun renameDocument(documentId: String, displayName: String): String {
         val file = getFileForDocumentId(documentId)
         val dest = findFileNameForNewFile(File(file.parentFile, displayName))
         file.renameTo(dest)
@@ -202,5 +204,20 @@ class UserDirectoryProvider : DocumentsProvider() {
     private fun notifyChange(parentDocumentId: String?) {
         val uri = getDocumentUri(parentDocumentId)
         context!!.contentResolver.notifyChange(uri, null)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun findDocumentPath(
+        parentDocumentId: String?,
+        childDocumentId: String
+    ): DocumentsContract.Path {
+        if (!parentDocumentId.isNullOrEmpty()) {
+            // not implementing this for now...
+            return super.findDocumentPath(parentDocumentId, childDocumentId)
+        }
+
+        val nonRootPath = listOf(ROOT) + childDocumentId.removePrefix(ROOT).split("/")
+
+        return DocumentsContract.Path(ROOT, nonRootPath)
     }
 }
