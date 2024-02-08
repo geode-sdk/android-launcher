@@ -1,6 +1,6 @@
 buildscript {
-    val composeBOM by extra("2023.10.01")
-    val composeCompiler by extra("1.5.8")
+    val composeBOM by extra("2024.02.00")
+    val composeCompiler by extra("1.5.9")
 }
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.

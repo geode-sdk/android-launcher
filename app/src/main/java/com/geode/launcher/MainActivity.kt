@@ -159,7 +159,9 @@ fun UpdateProgressIndicator(
         if (progress == null) {
             LinearProgressIndicator()
         } else {
-            LinearProgressIndicator(progress)
+            LinearProgressIndicator(
+                progress = { progress },
+            )
         }
 
         TextButton(

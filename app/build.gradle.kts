@@ -99,6 +99,5 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.6.2")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
-    debugImplementation ("androidx.compose.ui:ui-test-manifest")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
 }
