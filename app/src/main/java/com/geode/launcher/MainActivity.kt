@@ -145,7 +145,7 @@ fun UpdateProgressIndicator(
     message: String,
     releaseViewModel: ReleaseViewModel,
     modifier: Modifier = Modifier,
-    progress: Float? = null
+    progress: (() -> Float)? = null
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -159,9 +159,7 @@ fun UpdateProgressIndicator(
         if (progress == null) {
             LinearProgressIndicator()
         } else {
-            LinearProgressIndicator(
-                progress = { progress },
-            )
+            LinearProgressIndicator(progress = progress)
         }
 
         TextButton(
@@ -351,8 +349,6 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
             )
         }
         is ReleaseViewModel.ReleaseUIState.InDownload -> {
-            val progress = state.downloaded / state.outOf.toDouble()
-
             val downloaded = remember(state.downloaded) {
                 formatShortFileSize(context, state.downloaded)
             }
@@ -369,7 +365,10 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
                 ),
                 modifier = modifier,
                 releaseViewModel = releaseViewModel,
-                progress = progress.toFloat()
+                progress = {
+                    val progress = state.downloaded / state.outOf.toDouble()
+                    progress.toFloat()
+                }
             )
         }
         is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
@@ -450,7 +449,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    val shouldAutomaticallyLaunch = PreferenceUtils.useBooleanPreference(
+    val shouldAutomaticallyLaunch by PreferenceUtils.useBooleanPreference(
         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 
@@ -493,15 +492,11 @@ fun MainScreen(
         )
 
         if (gdInstalled && geodeInstalled) {
-            if (shouldAutomaticallyLaunch.value && !releaseViewModel.isInUpdate && !disableAutomaticLaunch) {
+            val stopLaunch = releaseViewModel.isInUpdate || disableAutomaticLaunch || showSafeModeDialog
+            if (shouldAutomaticallyLaunch && !stopLaunch) {
                 val countdownTimer = useCountdownTimer(
                     time = 3000,
-                    onCountdownFinish = {
-                        // just in case this changed async
-                        if (shouldAutomaticallyLaunch.value) {
-                            beginLaunch = true
-                        }
-                    }
+                    onCountdownFinish = { beginLaunch = true }
                 )
 
                 if (countdownTimer != 0L) {
