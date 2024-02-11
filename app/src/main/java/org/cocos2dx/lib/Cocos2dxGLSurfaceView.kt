@@ -277,8 +277,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             return super.onGenericMotionEvent(event)
         }
 
-        val action = event?.action?.and(MotionEvent.ACTION_MASK)
-        if (action == MotionEvent.ACTION_SCROLL) {
+        if (event?.action == MotionEvent.ACTION_SCROLL) {
             val scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL)
             val scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
 
