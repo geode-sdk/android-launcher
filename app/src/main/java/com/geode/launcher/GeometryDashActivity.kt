@@ -35,7 +35,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 
-class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener {
+class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private val sTag = GeometryDashActivity::class.simpleName
     private var mIsRunning = false
@@ -107,7 +107,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         setupRedirection(gdPackageInfo)
 
         Cocos2dxHelper.init(this, this)
+
         GeodeUtils.setContext(this)
+        GeodeUtils.setCapabilityListener(this)
 
         tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
         tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
@@ -446,6 +448,12 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                     e.printStackTrace()
                 }
             }
+        }
+    }
+
+    override fun onCapabilityAdded(capability: String) {
+        if (capability == GeodeUtils.CAPABILITY_EXTENDED_INPUT) {
+            mGLSurfaceView?.useKeyboardEvents = true
         }
     }
 }

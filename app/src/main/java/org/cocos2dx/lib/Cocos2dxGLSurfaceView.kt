@@ -10,6 +10,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import com.customRobTop.BaseRobTopActivity
+import com.geode.launcher.utils.GeodeUtils
 
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
@@ -37,6 +38,11 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     private lateinit var cocos2dxRenderer: Cocos2dxRenderer
+    var useKeyboardEvents = false
+        set(value) {
+            field = value
+            cocos2dxRenderer.sendResizeEvents = value
+        }
 
     var cocos2dxEditText: Cocos2dxEditText? = null
         set(value) {
@@ -207,7 +213,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
+    private fun legacyKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
         return when (keyCode) {
             KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
                 if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
@@ -218,6 +224,72 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             }
             else -> super.onKeyDown(keyCode, keyEvent)
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (!useKeyboardEvents) {
+            return legacyKeyDown(keyCode, event)
+        }
+
+        return when (keyCode) {
+            // ignore system keys
+            KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_MUTE -> {
+                super.onKeyDown(keyCode, event)
+            }
+            else -> {
+                if (BaseRobTopActivity.blockBackButton) {
+                    return true
+                }
+
+                queueEvent {
+                    GeodeUtils.nativeKeyDown(keyCode, event.modifiers, event.repeatCount != 0)
+                }
+                true
+            }
+        }
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (!useKeyboardEvents) {
+            return super.onKeyUp(keyCode, event)
+        }
+
+        return when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_MUTE -> {
+                super.onKeyUp(keyCode, event)
+            }
+            else -> {
+                if (event.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
+                    return true
+                }
+
+                queueEvent {
+                    GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
+                }
+
+                true
+            }
+        }
+    }
+
+    override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
+        if (!useKeyboardEvents) {
+            return super.onGenericMotionEvent(event)
+        }
+
+        val action = event?.action?.and(MotionEvent.ACTION_MASK)
+        if (action == MotionEvent.ACTION_SCROLL) {
+            val scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL)
+            val scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
+
+            queueEvent {
+                GeodeUtils.nativeActionScroll(scrollX, scrollY)
+            }
+
+            return true
+        }
+
+        return super.onGenericMotionEvent(event)
     }
 
     fun setCocos2dxRenderer(renderer: Cocos2dxRenderer) {
