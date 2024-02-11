@@ -448,7 +448,7 @@ object GeodeUtils {
     }
 
     interface CapabilityListener {
-        fun onCapabilityAdded(capability: String)
+        fun onCapabilityAdded(capability: String): Boolean
     }
 
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
@@ -460,12 +460,12 @@ object GeodeUtils {
     }
 
     @JvmStatic
-    fun reportPlatformCapability(capability: String?) {
+    fun reportPlatformCapability(capability: String?): Boolean {
         if (capability.isNullOrEmpty()) {
-            return
+            return false
         }
 
-        capabilityListener.get()?.onCapabilityAdded(capability)
+        return capabilityListener.get()?.onCapabilityAdded(capability) ?: false
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
