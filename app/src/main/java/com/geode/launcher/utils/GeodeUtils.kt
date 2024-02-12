@@ -446,4 +446,30 @@ object GeodeUtils {
 
         return null
     }
+
+    interface CapabilityListener {
+        fun onCapabilityAdded(capability: String): Boolean
+    }
+
+    const val CAPABILITY_EXTENDED_INPUT = "extended_input"
+
+    private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
+
+    fun setCapabilityListener(listener: CapabilityListener) {
+        capabilityListener = WeakReference(listener)
+    }
+
+    @JvmStatic
+    fun reportPlatformCapability(capability: String?): Boolean {
+        if (capability.isNullOrEmpty()) {
+            return false
+        }
+
+        return capabilityListener.get()?.onCapabilityAdded(capability) ?: false
+    }
+
+    external fun nativeKeyUp(keyCode: Int, modifiers: Int)
+    external fun nativeKeyDown(keyCode: Int, modifiers: Int, isRepeating: Boolean)
+    external fun nativeActionScroll(scrollX: Float, scrollY: Float)
+    external fun resizeSurface(width: Int, height: Int)
 }

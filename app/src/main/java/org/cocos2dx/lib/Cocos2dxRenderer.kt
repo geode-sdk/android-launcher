@@ -59,6 +59,7 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
     private var lastTickInNanoSeconds: Long = 0
     private var screenWidth = 0
     private var screenHeight = 0
+    var sendResizeEvents = false
 
     fun setScreenWidthAndHeight(surfaceWidth: Int, surfaceHeight: Int) {
         screenWidth = surfaceWidth
