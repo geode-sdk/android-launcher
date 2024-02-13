@@ -291,6 +291,11 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         frameLayout.addView(this.mGLSurfaceView)
 
         glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
+
+        if (isAndroidEmulator()) {
+            glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+        }
+
         glSurfaceView.initView()
         glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
 
