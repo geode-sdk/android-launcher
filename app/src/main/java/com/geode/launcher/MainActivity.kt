@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
@@ -37,6 +38,8 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,6 +61,11 @@ import kotlinx.coroutines.flow.collectLatest
 import java.net.ConnectException
 import java.net.UnknownHostException
 
+data class LoadFailureInfo(
+    val title: LaunchUtils.LauncherError,
+    val description: String,
+    val extendedMessage: String?
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,8 +76,12 @@ class MainActivity : ComponentActivity() {
         val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
-        val returnMessage = intent.extras?.getString(Constants.LAUNCHER_KEY_RETURN_MESSAGE)
-        val returnTitle = intent.extras?.getString(Constants.LAUNCHER_KEY_RETURN_TITLE)
+        val returnMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE)
+        val returnExtendedMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE)
+
+        @Suppress("DEPRECATION") // the new api is android 13 only (why)
+        val returnError = intent.extras?.getSerializable(LaunchUtils.LAUNCHER_KEY_RETURN_ERROR)
+                as? LaunchUtils.LauncherError
 
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
@@ -83,12 +95,11 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        val loadFailed = !returnMessage.isNullOrEmpty() && !returnTitle.isNullOrEmpty()
-                        MainScreen(gdInstalled, geodeInstalled, loadFailed)
+                        val loadFailureInfo = if (returnError != null && returnMessage != null) {
+                            LoadFailureInfo(returnError, returnMessage, returnExtendedMessage)
+                        } else { null }
 
-                        if (!returnMessage.isNullOrEmpty() && !returnTitle.isNullOrEmpty()) {
-                            LoadFailedDialog(returnTitle, returnMessage)
-                        }
+                        MainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
                     }
                 }
             }
@@ -207,30 +218,6 @@ fun UpdateMessageIndicator(
         }
     }
 
-}
-
-@Composable
-fun LoadFailedDialog(returnTitle: String, returnMessage: String) {
-    var showDialog by remember { mutableStateOf(true) }
-
-    if (showDialog) {
-        AlertDialog(
-            icon = {
-                Icon(
-                    painterResource(R.drawable.icon_error),
-                    contentDescription = stringResource(R.string.launcher_error_icon_alt)
-                )
-            },
-            title = { Text(returnTitle) },
-            text = { Text(returnMessage) },
-            confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(R.string.message_box_accept))
-                }
-            },
-            onDismissRequest = { showDialog = false }
-        )
-    }
 }
 
 @Composable
@@ -422,6 +409,136 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
     }
 }
 
+@Composable
+fun ErrorInfoBody(failureReason: LaunchUtils.LauncherError, modifier: Modifier = Modifier) {
+    val headline = when (failureReason) {
+        LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
+        LaunchUtils.LauncherError.LINKER_NEEDS_32BIT -> stringResource(R.string.load_failed_abi_error)
+        LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error_description)
+        LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error_description)
+    }
+
+    val recommendations = when (failureReason) {
+        LaunchUtils.LauncherError.LINKER_NEEDS_64BIT -> listOf(
+            stringResource(R.string.load_failed_recommendation_reinstall),
+            stringResource(R.string.load_failed_recommendation_switch_64bit_abi),
+        )
+        LaunchUtils.LauncherError.LINKER_NEEDS_32BIT -> listOf(
+            stringResource(R.string.load_failed_recommendation_reinstall),
+            stringResource(R.string.load_failed_recommendation_switch_32bit_abi),
+        )
+        LaunchUtils.LauncherError.LINKER_FAILED -> listOf(
+            stringResource(R.string.load_failed_recommendation_reinstall),
+            stringResource(R.string.load_failed_recommendation_update),
+        )
+        LaunchUtils.LauncherError.GENERIC -> listOf(
+            stringResource(R.string.load_failed_recommendation_reinstall),
+            stringResource(R.string.load_failed_recommendation_update),
+            stringResource(R.string.load_failed_recommendation_report)
+        )
+    }
+
+    Column(modifier = modifier) {
+        Text(headline)
+
+        recommendations.forEach { r ->
+            Text("\u2022\u00A0\u00A0$r")
+        }
+    }
+}
+
+@Composable
+fun ErrorInfoTitle(failureReason: LaunchUtils.LauncherError) {
+    val message = when (failureReason) {
+        LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
+        LaunchUtils.LauncherError.LINKER_NEEDS_32BIT,
+        LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error)
+        LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error)
+    }
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painterResource(R.drawable.icon_error),
+            contentDescription = stringResource(R.string.launcher_error_icon_alt),
+            modifier = Modifier.size(28.dp)
+        )
+        Text(message, style = Typography.headlineMedium)
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
+        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+            ErrorInfoTitle(failureInfo.title)
+
+            Spacer(Modifier.size(16.dp))
+
+            ErrorInfoBody(failureInfo.title)
+
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                Text(
+                    stringResource(R.string.launcher_error_details),
+                    style = Typography.headlineSmall
+                )
+
+                Spacer(Modifier.size(8.dp))
+
+                Text(
+                    failureInfo.description,
+                    fontFamily = FontFamily.Monospace,
+                    style = Typography.bodyMedium
+                )
+            }
+
+            val clipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    12.dp, alignment = Alignment.CenterHorizontally
+                )
+            ) {
+                Button(onClick = {
+                    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
+                    context.startActivity(launchIntent)
+                }) {
+                    Icon(
+                        painterResource(R.drawable.icon_description),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.launcher_error_view_logs))
+                }
+
+                FilledTonalButton(onClick = {
+                    val message = failureInfo.extendedMessage ?: failureInfo.description
+                    clipboardManager.setText(AnnotatedString(message))
+                }) {
+                    Icon(
+                        painterResource(R.drawable.icon_content_copy),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.launcher_error_copy))
+                }
+            }
+
+            Spacer(Modifier.size(8.dp))
+        }
+    }
+}
+
 fun onLaunch(context: Context, safeMode: Boolean = false) {
     if (safeMode) {
         GeodeUtils.setAdditionalLaunchArguments(GeodeUtils.ARGUMENT_SAFE_MODE)
@@ -444,7 +561,7 @@ fun onSettings(context: Context) {
 fun MainScreen(
     gdInstalled: Boolean = true,
     geodePreinstalled: Boolean = true,
-    disableAutomaticLaunch: Boolean = false,
+    loadFailureInfo: LoadFailureInfo? = null,
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
@@ -473,144 +590,175 @@ fun MainScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.geode_logo),
-            contentDescription = context.getString(R.string.launcher_logo_alt),
-            modifier = Modifier.size(136.dp, 136.dp)
-        )
-        Text(
-            context.getString(R.string.launcher_title),
-            fontSize = 32.sp,
-            modifier = Modifier.padding(12.dp)
-        )
+    val hasError = loadFailureInfo != null
+    var showErrorInfo by remember { mutableStateOf(false) }
 
-        if (gdInstalled && geodeInstalled) {
-            val stopLaunch = releaseViewModel.isInUpdate || disableAutomaticLaunch || showSafeModeDialog
-            if (shouldAutomaticallyLaunch && !stopLaunch) {
-                val countdownTimer = useCountdownTimer(
-                    time = 3000,
-                    onCountdownFinish = { beginLaunch = true }
-                )
+    val snackbarHostState = remember { SnackbarHostState() }
 
-                if (countdownTimer != 0L) {
-                    Text(
-                        pluralStringResource(
-                            R.plurals.automatically_load_countdown,
-                            countdownTimer.toInt(),
-                            countdownTimer
-                        ),
-                        style = Typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                    Spacer(Modifier.size(12.dp))
+    LaunchedEffect(hasError) {
+        if (hasError) {
+            val res = snackbarHostState.showSnackbar(
+                message = context.getString(R.string.launcher_failed_to_load),
+                actionLabel = context.getString(R.string.launcher_error_more),
+                duration = SnackbarDuration.Indefinite,
+            )
+
+            when (res) {
+                SnackbarResult.ActionPerformed -> {
+                    showErrorInfo = true
                 }
+                SnackbarResult.Dismissed -> {}
             }
+        }
+    }
 
-            // compose apis don't provide a good way of adding long press to a button
-            val interactionSource = remember { MutableInteractionSource() }
-            val viewConfiguration = LocalViewConfiguration.current
-            val haptics = LocalHapticFeedback.current
+    if (showErrorInfo && loadFailureInfo != null) {
+        ErrorInfoSheet(loadFailureInfo, onDismiss = { showErrorInfo = false })
+    }
 
-            LaunchedEffect(interactionSource) {
-                interactionSource.interactions.collectLatest { interaction ->
-                    when (interaction) {
-                        is PressInteraction.Press -> {
-                            launchInSafeMode = false
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.geode_logo),
+                contentDescription = context.getString(R.string.launcher_logo_alt),
+                modifier = Modifier.size(136.dp, 136.dp)
+            )
+            Text(
+                context.getString(R.string.launcher_title),
+                fontSize = 32.sp,
+                modifier = Modifier.padding(12.dp)
+            )
 
-                            delay(viewConfiguration.longPressTimeoutMillis)
+            if (gdInstalled && geodeInstalled) {
+                val stopLaunch = releaseViewModel.isInUpdate || hasError || showSafeModeDialog
+                if (shouldAutomaticallyLaunch && !stopLaunch) {
+                    val countdownTimer = useCountdownTimer(
+                        time = 3000,
+                        onCountdownFinish = { beginLaunch = true }
+                    )
 
-                            // perform a second delay to make the action more obvious
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            delay(viewConfiguration.longPressTimeoutMillis)
+                    if (countdownTimer != 0L) {
+                        Text(
+                            pluralStringResource(
+                                R.plurals.automatically_load_countdown,
+                                countdownTimer.toInt(),
+                                countdownTimer
+                            ),
+                            style = Typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                        Spacer(Modifier.size(12.dp))
+                    }
+                }
 
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                // compose apis don't provide a good way of adding long press to a button
+                val interactionSource = remember { MutableInteractionSource() }
+                val viewConfiguration = LocalViewConfiguration.current
+                val haptics = LocalHapticFeedback.current
 
-                            showSafeModeDialog = true
-                        }
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collectLatest { interaction ->
+                        when (interaction) {
+                            is PressInteraction.Press -> {
+                                launchInSafeMode = false
 
-                        is PressInteraction.Release -> {
-                            if (!showSafeModeDialog) {
-                                beginLaunch = true
+                                delay(viewConfiguration.longPressTimeoutMillis)
+
+                                // perform a second delay to make the action more obvious
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                delay(viewConfiguration.longPressTimeoutMillis)
+
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                                showSafeModeDialog = true
+                            }
+
+                            is PressInteraction.Release -> {
+                                if (!showSafeModeDialog) {
+                                    beginLaunch = true
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Row {
-                Button(
-                    onClick = { },
-                    enabled = !releaseViewModel.isInUpdate,
-                    interactionSource = interactionSource
-                ) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = context.getString(R.string.launcher_launch_icon_alt)
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(context.getString(R.string.launcher_launch))
+                Row {
+                    Button(
+                        onClick = { },
+                        enabled = !releaseViewModel.isInUpdate,
+                        interactionSource = interactionSource
+                    ) {
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            contentDescription = context.getString(R.string.launcher_launch_icon_alt)
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(context.getString(R.string.launcher_launch))
+                    }
+                    Spacer(Modifier.size(2.dp))
+                    IconButton(onClick = { onSettings(context) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                        )
+                    }
                 }
-                Spacer(Modifier.size(2.dp))
-                IconButton(onClick = { onSettings(context) }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                    )
-                }
-            }
-        } else if (gdInstalled) {
-            Text(
-                context.getString(R.string.geode_download_title),
-                modifier = Modifier.padding(12.dp)
-            )
-
-            Row {
-                Button(
-                    onClick = { releaseViewModel.runReleaseCheck(true) },
-                    enabled = !releaseViewModel.isInUpdate
-                ) {
-                    Icon(
-                        painterResource(R.drawable.icon_download),
-                        contentDescription = context.getString(R.string.launcher_download_icon_alt)
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(context.getString(R.string.launcher_download))
-                }
-                Spacer(Modifier.size(2.dp))
-                IconButton(onClick = { onSettings(context) }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                    )
-                }
-            }
-        } else {
-            Text(
-                context.getString(R.string.game_not_found),
-                modifier = Modifier.padding(12.dp)
-            )
-            OutlinedButton(onClick = { onSettings(context) }) {
-                Icon(
-                    Icons.Filled.Settings,
-                    contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+            } else if (gdInstalled) {
+                Text(
+                    context.getString(R.string.geode_download_title),
+                    modifier = Modifier.padding(12.dp)
                 )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(context.getString(R.string.launcher_settings))
-            }
-        }
 
-        UpdateCard(
-            releaseViewModel,
-            modifier = Modifier
-                .padding(12.dp)
-        )
+                Row {
+                    Button(
+                        onClick = { releaseViewModel.runReleaseCheck(true) },
+                        enabled = !releaseViewModel.isInUpdate
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.icon_download),
+                            contentDescription = context.getString(R.string.launcher_download_icon_alt)
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(context.getString(R.string.launcher_download))
+                    }
+                    Spacer(Modifier.size(2.dp))
+                    IconButton(onClick = { onSettings(context) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    context.getString(R.string.game_not_found),
+                    modifier = Modifier.padding(12.dp)
+                )
+                OutlinedButton(onClick = { onSettings(context) }) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(context.getString(R.string.launcher_settings))
+                }
+            }
+
+            UpdateCard(
+                releaseViewModel,
+                modifier = Modifier
+                    .padding(12.dp)
+            )
+        }
     }
 
     if (beginLaunch) {

@@ -65,36 +65,39 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             val is64bit = LaunchUtils.is64bit
             val errorMessage = when {
-                abiMismatch && is64bit -> getString(R.string.load_failed_abi_error_need_32bit_description)
-                abiMismatch -> getString(R.string.load_failed_abi_error_need_64bit_description)
-                else -> getString(R.string.load_failed_link_error_description)
+                abiMismatch && is64bit -> LaunchUtils.LauncherError.LINKER_NEEDS_32BIT
+                abiMismatch -> LaunchUtils.LauncherError.LINKER_NEEDS_64BIT
+                else -> LaunchUtils.LauncherError.LINKER_FAILED
             }
 
-            returnToMain(
-                getString(R.string.load_failed_link_error),
-                errorMessage
-            )
+            returnToMain(errorMessage, e.message, e.stackTraceToString())
 
             return
         } catch (e: Exception) {
             Log.e("GeodeLauncher", "Uncaught error during game load", e)
 
             returnToMain(
-                getString(R.string.load_failed_generic_error),
-                getString(R.string.load_failed_generic_error_description, e.message ?: "UnknownException")
+                LaunchUtils.LauncherError.GENERIC,
+                e.message ?: "Unknown Exception",
+                e.stackTraceToString()
             )
 
             return
         }
     }
 
-    private fun returnToMain(returnTitle: String? = null, returnMessage: String? = null) {
+    private fun returnToMain(
+        error: LaunchUtils.LauncherError? = null,
+        returnMessage: String? = null,
+        returnExtendedMessage: String? = null
+    ) {
         val launchIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
 
-            if (!returnTitle.isNullOrEmpty() && !returnMessage.isNullOrEmpty()) {
-                putExtra(Constants.LAUNCHER_KEY_RETURN_TITLE, returnTitle)
-                putExtra(Constants.LAUNCHER_KEY_RETURN_MESSAGE, returnMessage)
+            if (error != null && !returnMessage.isNullOrEmpty()) {
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_ERROR, error)
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE, returnMessage)
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE, returnExtendedMessage)
             }
         }
 

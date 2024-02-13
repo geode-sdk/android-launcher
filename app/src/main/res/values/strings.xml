@@ -32,6 +32,12 @@
     <string name="launcher_update_dismiss">Dismiss</string>
     <string name="safe_mode_enable_title">Enable safe mode?</string>
     <string name="safe_mode_enable_description">Safe mode disables loading of all mods, allowing one to remove problematic mods or diagnose crashes. If you\'re not experiencing issues with Geode, you should probably not be using safe mode.</string>
+    <string name="launcher_failed_to_load">Geode failed to load.</string>
+    <string name="launcher_error_more">Learn more</string>
+    <string name="launcher_error_details">Error details</string>
+    <string name="launcher_error_view_logs">View logs</string>
+    <string name="launcher_error_copy_error_alt">Copy</string>
+    <string name="launcher_error_copy">Copy details</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
@@ -48,11 +54,16 @@
 
     <!-- GeometryDashActivity strings -->
     <string name="load_failed_link_error">Failed to link libraries</string>
-    <string name="load_failed_link_error_description">Game libraries could not be found. This may occur if the architecture or version of the launcher and Geometry Dash do not match, or from a system bug.\nCheck application logs for more details.</string>
-    <string name="load_failed_abi_error_need_64bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 64-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
-    <string name="load_failed_abi_error_need_32bit_description">The architecture of the launcher and Geometry Dash do not match. Please reinstall Geometry Dash from the Play Store or use the 32-bit version of the launcher to resolve this issue.\nCheck application logs for more details.</string>
-    <string name="load_failed_generic_error">Load failed</string>
-    <string name="load_failed_generic_error_description">Uncaught error during game load: `%1$s`.\nCheck application logs for more details.</string>
+    <string name="load_failed_link_error_description">Game libraries could not be found. Try to:</string>
+    <string name="load_failed_abi_error">The architecture of the launcher and Geometry Dash do not match. Try to:</string>
+    <string name="load_failed_generic_error">Failed to load Geode</string>
+    <string name="load_failed_generic_error_description">Uncaught error during game load. Try to:</string>
+    <string name="load_failed_recommendation_reinstall">Reinstall Geometry Dash from the Play Store.</string>
+    <string name="load_failed_recommendation_switch_32bit_abi">Install the 32-bit version of the launcher.</string>
+    <string name="load_failed_recommendation_switch_64bit_abi">Install the non 32-bit version of the launcher.</string>
+    <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>
+    <string name="load_failed_recommendation_report">Report this issue to the developers.</string>
+
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>
     <string name="message_box_continue">Continue</string>

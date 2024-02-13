@@ -155,4 +155,15 @@ object LaunchUtils {
             aspMethod.invoke(assetManager, it)
         }
     }
+
+    enum class LauncherError {
+        LINKER_NEEDS_64BIT,
+        LINKER_NEEDS_32BIT,
+        LINKER_FAILED,
+        GENERIC
+    }
+
+    const val LAUNCHER_KEY_RETURN_ERROR = "return_error"
+    const val LAUNCHER_KEY_RETURN_MESSAGE = "return_message"
+    const val LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE = "return_extended_message"
 }
