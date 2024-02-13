@@ -302,6 +302,11 @@ fun SettingsScreen(
                         description = context.getString(R.string.preference_load_automatically_description),
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
+                    SettingsCard(
+                        title = stringResource(R.string.preference_limit_aspect_ratio_name),
+                        description = stringResource(R.string.preference_limit_aspect_ratio_description),
+                        preferenceKey = PreferenceUtils.Key.LIMIT_ASPECT_RATIO
+                    )
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         onClick = { onOpenFileManager(context) }

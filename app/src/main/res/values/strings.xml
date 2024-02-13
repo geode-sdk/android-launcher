@@ -90,6 +90,8 @@
     <string name="preference_theme_light">Light</string>
     <string name="preference_theme_dark">Dark</string>
     <string name="preference_black_background_name">Black background in dark theme</string>
+    <string name="preference_limit_aspect_ratio_name">Limit aspect ratio</string>
+    <string name="preference_limit_aspect_ratio_description">Restricts the game window to a 16:9 ratio.</string>
 
     <string name="preference_category_updater">Updates</string>
     <string name="preference_update_automatically_name">Enable automatic updates</string>

@@ -21,6 +21,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.ConstrainedFrameLayout
 import com.geode.launcher.utils.DownloadUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.LaunchUtils
@@ -262,10 +263,24 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun createView(): FrameLayout {
-        val frameLayoutParams = ViewGroup.LayoutParams(-1, -1)
-        val frameLayout = FrameLayout(this)
+        val frameLayoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        val frameLayout = ConstrainedFrameLayout(this)
         frameLayout.layoutParams = frameLayoutParams
-        val editTextLayoutParams = ViewGroup.LayoutParams(-1, -2)
+
+        val isRestricted = PreferenceUtils.get(this)
+            .getBoolean(PreferenceUtils.Key.LIMIT_ASPECT_RATIO)
+        if (isRestricted) {
+            // despite not being perfectly 16:9, this is what Android calls "16:9"
+            frameLayout.aspectRatio = 1.86f
+        }
+
+        val editTextLayoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
         val editText = Cocos2dxEditText(this)
         editText.layoutParams = editTextLayoutParams
         frameLayout.addView(editText)
@@ -276,11 +291,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         frameLayout.addView(this.mGLSurfaceView)
 
         glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)
-
-        if (isAndroidEmulator()) {
-            glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-        }
-
         glSurfaceView.initView()
         glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
 
