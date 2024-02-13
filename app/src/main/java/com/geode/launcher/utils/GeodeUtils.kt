@@ -320,15 +320,12 @@ object GeodeUtils {
 
     @JvmStatic
     fun createFile(path: String): Boolean {
-        var uri: Uri?
-        DocumentFile.fromFile(File(path)).also {
-            uri = it.uri
-        }
+        val initialPath = File(path)
 
         return try {
             checkForFilePermissions(
                 onSuccess = {
-                    saveFileResultLauncher.launch(GeodeSaveFileActivityResult.SaveFileParams(null, uri))
+                    saveFileResultLauncher.launch(GeodeSaveFileActivityResult.SaveFileParams(null, initialPath))
                 },
                 onFailure = { failedCallback() }
             )

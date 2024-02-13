@@ -7,18 +7,25 @@ import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.documentfile.provider.DocumentFile
+import java.io.File
 
 open class GeodeSaveFileActivityResult : ActivityResultContract<GeodeSaveFileActivityResult.SaveFileParams, Uri?>() {
-    class SaveFileParams(val mimeType: String?, val defaultPath: Uri?) {}
+    class SaveFileParams(val mimeType: String?, val initialPath: File?)
     override fun createIntent(context: Context, input: SaveFileParams): Intent {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
             .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             .setType(input.mimeType ?: "*/*")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (input.defaultPath != null) {
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, input.defaultPath)
+
+        if (input.initialPath != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val uri = DocumentFile.fromFile(input.initialPath).uri
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
             }
+
+            intent.putExtra(Intent.EXTRA_TITLE, input.initialPath.name)
         }
+
         return intent
     }
 
