@@ -14,8 +14,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 34
-        versionCode = 11
-        versionName = "1.2.1"
+        versionCode = 12
+        versionName = "1.3.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -93,7 +93,7 @@ dependencies {
     implementation ("androidx.activity:activity-ktx:1.8.2")
     implementation ("androidx.appcompat:appcompat:1.6.1")
     implementation ("androidx.documentfile:documentfile:1.0.1")
-    implementation ("com.squareup.okio:okio:3.7.0")
+    implementation ("com.squareup.okio:okio:3.8.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.6.2")
