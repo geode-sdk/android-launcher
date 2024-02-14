@@ -513,7 +513,7 @@ fun onShowLogs(context: Context) {
     context.startActivity(launchIntent)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
@@ -546,7 +546,7 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
             val clipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
 
-            Row(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
