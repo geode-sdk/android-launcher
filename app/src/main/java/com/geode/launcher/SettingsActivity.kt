@@ -193,6 +193,15 @@ fun themeToKey(theme: Int): String {
     }
 }
 
+@Composable
+fun displayOptionToKey(option: Int): String {
+    return when (option) {
+        1 -> stringResource(R.string.preference_display_mode_legacy)
+        2 -> stringResource(R.string.preference_display_mode_fullscreen)
+        else -> stringResource(R.string.preference_display_mode_default)
+    }
+}
+
 fun updateTheme(context: Context, theme: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
@@ -302,10 +311,13 @@ fun SettingsScreen(
                         description = context.getString(R.string.preference_load_automatically_description),
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
-                    SettingsCard(
-                        title = stringResource(R.string.preference_limit_aspect_ratio_name),
-                        description = stringResource(R.string.preference_limit_aspect_ratio_description),
-                        preferenceKey = PreferenceUtils.Key.LIMIT_ASPECT_RATIO
+                    SettingsSelectCard(
+                        title = stringResource(R.string.preference_display_mode_name),
+                        dialogTitle = stringResource(R.string.preference_display_mode_select),
+                        // necessary api doesn't exist on older versions of android
+                        maxVal = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 2 else 1,
+                        preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
+                        toLabel = { displayOptionToKey(it) }
                     )
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),

@@ -136,7 +136,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         DISMISSED_GJ_UPDATE,
         LAUNCH_ARGUMENTS,
         IGNORE_LOAD_FAILURE,
-        LIMIT_ASPECT_RATIO
+        LIMIT_ASPECT_RATIO,
+        DISPLAY_MODE
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -145,6 +146,11 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.RELEASE_CHANNEL -> BuildConfig.DEBUG
             else -> false
         }
+    }
+
+    private fun defaultValueForIntKey(key: Key) = when (key) {
+        Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
+        else -> 0
     }
 
     private fun keyToName(key: Key): String {
@@ -163,6 +169,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LAUNCH_ARGUMENTS -> "PreferenceLaunchArguments"
             Key.IGNORE_LOAD_FAILURE -> "PreferenceIgnoreLoadFailure"
             Key.LIMIT_ASPECT_RATIO -> "PreferenceLimitAspectRatio"
+            Key.DISPLAY_MODE -> "PreferenceDisplayMode"
         }
     }
 
@@ -217,7 +224,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     fun getInt(key: Key): Int {
         val keyName = keyToName(key)
-        return sharedPreferences.getInt(keyName, 0)
+        return sharedPreferences.getInt(keyName, defaultValueForIntKey(key))
     }
 
     fun setInt(key: Key, value: Int) {

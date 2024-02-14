@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -35,6 +36,17 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
+enum class DisplayMode {
+    DEFAULT, LIMITED, FULLSCREEN;
+
+    companion object {
+        fun fromInt(i: Int) = when (i) {
+            1 -> LIMITED
+            2 -> FULLSCREEN
+            else -> DEFAULT
+        }
+    }
+}
 
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
@@ -43,6 +55,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mIsOnPause = false
     private var mHasWindowFocus = false
     private var mReceiver: BroadcastReceiver? = null
+
+    private var displayMode = DisplayMode.DEFAULT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -270,9 +284,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val frameLayout = ConstrainedFrameLayout(this)
         frameLayout.layoutParams = frameLayoutParams
 
-        val isRestricted = PreferenceUtils.get(this)
-            .getBoolean(PreferenceUtils.Key.LIMIT_ASPECT_RATIO)
-        if (isRestricted) {
+        if (displayMode == DisplayMode.LIMITED) {
             // despite not being perfectly 16:9, this is what Android calls "16:9"
             frameLayout.aspectRatio = 1.86f
         }
@@ -307,6 +319,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun setupUIState() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+
+        displayMode = DisplayMode.fromInt(
+            PreferenceUtils.get(this).getInt(PreferenceUtils.Key.DISPLAY_MODE)
+        )
+
+        if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
 
         hideSystemUi()
     }
