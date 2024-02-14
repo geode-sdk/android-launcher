@@ -33,11 +33,14 @@
     <string name="safe_mode_enable_title">Enable safe mode?</string>
     <string name="safe_mode_enable_description">Safe mode disables loading of all mods, allowing one to remove problematic mods or diagnose crashes. If you\'re not experiencing issues with Geode, you should probably not be using safe mode.</string>
     <string name="launcher_failed_to_load">Geode failed to load.</string>
+    <string name="launcher_crashed">Geode crashed.</string>
     <string name="launcher_error_more">Learn more</string>
     <string name="launcher_error_details">Error details</string>
     <string name="launcher_error_view_logs">View logs</string>
     <string name="launcher_error_copy_error_alt">Copy</string>
     <string name="launcher_error_copy">Copy details</string>
+    <string name="launcher_error_export_crash">Share crash</string>
+    <string name="launcher_error_export_missing">No crash dump was found!</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
@@ -58,11 +61,14 @@
     <string name="load_failed_abi_error">The architecture of the launcher and Geometry Dash do not match. Try to:</string>
     <string name="load_failed_generic_error">Failed to load Geode</string>
     <string name="load_failed_generic_error_description">Uncaught error during game load. Try to:</string>
+    <string name="load_failed_crashed">Geode crashed</string>
+    <string name="load_failed_crashed_description">A crash was reported during the last session. Try to:</string>
     <string name="load_failed_recommendation_reinstall">Reinstall Geometry Dash from the Play Store.</string>
     <string name="load_failed_recommendation_switch_32bit_abi">Install the 32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_switch_64bit_abi">Install the non 32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>
     <string name="load_failed_recommendation_report">Report this issue to the developers.</string>
+    <string name="load_failed_recommendation_safe_mode">Hold the Launch button to launch in safe mode.</string>
 
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>

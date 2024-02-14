@@ -1,9 +1,12 @@
 package com.geode.launcher
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.text.format.Formatter.formatShortFileSize
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -63,8 +67,8 @@ import java.net.UnknownHostException
 
 data class LoadFailureInfo(
     val title: LaunchUtils.LauncherError,
-    val description: String,
-    val extendedMessage: String?
+    val description: String? = null,
+    val extendedMessage: String? = null
 )
 
 class MainActivity : ComponentActivity() {
@@ -83,6 +87,12 @@ class MainActivity : ComponentActivity() {
         val returnError = intent.extras?.getSerializable(LaunchUtils.LAUNCHER_KEY_RETURN_ERROR)
                 as? LaunchUtils.LauncherError
 
+        val loadFailureInfo = if (returnError != null && returnMessage != null) {
+            LoadFailureInfo(returnError, returnMessage, returnExtendedMessage)
+        } else if (LaunchUtils.lastSessionCrashed(this)) {
+            LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
+        } else { null }
+
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
@@ -95,10 +105,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        val loadFailureInfo = if (returnError != null && returnMessage != null) {
-                            LoadFailureInfo(returnError, returnMessage, returnExtendedMessage)
-                        } else { null }
-
                         MainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
                     }
                 }
@@ -416,6 +422,7 @@ fun ErrorInfoBody(failureReason: LaunchUtils.LauncherError, modifier: Modifier =
         LaunchUtils.LauncherError.LINKER_NEEDS_32BIT -> stringResource(R.string.load_failed_abi_error)
         LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error_description)
         LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error_description)
+        LaunchUtils.LauncherError.CRASHED -> stringResource(R.string.load_failed_crashed_description)
     }
 
     val recommendations = when (failureReason) {
@@ -436,6 +443,10 @@ fun ErrorInfoBody(failureReason: LaunchUtils.LauncherError, modifier: Modifier =
             stringResource(R.string.load_failed_recommendation_update),
             stringResource(R.string.load_failed_recommendation_report)
         )
+        LaunchUtils.LauncherError.CRASHED -> listOf(
+            stringResource(R.string.load_failed_recommendation_safe_mode),
+            stringResource(R.string.load_failed_recommendation_report)
+        )
     }
 
     Column(modifier = modifier) {
@@ -454,10 +465,11 @@ fun ErrorInfoTitle(failureReason: LaunchUtils.LauncherError) {
         LaunchUtils.LauncherError.LINKER_NEEDS_32BIT,
         LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error)
         LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error)
+        LaunchUtils.LauncherError.CRASHED -> stringResource(R.string.load_failed_crashed)
     }
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -468,6 +480,39 @@ fun ErrorInfoTitle(failureReason: LaunchUtils.LauncherError) {
         Text(message, style = Typography.headlineMedium)
     }
 
+}
+
+fun onShareCrash(context: Context) {
+    val lastCrash = LaunchUtils.getLastCrash(context)
+    if (lastCrash == null) {
+        Toast.makeText(context, R.string.launcher_error_export_missing, Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val baseDirectory = LaunchUtils.getBaseDirectory(context)
+
+    val providerLocation = lastCrash.toRelativeString(baseDirectory)
+    val documentsPath = "${UserDirectoryProvider.ROOT}${providerLocation}"
+
+    val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
+
+    println("shareCrash: $uri")
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        putExtra(Intent.EXTRA_STREAM, uri)
+        type = "application/octet-stream"
+    }
+
+    try {
+        context.startActivity(shareIntent)
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, R.string.no_activity_found, Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun onShowLogs(context: Context) {
+    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
+    context.startActivity(launchIntent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -483,19 +528,21 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
 
             ErrorInfoBody(failureInfo.title)
 
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                Text(
-                    stringResource(R.string.launcher_error_details),
-                    style = Typography.headlineSmall
-                )
+            if (failureInfo.description != null) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        stringResource(R.string.launcher_error_details),
+                        style = Typography.headlineSmall
+                    )
 
-                Spacer(Modifier.size(8.dp))
+                    Spacer(Modifier.size(8.dp))
 
-                Text(
-                    failureInfo.description,
-                    fontFamily = FontFamily.Monospace,
-                    style = Typography.bodyMedium
-                )
+                    Text(
+                        failureInfo.description,
+                        fontFamily = FontFamily.Monospace,
+                        style = Typography.bodyMedium
+                    )
+                }
             }
 
             val clipboardManager = LocalClipboardManager.current
@@ -509,28 +556,45 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
                     12.dp, alignment = Alignment.CenterHorizontally
                 )
             ) {
-                Button(onClick = {
-                    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
-                    context.startActivity(launchIntent)
-                }) {
-                    Icon(
-                        painterResource(R.drawable.icon_description),
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.launcher_error_view_logs))
-                }
+                if (failureInfo.description != null) {
+                    Button(onClick = { onShowLogs(context) }) {
+                        Icon(
+                            painterResource(R.drawable.icon_description),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_error_view_logs))
+                    }
 
-                FilledTonalButton(onClick = {
-                    val message = failureInfo.extendedMessage ?: failureInfo.description
-                    clipboardManager.setText(AnnotatedString(message))
-                }) {
-                    Icon(
-                        painterResource(R.drawable.icon_content_copy),
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.launcher_error_copy))
+                    FilledTonalButton(onClick = {
+                        val message = failureInfo.extendedMessage ?: failureInfo.description
+                        clipboardManager.setText(AnnotatedString(message))
+                    }) {
+                        Icon(
+                            painterResource(R.drawable.icon_content_copy),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_error_copy))
+                    }
+                } else {
+                    Button(onClick = { onShareCrash(context) }) {
+                        Icon(
+                            Icons.Filled.Share,
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_error_export_crash))
+                    }
+
+                    FilledTonalButton(onClick = { onShowLogs(context) }) {
+                        Icon(
+                            painterResource(R.drawable.icon_description),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_error_view_logs))
+                    }
                 }
             }
 
@@ -590,15 +654,20 @@ fun MainScreen(
         }
     }
 
-    val hasError = loadFailureInfo != null
-    var showErrorInfo by remember { mutableStateOf(false) }
-
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var showErrorInfo by remember { mutableStateOf(false) }
+    val hasError = loadFailureInfo != null
     LaunchedEffect(hasError) {
-        if (hasError) {
+        if (loadFailureInfo != null) {
+            val message = if (loadFailureInfo.title == LaunchUtils.LauncherError.CRASHED) {
+                context.getString(R.string.launcher_crashed)
+            } else {
+                context.getString(R.string.launcher_failed_to_load)
+            }
+
             val res = snackbarHostState.showSnackbar(
-                message = context.getString(R.string.launcher_failed_to_load),
+                message = message,
                 actionLabel = context.getString(R.string.launcher_error_more),
                 duration = SnackbarDuration.Indefinite,
             )
