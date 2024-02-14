@@ -496,8 +496,6 @@ fun onShareCrash(context: Context) {
 
     val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
 
-    println("shareCrash: $uri")
-
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         putExtra(Intent.EXTRA_STREAM, uri)
         type = "application/octet-stream"
