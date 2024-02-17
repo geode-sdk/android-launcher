@@ -54,10 +54,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -125,25 +127,6 @@ fun getLogColor(priority: LogPriority): Color {
     }
 }
 
-fun copyLogText(context: Context, logMessage: String) {
-    val clipboardManager =
-        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboardManager.setPrimaryClip(
-        ClipData.newPlainText(
-            context.getString(R.string.application_log_copy_label),
-            logMessage
-        )
-    )
-
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-        Toast.makeText(
-            context,
-            context.getString(R.string.text_copied),
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-}
-
 @Composable
 fun SelectLogLevelDialog(
     onDismissRequest: () -> Unit,
@@ -165,10 +148,8 @@ fun SelectLogLevelDialog(
 
 @Composable
 fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-
     val haptics = LocalHapticFeedback.current
-
+    val clipboardManager = LocalClipboardManager.current
 
     Column(
         modifier = modifier
@@ -177,7 +158,7 @@ fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
                 detectTapGestures(
                     onLongPress = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        copyLogText(context, logLine.asSimpleString)
+                        clipboardManager.setText(AnnotatedString(logLine.asSimpleString))
                     }
                 )
             },
