@@ -34,7 +34,7 @@
     <string name="safe_mode_enable_description">Safe mode disables loading of all mods, allowing one to remove problematic mods or diagnose crashes. If you\'re not experiencing issues with Geode, you should probably not be using safe mode.</string>
     <string name="launcher_failed_to_load">Geode failed to load.</string>
     <string name="launcher_crashed">Geode crashed.</string>
-    <string name="launcher_error_more">Learn more</string>
+    <string name="launcher_error_more">Help</string>
     <string name="launcher_error_details">Error details</string>
     <string name="launcher_error_view_logs">View logs</string>
     <string name="launcher_error_copy_error_alt">Copy</string>

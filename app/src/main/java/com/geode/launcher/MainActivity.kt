@@ -619,6 +619,32 @@ fun onSettings(context: Context) {
     context.startActivity(launchIntent)
 }
 
+suspend fun showFailureSnackbar(
+    context: Context,
+    loadFailureInfo: LoadFailureInfo,
+    snackbarHostState: SnackbarHostState,
+    onActionPerformed: () -> Unit
+) {
+    val message = if (loadFailureInfo.title == LaunchUtils.LauncherError.CRASHED) {
+        context.getString(R.string.launcher_crashed)
+    } else {
+        context.getString(R.string.launcher_failed_to_load)
+    }
+
+    val res = snackbarHostState.showSnackbar(
+        message = message,
+        actionLabel = context.getString(R.string.launcher_error_more),
+        duration = SnackbarDuration.Indefinite,
+    )
+
+    when (res) {
+        SnackbarResult.ActionPerformed -> {
+            onActionPerformed()
+        }
+        SnackbarResult.Dismissed -> {}
+    }
+}
+
 @Composable
 fun MainScreen(
     gdInstalled: Boolean = true,
@@ -654,27 +680,16 @@ fun MainScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var showErrorInfo by remember { mutableStateOf(false) }
+    // automatically show load failed dialog (but not crash)
+    var showErrorInfo by remember { mutableStateOf(
+        loadFailureInfo != null && loadFailureInfo.title != LaunchUtils.LauncherError.CRASHED
+    )}
+
     val hasError = loadFailureInfo != null
-    LaunchedEffect(hasError) {
-        if (loadFailureInfo != null) {
-            val message = if (loadFailureInfo.title == LaunchUtils.LauncherError.CRASHED) {
-                context.getString(R.string.launcher_crashed)
-            } else {
-                context.getString(R.string.launcher_failed_to_load)
-            }
-
-            val res = snackbarHostState.showSnackbar(
-                message = message,
-                actionLabel = context.getString(R.string.launcher_error_more),
-                duration = SnackbarDuration.Indefinite,
-            )
-
-            when (res) {
-                SnackbarResult.ActionPerformed -> {
-                    showErrorInfo = true
-                }
-                SnackbarResult.Dismissed -> {}
+    LaunchedEffect(hasError, showErrorInfo) {
+        if (!showErrorInfo && loadFailureInfo != null) {
+            showFailureSnackbar(context, loadFailureInfo, snackbarHostState) {
+                showErrorInfo = true
             }
         }
     }
