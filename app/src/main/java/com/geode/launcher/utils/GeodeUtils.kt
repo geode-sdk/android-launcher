@@ -106,7 +106,7 @@ object GeodeUtils {
         }
 
         // only necessary on newer android versions
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             internalRequestAllFilesLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
                 if (Environment.isExternalStorageManager()) {
                     afterRequestPermissions?.invoke()
@@ -219,7 +219,7 @@ object GeodeUtils {
     private external fun failedCallback()
 
     private fun checkForFilePermissions(onSuccess: () -> Unit, onFailure: () -> Unit) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (Environment.isExternalStorageManager()) {
                 onSuccess()
             } else {
@@ -376,7 +376,7 @@ object GeodeUtils {
         val context = activity.get() ?: return false
 
         return when (permission) {
-            MANAGE_ALL_FILES -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+            MANAGE_ALL_FILES -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Environment.isExternalStorageManager()
             } else {
                 val permissions = listOf(
