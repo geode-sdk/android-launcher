@@ -14,6 +14,7 @@
     <string name="launcher_settings_icon_alt">settings icon</string>
     <string name="launcher_retry_icon_alt">retry icon</string>
     <string name="geode_download_title">Geode is not installed.</string>
+    <string name="game_outdated">A Geometry Dash update is required.</string>
     <string name="geode_download_description">Geode is downloading. Please wait.</string>
     <plurals name="automatically_load_countdown">
         <item quantity="one">Automatically launching game in %1$d second.</item>

@@ -744,7 +744,6 @@ fun PlayButton(
         }
     }
 
-
     if (showSafeModeDialog) {
         SafeModeDialog(
             onDismiss = {
@@ -763,6 +762,20 @@ fun PlayButton(
 }
 
 @Composable
+fun LaunchBlockedLabel(text: String) {
+    val context = LocalContext.current
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text, modifier = Modifier.padding(12.dp))
+        OutlinedButton(onClick = { onSettings(context) }) {
+            Icon(Icons.Filled.Settings, contentDescription = null)
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(context.getString(R.string.launcher_settings))
+        }
+    }
+}
+
+@Composable
 fun MainScreen(
     gdInstalled: Boolean = true,
     geodePreinstalled: Boolean = true,
@@ -772,7 +785,6 @@ fun MainScreen(
     val context = LocalContext.current
 
     val shouldUpdate by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
-
     val autoUpdateState by releaseViewModel.uiState.collectAsState()
 
     val geodeJustInstalled = (autoUpdateState as? ReleaseViewModel.ReleaseUIState.Finished)
@@ -834,15 +846,23 @@ fun MainScreen(
 
             when {
                 gdInstalled && geodeInstalled -> {
-                    val stopLaunch = releaseViewModel.isInUpdate || hasError
-                    PlayButton(
-                        stopAutomaticLaunch = stopLaunch,
-                        blockLaunch = releaseViewModel.isInUpdate,
-                        onPlayGame = { safeMode ->
-                            launchInSafeMode = safeMode
-                            beginLaunch = true
-                        },
-                    )
+                    val gdVersion = remember {
+                        LaunchUtils.getGeometryDashVersionCode(context.packageManager)
+                    }
+
+                    if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
+                        LaunchBlockedLabel(stringResource(R.string.game_outdated))
+                    } else {
+                        val stopLaunch = releaseViewModel.isInUpdate || hasError
+                        PlayButton(
+                            stopAutomaticLaunch = stopLaunch,
+                            blockLaunch = releaseViewModel.isInUpdate,
+                            onPlayGame = { safeMode ->
+                                launchInSafeMode = safeMode
+                                beginLaunch = true
+                            },
+                        )
+                    }
                 }
                 gdInstalled -> {
                     Text(
@@ -871,20 +891,7 @@ fun MainScreen(
                         }
                     }
                 }
-                else -> {
-                    Text(
-                        context.getString(R.string.game_not_found),
-                        modifier = Modifier.padding(12.dp)
-                    )
-                    OutlinedButton(onClick = { onSettings(context) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(context.getString(R.string.launcher_settings))
-                    }
-                }
+                else -> LaunchBlockedLabel(stringResource(R.string.game_not_found))
             }
 
             UpdateCard(
