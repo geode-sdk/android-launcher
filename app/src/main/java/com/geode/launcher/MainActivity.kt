@@ -657,6 +657,112 @@ suspend fun showFailureSnackbar(
 }
 
 @Composable
+fun PlayButton(
+    stopAutomaticLaunch: Boolean,
+    blockLaunch: Boolean,
+    onPlayGame: (Boolean) -> Unit
+) {
+    val context = LocalContext.current
+
+    var showSafeModeDialog by remember { mutableStateOf(false) }
+    var launchInSafeMode by remember { mutableStateOf(false) }
+
+    val shouldAutomaticallyLaunch by PreferenceUtils.useBooleanPreference(
+        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
+    )
+
+    if (shouldAutomaticallyLaunch && !stopAutomaticLaunch && !showSafeModeDialog) {
+        val countdownTimer = useCountdownTimer(
+            time = 3000,
+            onCountdownFinish = { onPlayGame(launchInSafeMode) }
+        )
+
+        if (countdownTimer != 0L) {
+            Text(
+                pluralStringResource(
+                    R.plurals.automatically_load_countdown,
+                    countdownTimer.toInt(),
+                    countdownTimer
+                ),
+                style = Typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Spacer(Modifier.size(12.dp))
+        }
+    }
+
+    // compose apis don't provide a good way of adding long press to a button
+    val interactionSource = remember { MutableInteractionSource() }
+    val viewConfiguration = LocalViewConfiguration.current
+    val haptics = LocalHapticFeedback.current
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    launchInSafeMode = false
+
+                    delay(viewConfiguration.longPressTimeoutMillis)
+
+                    // perform a second delay to make the action more obvious
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    delay(viewConfiguration.longPressTimeoutMillis)
+
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                    showSafeModeDialog = true
+                }
+
+                is PressInteraction.Release -> {
+                    if (!showSafeModeDialog) {
+                        onPlayGame(launchInSafeMode)
+                    }
+                }
+            }
+        }
+    }
+
+    Row {
+        Button(
+            onClick = { },
+            enabled = !blockLaunch,
+            interactionSource = interactionSource
+        ) {
+            Icon(
+                Icons.Filled.PlayArrow,
+                contentDescription = context.getString(R.string.launcher_launch_icon_alt)
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(context.getString(R.string.launcher_launch))
+        }
+        Spacer(Modifier.size(2.dp))
+        IconButton(onClick = { onSettings(context) }) {
+            Icon(
+                Icons.Filled.Settings,
+                contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+            )
+        }
+    }
+
+
+    if (showSafeModeDialog) {
+        SafeModeDialog(
+            onDismiss = {
+                launchInSafeMode = false
+                showSafeModeDialog = false
+            },
+            onLaunch = {
+                launchInSafeMode = true
+
+                onPlayGame(true)
+
+                showSafeModeDialog = false
+            }
+        )
+    }
+}
+
+@Composable
 fun MainScreen(
     gdInstalled: Boolean = true,
     geodePreinstalled: Boolean = true,
@@ -664,10 +770,6 @@ fun MainScreen(
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
-
-    val shouldAutomaticallyLaunch by PreferenceUtils.useBooleanPreference(
-        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
-    )
 
     val shouldUpdate by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
 
@@ -678,7 +780,6 @@ fun MainScreen(
     val geodeInstalled = geodePreinstalled || geodeJustInstalled
 
     var beginLaunch by remember { mutableStateOf(false) }
-    var showSafeModeDialog by remember { mutableStateOf(false) }
     var launchInSafeMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(shouldUpdate) {
@@ -731,118 +832,58 @@ fun MainScreen(
                 modifier = Modifier.padding(12.dp)
             )
 
-            if (gdInstalled && geodeInstalled) {
-                val stopLaunch = releaseViewModel.isInUpdate || hasError || showSafeModeDialog
-                if (shouldAutomaticallyLaunch && !stopLaunch) {
-                    val countdownTimer = useCountdownTimer(
-                        time = 3000,
-                        onCountdownFinish = { beginLaunch = true }
+            when {
+                gdInstalled && geodeInstalled -> {
+                    val stopLaunch = releaseViewModel.isInUpdate || hasError
+                    PlayButton(
+                        stopAutomaticLaunch = stopLaunch,
+                        blockLaunch = releaseViewModel.isInUpdate,
+                        onPlayGame = { safeMode ->
+                            launchInSafeMode = safeMode
+                            beginLaunch = true
+                        },
+                    )
+                }
+                gdInstalled -> {
+                    Text(
+                        context.getString(R.string.geode_download_title),
+                        modifier = Modifier.padding(12.dp)
                     )
 
-                    if (countdownTimer != 0L) {
-                        Text(
-                            pluralStringResource(
-                                R.plurals.automatically_load_countdown,
-                                countdownTimer.toInt(),
-                                countdownTimer
-                            ),
-                            style = Typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                        Spacer(Modifier.size(12.dp))
-                    }
-                }
-
-                // compose apis don't provide a good way of adding long press to a button
-                val interactionSource = remember { MutableInteractionSource() }
-                val viewConfiguration = LocalViewConfiguration.current
-                val haptics = LocalHapticFeedback.current
-
-                LaunchedEffect(interactionSource) {
-                    interactionSource.interactions.collectLatest { interaction ->
-                        when (interaction) {
-                            is PressInteraction.Press -> {
-                                launchInSafeMode = false
-
-                                delay(viewConfiguration.longPressTimeoutMillis)
-
-                                // perform a second delay to make the action more obvious
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                delay(viewConfiguration.longPressTimeoutMillis)
-
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-
-                                showSafeModeDialog = true
-                            }
-
-                            is PressInteraction.Release -> {
-                                if (!showSafeModeDialog) {
-                                    beginLaunch = true
-                                }
-                            }
+                    Row {
+                        Button(
+                            onClick = { releaseViewModel.runReleaseCheck(true) },
+                            enabled = !releaseViewModel.isInUpdate
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.icon_download),
+                                contentDescription = context.getString(R.string.launcher_download_icon_alt)
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(context.getString(R.string.launcher_download))
+                        }
+                        Spacer(Modifier.size(2.dp))
+                        IconButton(onClick = { onSettings(context) }) {
+                            Icon(
+                                Icons.Filled.Settings,
+                                contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                            )
                         }
                     }
                 }
-
-                Row {
-                    Button(
-                        onClick = { },
-                        enabled = !releaseViewModel.isInUpdate,
-                        interactionSource = interactionSource
-                    ) {
-                        Icon(
-                            Icons.Filled.PlayArrow,
-                            contentDescription = context.getString(R.string.launcher_launch_icon_alt)
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(context.getString(R.string.launcher_launch))
-                    }
-                    Spacer(Modifier.size(2.dp))
-                    IconButton(onClick = { onSettings(context) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                        )
-                    }
-                }
-            } else if (gdInstalled) {
-                Text(
-                    context.getString(R.string.geode_download_title),
-                    modifier = Modifier.padding(12.dp)
-                )
-
-                Row {
-                    Button(
-                        onClick = { releaseViewModel.runReleaseCheck(true) },
-                        enabled = !releaseViewModel.isInUpdate
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.icon_download),
-                            contentDescription = context.getString(R.string.launcher_download_icon_alt)
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(context.getString(R.string.launcher_download))
-                    }
-                    Spacer(Modifier.size(2.dp))
-                    IconButton(onClick = { onSettings(context) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    context.getString(R.string.game_not_found),
-                    modifier = Modifier.padding(12.dp)
-                )
-                OutlinedButton(onClick = { onSettings(context) }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                else -> {
+                    Text(
+                        context.getString(R.string.game_not_found),
+                        modifier = Modifier.padding(12.dp)
                     )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(context.getString(R.string.launcher_settings))
+                    OutlinedButton(onClick = { onSettings(context) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(context.getString(R.string.launcher_settings))
+                    }
                 }
             }
 
@@ -859,20 +900,6 @@ fun MainScreen(
             beginLaunch = false
             launchInSafeMode = false
         }
-    }
-
-    if (showSafeModeDialog) {
-        SafeModeDialog(
-            onDismiss = {
-                showSafeModeDialog = false
-            },
-            onLaunch = {
-                launchInSafeMode = true
-                beginLaunch = true
-
-                showSafeModeDialog = false
-            }
-        )
     }
 }
 
