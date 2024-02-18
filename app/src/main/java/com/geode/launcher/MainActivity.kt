@@ -3,6 +3,7 @@ package com.geode.launcher
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.Formatter.formatShortFileSize
@@ -542,6 +543,13 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
                         failureInfo.description,
                         fontFamily = FontFamily.Monospace,
                         style = Typography.bodyMedium
+                    )
+
+                    Spacer(Modifier.size(4.dp))
+
+                    Text(
+                        stringResource(R.string.launcher_error_device_info, Build.MODEL, Build.VERSION.RELEASE),
+                        style = Typography.labelMedium
                     )
                 }
             }

@@ -41,6 +41,7 @@
     <string name="launcher_error_copy">Copy details</string>
     <string name="launcher_error_export_crash">Share crash</string>
     <string name="launcher_error_export_missing">No crash dump was found!</string>
+    <string name="launcher_error_device_info">Android %2$s, %1$s</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
