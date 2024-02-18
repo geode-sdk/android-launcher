@@ -519,7 +519,10 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Column(modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState())
+        ) {
             ErrorInfoTitle(failureInfo.title)
 
             Spacer(Modifier.size(16.dp))
