@@ -199,9 +199,69 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
         val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo)
-
         val libraryPath = if (nativeDir.endsWith('/')) "${nativeDir}lib$libraryName.so" else "$nativeDir/lib$libraryName.so"
-        System.load(libraryPath)
+
+        try {
+            System.load(libraryPath)
+        } catch (ule: UnsatisfiedLinkError) {
+            // some devices (samsung a series, cough) have an overly restrictive application classloader
+            // this is a workaround for that. hopefully
+            if (ule.message?.contains("not accessible for the namespace") != true) {
+                throw ule
+            }
+
+            println("Using copy for library $libraryName")
+            loadLibraryCopy(libraryName, libraryPath)
+        }
+    }
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    private fun loadLibraryCopy(libraryName: String, libraryPath: String) {
+        if (libraryPath.contains("!/")) {
+            // library in apk can't be loaded directly
+            loadLibraryFromAssetsCopy(libraryName)
+            return
+        }
+
+        val library = File(libraryPath)
+        val libraryCopy = File(cacheDir, libraryName)
+
+        libraryCopy.outputStream().use { libraryOutput ->
+            library.inputStream().use { inputStream ->
+                DownloadUtils.copyFile(inputStream, libraryOutput)
+            }
+        }
+
+        System.load(libraryCopy.path)
+
+        return
+    }
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    private fun loadLibraryFromAssetsCopy(libraryName: String) {
+        // loads a library loaded in assets
+        // this copies the library to a non-compressed directory
+
+        val arch = LaunchUtils.applicationArchitecture
+        val libraryFd = try {
+            assets.openNonAssetFd("lib/$arch/lib$libraryName.so")
+        } catch (_: Exception) {
+            throw UnsatisfiedLinkError("Could not find library lib$libraryName.so for abi $arch")
+        }
+
+        // copy the library to a path we can access
+        // there doesn't seem to be a way to load a library from a file descriptor
+        val libraryCopy = File(cacheDir, "lib$libraryName.so")
+
+        libraryCopy.outputStream().use { libraryOutput ->
+            libraryFd.createInputStream().use { inputStream ->
+                DownloadUtils.copyFile(inputStream, libraryOutput)
+            }
+        }
+
+        System.load(libraryCopy.path)
+
+        return
     }
 
     private fun getNativeLibraryDirectory(applicationInfo: ApplicationInfo): String {
