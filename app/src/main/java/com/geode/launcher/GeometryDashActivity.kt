@@ -224,7 +224,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         val library = File(libraryPath)
-        val libraryCopy = File(cacheDir, libraryName)
+        val libraryCopy = File(cacheDir, "lib$libraryName.so")
 
         libraryCopy.outputStream().use { libraryOutput ->
             library.inputStream().use { inputStream ->
