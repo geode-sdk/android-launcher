@@ -11,18 +11,24 @@ import java.io.IOException
 import java.nio.ByteBuffer
 
 class MediaCodec {
-    private var channelCount = 0
+    // these variables require getX functions for ndk access
+    var channelCount = 0
+        private set
 
-    var mCodecPtr = 0L
+    var length = 0L
+        private set
+
+    var sampleRate = 0
+        private set
+
+    private var mCodecPtr = 0L
     private var mCurrentOutputBufferIndex = -1
     private var mDecoder: MediaCodec? = null
     private var mExtractor: MediaExtractor? = null
     private var mInputBuffers: Array<ByteBuffer>? = null
     private var mInputFinished = false
-    private var length = 0L
     private var mOutputBuffers: Array<ByteBuffer>? = null
     private var mOutputFinished = false
-    private var sampleRate = 0
 
     fun init(codecPtr: Long): Boolean {
         mCodecPtr = codecPtr
