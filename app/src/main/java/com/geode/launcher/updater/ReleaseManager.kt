@@ -167,11 +167,6 @@ class ReleaseManager private constructor(
     }
 
     private fun checkLauncherUpdate(launcherUpdate: Release) {
-        if (BuildConfig.DEBUG) {
-            println("ignoring launcher update check - in debug mode!")
-            return
-        }
-
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val lastDismissedVersion = sharedPreferences.getString(PreferenceUtils.Key.LAST_DISMISSED_UPDATE)
 
