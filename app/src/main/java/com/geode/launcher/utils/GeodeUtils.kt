@@ -16,6 +16,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
@@ -29,6 +30,7 @@ import java.io.File
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
+@Keep
 @Suppress("unused", "KotlinJniMissingFunction")
 object GeodeUtils {
     private lateinit var activity: WeakReference<AppCompatActivity>
