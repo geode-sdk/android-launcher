@@ -514,100 +514,117 @@ fun onShowLogs(context: Context) {
     context.startActivity(launchIntent)
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            stringResource(R.string.launcher_error_details),
+            style = Typography.headlineSmall
+        )
+
+        Spacer(Modifier.size(8.dp))
+
+        Text(
+            description,
+            fontFamily = FontFamily.Monospace,
+            style = Typography.bodyMedium
+        )
+
+        Spacer(Modifier.size(4.dp))
+
+        Text(
+            stringResource(R.string.launcher_error_device_info, Build.MODEL, Build.VERSION.RELEASE),
+            style = Typography.labelMedium
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalLayoutApi::class)
+fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(
+            12.dp, alignment = Alignment.CenterHorizontally
+        )
+    ) {
+        if (extraDetails != null) {
+            Button(onClick = { onShowLogs(context) }) {
+                Icon(
+                    painterResource(R.drawable.icon_description),
+                    contentDescription = null
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.launcher_error_view_logs))
+            }
+
+            FilledTonalButton(onClick = {
+                val message = extraDetails
+                clipboardManager.setText(AnnotatedString(message))
+            }) {
+                Icon(
+                    painterResource(R.drawable.icon_content_copy),
+                    contentDescription = null
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.launcher_error_copy))
+            }
+        } else {
+            Button(onClick = { onShareCrash(context) }) {
+                Icon(
+                    Icons.Filled.Share,
+                    contentDescription = null
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.launcher_error_export_crash))
+            }
+
+            FilledTonalButton(onClick = { onShowLogs(context) }) {
+                Icon(
+                    painterResource(R.drawable.icon_description),
+                    contentDescription = null
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.launcher_error_view_logs))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
-        Column(modifier = Modifier
-            .padding(horizontal = 24.dp)
-            .verticalScroll(rememberScrollState())
-        ) {
-            ErrorInfoTitle(failureInfo.title)
-
-            Spacer(Modifier.size(16.dp))
-
-            ErrorInfoBody(failureInfo.title)
-
-            if (failureInfo.description != null) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(
-                        stringResource(R.string.launcher_error_details),
-                        style = Typography.headlineSmall
-                    )
-
-                    Spacer(Modifier.size(8.dp))
-
-                    Text(
-                        failureInfo.description,
-                        fontFamily = FontFamily.Monospace,
-                        style = Typography.bodyMedium
-                    )
-
-                    Spacer(Modifier.size(4.dp))
-
-                    Text(
-                        stringResource(R.string.launcher_error_device_info, Build.MODEL, Build.VERSION.RELEASE),
-                        style = Typography.labelMedium
-                    )
-                }
-            }
-
-            val clipboardManager = LocalClipboardManager.current
-            val context = LocalContext.current
-
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(
-                    12.dp, alignment = Alignment.CenterHorizontally
-                )
+        // second container created for scroll (before padding is added)
+        Box(Modifier.verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier
+                .padding(horizontal = 24.dp)
             ) {
+                ErrorInfoTitle(failureInfo.title)
+
+                Spacer(Modifier.size(16.dp))
+
+                ErrorInfoBody(failureInfo.title)
+
                 if (failureInfo.description != null) {
-                    Button(onClick = { onShowLogs(context) }) {
-                        Icon(
-                            painterResource(R.drawable.icon_description),
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_error_view_logs))
-                    }
-
-                    FilledTonalButton(onClick = {
-                        val message = failureInfo.extendedMessage ?: failureInfo.description
-                        clipboardManager.setText(AnnotatedString(message))
-                    }) {
-                        Icon(
-                            painterResource(R.drawable.icon_content_copy),
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_error_copy))
-                    }
-                } else {
-                    Button(onClick = { onShareCrash(context) }) {
-                        Icon(
-                            Icons.Filled.Share,
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_error_export_crash))
-                    }
-
-                    FilledTonalButton(onClick = { onShowLogs(context) }) {
-                        Icon(
-                            painterResource(R.drawable.icon_description),
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_error_view_logs))
-                    }
+                    ErrorInfoDescription(
+                        failureInfo.description,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
-            }
 
-            Spacer(Modifier.size(8.dp))
+                ErrorInfoActions(
+                    extraDetails = failureInfo.extendedMessage ?: failureInfo.description,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 16.dp)
+                )
+            }
         }
     }
 }
