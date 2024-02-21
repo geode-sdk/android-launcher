@@ -1,6 +1,10 @@
 package com.geode.launcher.updater
 
 import com.geode.launcher.utils.DownloadUtils.executeCoroutine
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.until
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -15,6 +19,9 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         private const val GITHUB_API_BASE = "https://api.github.com"
         private const val GITHUB_API_HEADER = "X-GitHub-Api-Version"
         private const val GITHUB_API_VERSION = "2022-11-28"
+
+        private const val GITHUB_RATELIMIT_REMAINING = "x-ratelimit-remaining"
+        private const val GITHUB_RATELIMIT_RESET = "x-ratelimit-reset"
     }
 
     suspend fun getLatestLauncherRelease(): Release? {
@@ -33,6 +40,15 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         val url = URL(releasePath)
 
         return getReleaseByUrl(url)
+    }
+
+    private fun generateRateLimitMessage(resetTime: Instant): String {
+        val currentTime = Clock.System.now()
+        val resetDelay = currentTime.until(resetTime, DateTimeUnit.SECOND)
+
+        val formattedWait = "${resetDelay / 60}m"
+
+        return "api ratelimit reached, try again in ${formattedWait}"
     }
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -58,6 +74,24 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
                 )
 
                 release
+            }
+            403 -> {
+                // determine if the error code is a ratelimit
+                // (github docs say it sends 429 too, but haven't seen that)
+
+                val limitRemaining = response.headers.get(GITHUB_RATELIMIT_REMAINING)?.toInt()
+                val limitReset = response.headers.get(GITHUB_RATELIMIT_RESET)?.toLong()
+
+                if (limitRemaining == 0 && limitReset != null) {
+                    // handle ratelimit with a custom error
+                    // there's also a retry-after header but again, haven't seen
+                    val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
+                    val msg = generateRateLimitMessage(resetTime)
+
+                    throw IOException(msg)
+                }
+
+                throw IOException("response 403: ${response.body!!.string()}")
             }
             404 -> {
                 null
