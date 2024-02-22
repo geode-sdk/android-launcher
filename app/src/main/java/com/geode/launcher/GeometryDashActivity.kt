@@ -35,6 +35,7 @@ import org.fmod.FMOD
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 
 enum class DisplayMode {
     DEFAULT, LIMITED, FULLSCREEN;
@@ -132,9 +133,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
         tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
 
-        if (getLoadTesting()) {
-            loadTestingLibraries()
-        }
+        loadInternalMods()
 
         setContentView(createView())
 
@@ -513,42 +512,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         return isEmulator
     }
 
-    private fun getLoadTesting(): Boolean {
-        val preferences = PreferenceUtils.get(this)
-        return preferences.getBoolean(PreferenceUtils.Key.LOAD_TESTING)
-    }
-
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadTestingLibraries() {
-        // clear data dir
-        val testDirPath = File(filesDir.path + File.separator + "testlib" + File.separator)
-        if (testDirPath.exists()) {
-            testDirPath.deleteRecursively()
-        }
-        testDirPath.mkdir()
-
-        val dir = LaunchUtils.getBaseDirectory(this)
-        val testingPath = File(dir, "test")
-
-        testingPath.walk().forEach {
-            if (it.isFile) {
-                // welcome to the world of Android classloader permissions
-                val outputFile = File(testDirPath, it.name)
-                DownloadUtils.copyFile(
-                    FileInputStream(it),
-                    FileOutputStream(outputFile)
-                )
-
-                try {
-                    println("Loading test library ${outputFile.name}")
-                    System.load(outputFile.path)
-                } catch (e: UnsatisfiedLinkError) {
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
     override fun onCapabilityAdded(capability: String): Boolean {
         if (capability == GeodeUtils.CAPABILITY_EXTENDED_INPUT) {
             mGLSurfaceView?.useKeyboardEvents = true
@@ -556,5 +519,37 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         return false
+    }
+
+    /**
+     * Copies a mod from the launcher's assets to the Geode mods directory.
+     * This method is not recommended for casual use, the new mod will not be automatically removed.
+     */
+    private fun loadInternalMods() {
+        val internalModBase = "mods"
+
+        val modListing = try {
+            assets.list(internalModBase)
+        } catch (ioe: IOException) {
+            emptyArray<String>()
+        }
+
+        val modDirectory = File(
+            LaunchUtils.getBaseDirectory(this),
+            "game/geode/mods"
+        )
+
+        modDirectory.mkdirs()
+
+        modListing?.forEach { fileName ->
+            if (fileName.endsWith(".geode")) {
+                val modOutput = File(modDirectory, fileName)
+
+                val mod = assets.open("$internalModBase/$fileName")
+                DownloadUtils.copyFile(mod, modOutput.outputStream())
+
+                println("Copied internal mod $fileName")
+            }
+        }
     }
 }
