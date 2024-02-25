@@ -1,5 +1,5 @@
 buildscript {
-    val composeBOM by extra("2024.02.00")
+    val composeBOM by extra("2024.02.01")
     val composeCompiler by extra("1.5.9")
 }
 
