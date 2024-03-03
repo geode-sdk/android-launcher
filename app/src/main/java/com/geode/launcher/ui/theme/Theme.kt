@@ -40,14 +40,21 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+private val MochaColorScheme = darkColorScheme(
+        primary = CatppuccinForeground,
+        secondary = CatppuccinText,
+        tertiary = CatppuccinBackground,
+)
+
 enum class Theme {
-    LIGHT, DARK;
+    LIGHT, DARK, MOCHA;
 
     companion object {
         @Composable
         fun fromInt(value: Int) = when (value) {
             1 -> LIGHT
             2 -> DARK
+            3 -> MOCHA
             else -> if (isSystemInDarkTheme()) DARK else LIGHT
         }
     }
@@ -70,12 +77,17 @@ fun GeodeLauncherTheme(
                 theme == Theme.DARK && blackBackground ->
                     dynamicDarkColorScheme(context).copy(surface = Color.Black, background = Color.Black)
                 theme == Theme.DARK -> dynamicDarkColorScheme(context)
+                // catppuccin doesn't work with dynamic theming lol
+                theme == Theme.MOCHA -> MochaColorScheme
                 else -> dynamicLightColorScheme(context)
             }
         }
         theme == Theme.DARK && blackBackground ->
             DarkColorScheme.copy(surface = Color.Black, background = Color.Black)
         theme == Theme.DARK -> DarkColorScheme
+        theme == Theme.MOCHA -> MochaColorScheme
+        theme == Theme.MOCHA && blackBackground ->
+            MochaColorScheme.copy(surface = Color.Black, background = Color.Black)
         else -> LightColorScheme
     }
 
