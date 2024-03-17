@@ -189,6 +189,7 @@ fun themeToKey(theme: Int): String {
     return when (theme) {
         1 -> stringResource(R.string.preference_theme_light)
         2 -> stringResource(R.string.preference_theme_dark)
+        3 -> stringResource(R.string.preference_theme_mocha)
         else -> stringResource(R.string.preference_theme_default)
     }
 }
@@ -297,7 +298,7 @@ fun SettingsScreen(
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_theme_name),
                         dialogTitle = stringResource(R.string.preference_theme_select),
-                        maxVal = 2,
+                        maxVal = 3,
                         preferenceKey = PreferenceUtils.Key.THEME,
                         toLabel = { themeToKey(it) },
                         extraSelectBehavior = { updateTheme(context, it) }
