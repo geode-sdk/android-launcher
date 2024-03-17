@@ -59,6 +59,7 @@ import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.useCountdownTimer
 import kotlinx.coroutines.delay
@@ -78,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        val gdInstalled = LaunchUtils.isGeometryDashInstalled(packageManager)
+        val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
         val returnMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE)
@@ -232,8 +233,8 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val packageManager = context.packageManager
 
-    val gdVersionCode = remember { LaunchUtils.getGeometryDashVersionCode(packageManager) }
-    val gdVersionString = remember { LaunchUtils.getGeometryDashVersionString(packageManager) }
+    val gdVersionCode = remember { GamePackageUtils.getGameVersionCode(packageManager) }
+    val gdVersionString = remember { GamePackageUtils.getGameVersionString(packageManager) }
 
     var lastDismissedVersion by PreferenceUtils.useLongPreference(
         preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
@@ -562,8 +563,7 @@ fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
             }
 
             FilledTonalButton(onClick = {
-                val message = extraDetails
-                clipboardManager.setText(AnnotatedString(message))
+                clipboardManager.setText(AnnotatedString(extraDetails))
             }) {
                 Icon(
                     painterResource(R.drawable.icon_content_copy),
@@ -864,7 +864,7 @@ fun MainScreen(
             when {
                 gdInstalled && geodeInstalled -> {
                     val gdVersion = remember {
-                        LaunchUtils.getGeometryDashVersionCode(context.packageManager)
+                        GamePackageUtils.getGameVersionCode(context.packageManager)
                     }
 
                     if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {

@@ -359,8 +359,8 @@ object GeodeUtils {
     fun getGameVersion(): String {
         // these versions should be aligned to windows releases, not what android says
         activity.get()?.run {
-            val versionCode = LaunchUtils.getGeometryDashVersionCode(packageManager)
-            return gameVersionMap[versionCode] ?: LaunchUtils.getGeometryDashVersionString(packageManager)
+            val versionCode = GamePackageUtils.getGameVersionCode(packageManager)
+            return gameVersionMap[versionCode] ?: GamePackageUtils.getGameVersionString(packageManager)
         }
 
         return ""

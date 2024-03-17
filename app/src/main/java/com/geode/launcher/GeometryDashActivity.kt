@@ -24,6 +24,7 @@ import com.customRobTop.JniToCpp
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.ConstrainedFrameLayout
 import com.geode.launcher.utils.DownloadUtils
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -65,7 +66,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         super.onCreate(savedInstanceState)
 
         // return back to main if Geometry Dash isn't found
-        if (!LaunchUtils.isGeometryDashInstalled(packageManager)) {
+        if (!GamePackageUtils.isGameInstalled(packageManager)) {
             returnToMain()
             return
         }
@@ -77,7 +78,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             // generates helpful information for use in debugging library load failures
             val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-            val abiMismatch = LaunchUtils.detectAbiMismatch(this, gdPackageInfo, e)
+            val abiMismatch = GamePackageUtils.detectAbiMismatch(this, gdPackageInfo, e)
 
             val is64bit = LaunchUtils.is64bit
             val errorMessage = when {
@@ -163,7 +164,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun setupRedirection(packageInfo: PackageInfo) {
         try {
-            LaunchUtils.addAssetsFromPackage(assets, packageInfo)
+            GamePackageUtils.addAssetsFromPackage(assets, packageInfo)
         } catch (e: NoSuchMethodException) {
             Log.e("GeodeLauncher", "Failed to add asset redirection", e)
         }
