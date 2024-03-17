@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.os.Build
 import android.util.Log
+import okio.ByteString.Companion.toByteString
 
 object GamePackageUtils {
     fun isGameInstalled(packageManager: PackageManager): Boolean {
@@ -93,6 +94,28 @@ object GamePackageUtils {
         aspMethod.invoke(assetManager, packageInfo.applicationInfo.sourceDir)
         packageInfo.applicationInfo.splitSourceDirs?.forEach {
             aspMethod.invoke(assetManager, it)
+        }
+    }
+
+    private const val GAME_CERTIFICATE_HASH = "f5e7d8284d72c461a5f022d0cf755df101c3bb1e69cbe241bc1aef2cc5610a43"
+
+    private fun validateCertificate(certificate: ByteArray): Boolean =
+        certificate.toByteString().sha256().hex() == GAME_CERTIFICATE_HASH
+
+    fun identifyGameLegitimacy(packageManager: PackageManager): Boolean {
+        @Suppress("DEPRECATION")
+        val certificates = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNING_CERTIFICATES)
+            val signingInfo = game.signingInfo
+
+            signingInfo.signingCertificateHistory
+        } else {
+            val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNATURES)
+            game.signatures
+        }
+
+        return certificates.any {
+            validateCertificate(it.toByteArray())
         }
     }
 }
