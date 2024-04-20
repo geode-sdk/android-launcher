@@ -55,6 +55,7 @@
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.NoActionBar.Fullscreen"
+            android:configChanges="orientation|screenSize|smallestScreenSize"
             android:windowSoftInputMode="stateAlwaysHidden">
             <meta-data
                 android:name="android.app.lib_name"
