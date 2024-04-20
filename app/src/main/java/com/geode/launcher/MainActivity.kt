@@ -3,6 +3,7 @@ package com.geode.launcher
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -12,10 +13,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -34,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -44,8 +49,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -594,6 +601,82 @@ fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
     }
 }
 
+fun onDownloadGame(context: Context) {
+    val appUrl = "https://play.google.com/store/apps/details?id=${Constants.PACKAGE_NAME}"
+    try {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse(appUrl)
+            setPackage("com.android.vending")
+        }
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, R.string.no_activity_found, Toast.LENGTH_SHORT).show()
+    }
+}
+
+@Composable
+fun GooglePlayBadge(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    Image(
+        painter = painterResource(id = R.drawable.google_play_badge),
+        contentDescription = stringResource(R.string.launcher_download_game),
+        modifier = modifier
+            .width(196.dp)
+            .clip(AbsoluteRoundedCornerShape(4.dp))
+            .clickable { onDownloadGame(context) }
+    )
+}
+
+@Composable
+fun DownloadRecommendation(needsUniversal: Boolean, modifier: Modifier = Modifier) {
+    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val version = BuildConfig.VERSION_NAME
+
+    val showDownload = remember {
+        !GamePackageUtils.isGameInstalled(context.packageManager) ||
+                !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
+    }
+
+    val downloadBase = "https://github.com/geode-sdk/android-launcher/releases/download/$version"
+    val legacyDownloadUrl = "$downloadBase/geode-launcher-v$version-android32.apk"
+    val universalDownloadUrl = "$downloadBase/geode-launcher-v$version.apk"
+
+    val downloadUrl = if (needsUniversal)
+        universalDownloadUrl else legacyDownloadUrl
+
+    val downloadText = if (needsUniversal)
+        stringResource(R.string.launcher_download_universal)
+    else
+        stringResource(R.string.launcher_download_32bit)
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(
+            12.dp, alignment = Alignment.CenterVertically
+        )
+    ) {
+        ClickableText(
+            text = AnnotatedString(downloadText),
+            onClick = {
+                uriHandler.openUri(downloadUrl)
+            },
+
+            style = TextStyle.Default.copy(
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline
+            ),
+        )
+
+        if (showDownload) {
+            GooglePlayBadge(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
@@ -611,19 +694,28 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
 
                 ErrorInfoBody(failureInfo.title)
 
-                if (failureInfo.description != null) {
+                if (failureInfo.description != null && !failureInfo.title.isAbiFailure()) {
                     ErrorInfoDescription(
                         failureInfo.description,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
 
-                ErrorInfoActions(
-                    extraDetails = failureInfo.extendedMessage ?: failureInfo.description,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 16.dp)
-                )
+                if (failureInfo.title.isAbiFailure()) {
+                    DownloadRecommendation(
+                        needsUniversal = failureInfo.title == LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 16.dp)
+                    )
+                } else {
+                    ErrorInfoActions(
+                        extraDetails = failureInfo.extendedMessage ?: failureInfo.description,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 16.dp)
+                    )
+                }
             }
         }
     }
@@ -782,12 +874,22 @@ fun PlayButton(
 fun LaunchBlockedLabel(text: String) {
     val context = LocalContext.current
 
+    val showDownload = remember {
+        !GamePackageUtils.isGameInstalled(context.packageManager) ||
+                !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
+    }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text, modifier = Modifier.padding(12.dp))
-        OutlinedButton(onClick = { onSettings(context) }) {
-            Icon(Icons.Filled.Settings, contentDescription = null)
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(context.getString(R.string.launcher_settings))
+        Text(text, textAlign = TextAlign.Center, modifier = Modifier.padding(12.dp))
+
+        if (showDownload) {
+            GooglePlayBadge()
+        } else {
+            OutlinedButton(onClick = { onSettings(context) }) {
+                Icon(Icons.Filled.Settings, contentDescription = null)
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(context.getString(R.string.launcher_settings))
+            }
         }
     }
 }
@@ -868,7 +970,11 @@ fun MainScreen(
                     }
 
                     if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
-                        LaunchBlockedLabel(stringResource(R.string.game_outdated))
+                        val versionName = remember {
+                            GamePackageUtils.getUnifiedVersionName(context.packageManager)
+                        }
+
+                        LaunchBlockedLabel(stringResource(R.string.game_outdated, versionName))
                     } else {
                         val stopLaunch = releaseViewModel.isInUpdate || hasError
                         PlayButton(

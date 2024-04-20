@@ -11,10 +11,14 @@
     <string name="launcher_logo_alt">geode logo</string>
     <string name="launcher_launch_icon_alt">play icon</string>
     <string name="launcher_download_icon_alt">download icon</string>
+    <string name="launcher_purchase_reminder">If you enjoy the game, please consider purchasing it for a smoother launcher experience.</string>
+    <string name="launcher_download_game">Download Game</string>
+    <string name="launcher_download_32bit">Download the 32-bit version of launcher.</string>
+    <string name="launcher_download_universal">Download the non 32-bit version of launcher.</string>
     <string name="launcher_settings_icon_alt">settings icon</string>
     <string name="launcher_retry_icon_alt">retry icon</string>
     <string name="geode_download_title">Geode is not installed.</string>
-    <string name="game_outdated">A Geometry Dash update is required.</string>
+    <string name="game_outdated">A Geometry Dash update is required.\nYou currently have version %1$s.</string>
     <string name="geode_download_description">Geode is downloading. Please wait.</string>
     <plurals name="automatically_load_countdown">
         <item quantity="one">Automatically launching game in %1$d second.</item>
@@ -65,7 +69,7 @@
     <string name="load_failed_generic_error_description">Uncaught error during game load. Try to:</string>
     <string name="load_failed_crashed">Geode crashed</string>
     <string name="load_failed_crashed_description">A crash was reported during the last session. Try to:</string>
-    <string name="load_failed_recommendation_reinstall">Reinstall Geometry Dash from the Play Store.</string>
+    <string name="load_failed_recommendation_reinstall">Reinstall Geometry Dash.</string>
     <string name="load_failed_recommendation_switch_32bit_abi">Install the 32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_switch_64bit_abi">Install the non 32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>

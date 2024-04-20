@@ -97,7 +97,11 @@ object LaunchUtils {
         LINKER_NEEDS_32BIT,
         LINKER_FAILED,
         GENERIC,
-        CRASHED
+        CRASHED;
+
+        fun isAbiFailure(): Boolean {
+            return this == LINKER_NEEDS_32BIT || this == LINKER_NEEDS_64BIT
+        }
     }
 
     const val LAUNCHER_KEY_RETURN_ERROR = "return_error"
