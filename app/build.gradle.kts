@@ -83,19 +83,19 @@ android {
         }
     }
     namespace = "com.geode.launcher"
-    ndkVersion = "26.2.11394342"
+    ndkVersion = "26.3.11579264"
 }
 
 dependencies {
     implementation (platform("androidx.compose:compose-bom:$composeBOM"))
-    implementation ("androidx.core:core-ktx:1.12.0")
+    implementation ("androidx.core:core-ktx:1.13.0")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation ("androidx.activity:activity-compose:1.8.2")
-    implementation ("androidx.activity:activity-ktx:1.8.2")
+    implementation ("androidx.activity:activity-compose:1.9.0")
+    implementation ("androidx.activity:activity-ktx:1.9.0")
     implementation ("androidx.appcompat:appcompat:1.6.1")
     implementation ("androidx.documentfile:documentfile:1.0.1")
     implementation ("com.squareup.okio:okio:3.9.0")
