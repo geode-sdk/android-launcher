@@ -24,7 +24,7 @@ android {
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
-                arguments("-DUSE_TULIPHOOK:BOOL=OFF")
+                arguments("-DUSE_TULIPHOOK:BOOL=OFF", "-DANDROID_STL=c++_shared")
             }
         }
 
