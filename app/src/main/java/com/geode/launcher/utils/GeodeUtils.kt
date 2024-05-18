@@ -450,6 +450,7 @@ object GeodeUtils {
     }
 
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
+    const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 
@@ -470,4 +471,7 @@ object GeodeUtils {
     external fun nativeKeyDown(keyCode: Int, modifiers: Int, isRepeating: Boolean)
     external fun nativeActionScroll(scrollX: Float, scrollY: Float)
     external fun resizeSurface(width: Int, height: Int)
+
+    // represents the timestamp of the next input callback, in nanoseconds (most events don't send it, but it's there)
+    external fun setNextInputTimestamp(timestamp: Long)
 }

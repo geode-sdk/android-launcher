@@ -2,6 +2,7 @@ package org.cocos2dx.lib
 
 import android.content.Context
 import android.opengl.GLSurfaceView
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -14,6 +15,7 @@ import com.geode.launcher.utils.GeodeUtils
 
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
+private const val MS_TO_NS = 1_000_000
 
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     companion object {
@@ -43,6 +45,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             field = value
             cocos2dxRenderer.sendResizeEvents = value
         }
+
+    var sendTimestampEvents = false
 
     var cocos2dxEditText: Cocos2dxEditText? = null
         set(value) {
@@ -124,6 +128,9 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         val ids = IntArray(pointerNumber)
         val xs = FloatArray(pointerNumber)
         val ys = FloatArray(pointerNumber)
+        val timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            motionEvent.eventTimeNanos else motionEvent.eventTime * MS_TO_NS
+
         for (i in 0 until pointerNumber) {
             ids[i] = motionEvent.getPointerId(i)
             xs[i] = motionEvent.getX(i)
@@ -135,11 +142,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xDown = xs[0]
                 val f = ys[0]
                 queueEvent {
-                    cocos2dxRenderer.handleActionDown(
-                        idDown,
-                        xDown,
-                        f
-                    )
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionDown(idDown, xDown, f)
                 }
                 true
             }
@@ -147,26 +153,29 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val idUp = motionEvent.getPointerId(0)
                 val f2 = xs[0]
                 val f3 = ys[0]
-                queueEvent { cocos2dxRenderer.handleActionUp(idUp, f2, f3) }
+                queueEvent {
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionUp(idUp, f2, f3)
+                }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
                 queueEvent {
-                    cocos2dxRenderer.handleActionMove(
-                        ids,
-                        xs,
-                        ys
-                    )
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionMove(ids, xs, ys)
                 }
                 true
             }
             MotionEvent.ACTION_CANCEL -> {
                 queueEvent {
-                    cocos2dxRenderer.handleActionCancel(
-                        ids,
-                        xs,
-                        ys
-                    )
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionCancel(ids, xs, ys)
                 }
                 true
             }
@@ -176,11 +185,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerDown = motionEvent.getX(indexPointerDown)
                 val y = motionEvent.getY(indexPointerDown)
                 queueEvent {
-                    cocos2dxRenderer.handleActionDown(
-                        idPointerDown,
-                        xPointerDown,
-                        y
-                    )
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
                 }
                 true
             }
@@ -190,11 +198,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerUp = motionEvent.getX(indexPointUp)
                 val y2 = motionEvent.getY(indexPointUp)
                 queueEvent {
-                    cocos2dxRenderer.handleActionUp(
-                        idPointerUp,
-                        xPointerUp,
-                        y2
-                    )
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(timestamp)
+
+                    cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
                 }
                 true
             }
@@ -242,6 +249,9 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(event.eventTime * MS_TO_NS)
+
                     GeodeUtils.nativeKeyDown(keyCode, event.modifiers, event.repeatCount != 0)
                 }
                 true
@@ -264,6 +274,9 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
+                    if (sendTimestampEvents)
+                        GeodeUtils.setNextInputTimestamp(event.eventTime * MS_TO_NS)
+
                     GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
                 }
 
@@ -280,8 +293,13 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         if (event?.action == MotionEvent.ACTION_SCROLL) {
             val scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL)
             val scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
+            val timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                event.eventTimeNanos else event.eventTime * MS_TO_NS
 
             queueEvent {
+                if (sendTimestampEvents)
+                    GeodeUtils.setNextInputTimestamp(timestamp)
+
                 GeodeUtils.nativeActionScroll(scrollX, scrollY)
             }
 

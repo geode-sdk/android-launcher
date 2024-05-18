@@ -515,12 +515,17 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     override fun onCapabilityAdded(capability: String): Boolean {
-        if (capability == GeodeUtils.CAPABILITY_EXTENDED_INPUT) {
-            mGLSurfaceView?.useKeyboardEvents = true
-            return true
+        return when (capability) {
+            GeodeUtils.CAPABILITY_EXTENDED_INPUT -> {
+                mGLSurfaceView?.useKeyboardEvents = true
+                true
+            }
+            GeodeUtils.CAPABILITY_TIMESTAMP_INPUT -> {
+                mGLSurfaceView?.sendTimestampEvents = true
+                true
+            }
+            else -> false
         }
-
-        return false
     }
 
     /**
