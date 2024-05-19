@@ -355,7 +355,7 @@ fun OptionsCardPreview() {
             SettingsCard(
                 title = "Load files from /test",
                 description = "Very long testing description goes here. It is incredibly long, it should wrap onto a new line.",
-                preferenceKey = PreferenceUtils.Key.LOAD_TESTING
+                preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
             )
             SettingsCard(
                 title = "Testing option 2",

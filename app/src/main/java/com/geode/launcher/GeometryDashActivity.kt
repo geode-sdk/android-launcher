@@ -151,15 +151,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun handleGeodeException(e: Throwable) {
         e.printStackTrace()
-
-        val ignoreFailure = PreferenceUtils.get(this)
-            .getBoolean(PreferenceUtils.Key.IGNORE_LOAD_FAILURE)
-
-        if (ignoreFailure) {
-            Log.w("GeodeLauncher", "could not load Geode object!")
-        } else {
-            throw e
-        }
+        throw e
     }
 
     private fun setupRedirection(packageInfo: PackageInfo) {

@@ -11,7 +11,6 @@
     <string name="launcher_logo_alt">geode logo</string>
     <string name="launcher_launch_icon_alt">play icon</string>
     <string name="launcher_download_icon_alt">download icon</string>
-    <string name="launcher_purchase_reminder">If you enjoy the game, please consider purchasing it for a smoother launcher experience.</string>
     <string name="launcher_download_game">Download Game</string>
     <string name="launcher_download_32bit">Download the 32-bit version of launcher.</string>
     <string name="launcher_download_universal">Download the non 32-bit version of launcher.</string>
@@ -89,7 +88,6 @@
     <string name="text_copied">Copied to clipboard.</string>
 
     <string name="preference_category_testing">General</string>
-    <string name="preference_load_testing_name">Load files from /test</string>
     <string name="preference_load_automatically_name">Automatically launch</string>
     <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
@@ -126,7 +124,6 @@
     <string name="preference_category_developer">Developer</string>
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
-    <string name="preference_ignore_load_failure_name">Ignore loader errors</string>
     <string name="preference_text_clear">Clear</string>
 
     <!-- ApplicationLogsActivity strings -->
