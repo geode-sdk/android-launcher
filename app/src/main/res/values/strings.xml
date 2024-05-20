@@ -48,7 +48,7 @@
     <string name="launcher_error_device_info">Android %2$s, %1$s</string>
 
     <!-- Updater strings -->
-    <string name="release_fetch_failed">Update failed. Please try again later.</string>
+    <string name="release_fetch_failed">Update failed.\n%1$s</string>
     <string name="release_fetch_no_releases">No updates found.</string>
     <string name="release_fetch_in_progress">Checking for new releases…</string>
     <string name="release_fetch_success">Geode updated!</string>
@@ -58,6 +58,7 @@
     <string name="release_fetch_cancelled">Update cancelled.</string>
     <string name="release_fetch_button_retry">Retry</string>
     <string name="release_fetch_button_cancel">Cancel</string>
+    <string name="release_fetch_try_later">Please try again later.</string>
     <string name="release_fetch_manual_check_required">Externally managed library in use, please manually check for updates if you want to overwrite it.</string>
 
     <!-- GeometryDashActivity strings -->

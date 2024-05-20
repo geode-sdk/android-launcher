@@ -337,14 +337,17 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
                         ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
                             R.string.release_fetch_manual_check_required
                         )
-                        else -> state.exception.message
+                        else -> null
                     }
                 }
-                else -> state.exception.message
+                else -> null
             }
 
             UpdateMessageIndicator(
-                stringResource(R.string.release_fetch_failed, message ?: ""),
+                stringResource(
+                    R.string.release_fetch_failed,
+                    message ?: stringResource(R.string.release_fetch_try_later)
+                ),
                 modifier = modifier,
                 allowRetry = true,
                 releaseViewModel = releaseViewModel
