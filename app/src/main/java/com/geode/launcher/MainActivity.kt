@@ -875,7 +875,7 @@ fun LaunchBlockedLabel(text: String) {
     val context = LocalContext.current
 
     val showDownload = remember {
-        !GamePackageUtils.isGameInstalled(context.packageManager) ||
+        GamePackageUtils.isGameInstalled(context.packageManager) &&
                 !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
     }
 
