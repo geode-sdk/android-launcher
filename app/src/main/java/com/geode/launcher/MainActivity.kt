@@ -427,33 +427,23 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
 @Composable
 fun ErrorInfoBody(failureReason: LaunchUtils.LauncherError, modifier: Modifier = Modifier) {
     val headline = when (failureReason) {
-        LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
-        LaunchUtils.LauncherError.LINKER_NEEDS_32BIT -> stringResource(R.string.load_failed_abi_error)
         LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error_description)
-        LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error_description)
         LaunchUtils.LauncherError.CRASHED -> stringResource(R.string.load_failed_crashed_description)
+        else -> stringResource(R.string.load_failed_generic_error_description)
     }
 
     val recommendations = when (failureReason) {
-        LaunchUtils.LauncherError.LINKER_NEEDS_64BIT -> listOf(
-            stringResource(R.string.load_failed_recommendation_reinstall),
-            stringResource(R.string.load_failed_recommendation_switch_64bit_abi),
-        )
-        LaunchUtils.LauncherError.LINKER_NEEDS_32BIT -> listOf(
-            stringResource(R.string.load_failed_recommendation_reinstall),
-            stringResource(R.string.load_failed_recommendation_switch_32bit_abi),
-        )
         LaunchUtils.LauncherError.LINKER_FAILED -> listOf(
             stringResource(R.string.load_failed_recommendation_reinstall),
             stringResource(R.string.load_failed_recommendation_update),
         )
-        LaunchUtils.LauncherError.GENERIC -> listOf(
-            stringResource(R.string.load_failed_recommendation_reinstall),
-            stringResource(R.string.load_failed_recommendation_update),
-            stringResource(R.string.load_failed_recommendation_report)
-        )
         LaunchUtils.LauncherError.CRASHED -> listOf(
             stringResource(R.string.load_failed_recommendation_safe_mode),
+            stringResource(R.string.load_failed_recommendation_report)
+        )
+        else -> listOf(
+            stringResource(R.string.load_failed_recommendation_reinstall),
+            stringResource(R.string.load_failed_recommendation_update),
             stringResource(R.string.load_failed_recommendation_report)
         )
     }
@@ -651,12 +641,28 @@ fun DownloadRecommendation(needsUniversal: Boolean, modifier: Modifier = Modifie
     else
         stringResource(R.string.launcher_download_32bit)
 
+    val promptTitle = stringResource(R.string.load_failed_abi_error)
+    val reinstallText = stringResource(R.string.load_failed_recommendation_reinstall)
+    val recommendationText = if (needsUniversal)
+        stringResource(R.string.load_failed_recommendation_switch_64bit_abi)
+    else
+        stringResource(R.string.load_failed_recommendation_switch_32bit_abi)
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(
             12.dp, alignment = Alignment.CenterVertically
         )
     ) {
+        Text(promptTitle)
+        Text("\u2022\u00A0\u00A0$reinstallText")
+
+        if (showDownload) {
+            GooglePlayBadge()
+        }
+
+        Text("\u2022\u00A0\u00A0$recommendationText")
+
         ClickableText(
             text = AnnotatedString(downloadText),
             onClick = {
@@ -668,12 +674,6 @@ fun DownloadRecommendation(needsUniversal: Boolean, modifier: Modifier = Modifie
                 textDecoration = TextDecoration.Underline
             ),
         )
-
-        if (showDownload) {
-            GooglePlayBadge(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        }
     }
 }
 
@@ -692,15 +692,6 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
 
                 Spacer(Modifier.size(16.dp))
 
-                ErrorInfoBody(failureInfo.title)
-
-                if (failureInfo.description != null && !failureInfo.title.isAbiFailure()) {
-                    ErrorInfoDescription(
-                        failureInfo.description,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-
                 if (failureInfo.title.isAbiFailure()) {
                     DownloadRecommendation(
                         needsUniversal = failureInfo.title == LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
@@ -709,6 +700,15 @@ fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
                             .padding(top = 8.dp, bottom = 16.dp)
                     )
                 } else {
+                    ErrorInfoBody(failureInfo.title)
+
+                    if (failureInfo.description != null) {
+                        ErrorInfoDescription(
+                            failureInfo.description,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
                     ErrorInfoActions(
                         extraDetails = failureInfo.extendedMessage ?: failureInfo.description,
                         modifier = Modifier
@@ -884,12 +884,6 @@ fun LaunchBlockedLabel(text: String) {
 
         if (showDownload) {
             GooglePlayBadge()
-        } else {
-            OutlinedButton(onClick = { onSettings(context) }) {
-                Icon(Icons.Filled.Settings, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(context.getString(R.string.launcher_settings))
-            }
         }
     }
 }
