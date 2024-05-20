@@ -48,7 +48,7 @@
     <string name="launcher_error_device_info">Android %2$s, %1$s</string>
 
     <!-- Updater strings -->
-    <string name="release_fetch_failed">Update failed.\n%1$s</string>
+    <string name="release_fetch_failed">Update failed. Please try again later.</string>
     <string name="release_fetch_no_releases">No updates found.</string>
     <string name="release_fetch_in_progress">Checking for new releases…</string>
     <string name="release_fetch_success">Geode updated!</string>

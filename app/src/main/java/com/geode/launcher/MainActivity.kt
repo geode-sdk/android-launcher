@@ -914,7 +914,7 @@ fun MainScreen(
     var launchInSafeMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(shouldUpdate) {
-        if (shouldUpdate && !releaseViewModel.hasPerformedCheck) {
+        if (shouldUpdate && !releaseViewModel.hasPerformedCheck && gdInstalled) {
             releaseViewModel.runReleaseCheck()
         } else {
             releaseViewModel.useGlobalCheckState()
