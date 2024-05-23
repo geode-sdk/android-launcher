@@ -135,12 +135,13 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         DISMISSED_GJ_UPDATE,
         LAUNCH_ARGUMENTS,
         LIMIT_ASPECT_RATIO,
-        DISPLAY_MODE
+        DISPLAY_MODE,
+        FORCE_HRR
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
-            Key.UPDATE_AUTOMATICALLY -> true
+            Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
             Key.RELEASE_CHANNEL -> BuildConfig.DEBUG
             else -> false
         }
@@ -166,6 +167,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LAUNCH_ARGUMENTS -> "PreferenceLaunchArguments"
             Key.LIMIT_ASPECT_RATIO -> "PreferenceLimitAspectRatio"
             Key.DISPLAY_MODE -> "PreferenceDisplayMode"
+            Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"
         }
     }
 

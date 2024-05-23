@@ -319,6 +319,12 @@ fun SettingsScreen(
                         preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
                         toLabel = { displayOptionToKey(it) }
                     )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        SettingsCard(
+                            title = context.getString(R.string.preference_force_hrr),
+                            preferenceKey = PreferenceUtils.Key.FORCE_HRR,
+                        )
+                    }
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         onClick = { onOpenFileManager(context) }

@@ -9,7 +9,9 @@ import android.os.Message
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.Surface
 import android.view.inputmethod.InputMethodManager
+import androidx.annotation.RequiresApi
 import com.customRobTop.BaseRobTopActivity
 import com.geode.launcher.utils.GeodeUtils
 
@@ -111,6 +113,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
             }
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun updateRefreshRate() {
+        val maxRefreshRate = display.supportedModes.maxBy { it.refreshRate }
+        holder.surface.setFrameRate(
+            maxRefreshRate.refreshRate,
+            Surface.FRAME_RATE_COMPATIBILITY_DEFAULT
+        )
     }
 
     override fun onPause() {

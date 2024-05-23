@@ -59,6 +59,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mReceiver: BroadcastReceiver? = null
 
     private var displayMode = DisplayMode.DEFAULT
+    private var forceRefreshRate = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -377,6 +378,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             PreferenceUtils.get(this).getInt(PreferenceUtils.Key.DISPLAY_MODE)
         )
 
+        forceRefreshRate = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.FORCE_HRR)
+
         if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
@@ -414,6 +417,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         mIsRunning = true
 //        Cocos2dxHelper.onResume()
         mGLSurfaceView?.onResume()
+
+        if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            mGLSurfaceView?.updateRefreshRate()
+        }
     }
 
     private fun pauseGame() {
