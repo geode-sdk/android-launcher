@@ -1,10 +1,10 @@
-val composeCompiler: String by rootProject.extra
 val composeBOM: String by rootProject.extra
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -68,9 +68,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompiler
     }
     packaging {
         resources {
