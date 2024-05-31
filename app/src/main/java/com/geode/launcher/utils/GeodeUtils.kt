@@ -54,20 +54,37 @@ object GeodeUtils {
                     selectFileCallback(path)
                     return@registerForActivityResult
                 }
+
+                Toast.makeText(activity, R.string.file_select_error, Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(activity, R.string.no_file_selected, Toast.LENGTH_SHORT)
+                    .show()
             }
+
             failedCallback()
         }
         openDirectoryResultLauncher = activity.registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
             if (it != null) {
                 val path = FileUtils.getRealPathFromURI(activity, it)
-                if (path != null)
+                if (path != null) {
                     selectFileCallback(path)
-                return@registerForActivityResult
+                    return@registerForActivityResult
+                }
+
+                Toast.makeText(activity, R.string.file_select_error, Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(activity, R.string.no_file_selected, Toast.LENGTH_SHORT)
+                    .show()
             }
             failedCallback()
         }
         openFilesResultLauncher = activity.registerForActivityResult(GeodeOpenFilesActivityResult()) { result ->
             if (result.isEmpty()) {
+                Toast.makeText(activity, R.string.no_file_selected, Toast.LENGTH_SHORT)
+                    .show()
+
                 failedCallback()
                 return@registerForActivityResult
             }
@@ -88,6 +105,12 @@ object GeodeUtils {
                     selectFileCallback(path)
                     return@registerForActivityResult
                 }
+
+                Toast.makeText(activity, R.string.file_select_error, Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(activity, R.string.no_file_selected, Toast.LENGTH_SHORT)
+                    .show()
             }
             failedCallback()
         }
