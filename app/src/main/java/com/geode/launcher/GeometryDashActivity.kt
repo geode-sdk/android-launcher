@@ -152,7 +152,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun handleGeodeException(e: Throwable) {
         e.printStackTrace()
-        throw e
     }
 
     private fun setupRedirection(packageInfo: PackageInfo) {
