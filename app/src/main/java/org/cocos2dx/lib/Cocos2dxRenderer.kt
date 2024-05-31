@@ -1,11 +1,12 @@
 package org.cocos2dx.lib
 
 import android.opengl.GLSurfaceView
+import android.os.Build
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 @Suppress("unused", "KotlinJniMissingFunction")
-class Cocos2dxRenderer : GLSurfaceView.Renderer {
+class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceView.Renderer {
     companion object {
         @JvmStatic
         fun setAnimationInterval(@Suppress("UNUSED_PARAMETER") animationInterval: Double) {
@@ -60,6 +61,7 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
     private var screenWidth = 0
     private var screenHeight = 0
     var sendResizeEvents = false
+    var setFrameRate = false
 
     fun setScreenWidthAndHeight(surfaceWidth: Int, surfaceHeight: Int) {
         screenWidth = surfaceWidth
@@ -71,7 +73,11 @@ class Cocos2dxRenderer : GLSurfaceView.Renderer {
         lastTickInNanoSeconds = System.nanoTime()
     }
 
-    override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {}
+    override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {
+        if (setFrameRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            handler.updateRefreshRate()
+        }
+    }
 
     override fun onDrawFrame(gl: GL10?) {
         nativeRender()

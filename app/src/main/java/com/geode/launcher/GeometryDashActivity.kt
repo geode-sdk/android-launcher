@@ -363,7 +363,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         glSurfaceView.initView()
-        glSurfaceView.setCocos2dxRenderer(Cocos2dxRenderer())
+
+        val renderer = Cocos2dxRenderer(glSurfaceView)
+        glSurfaceView.setCocos2dxRenderer(renderer)
+
+        if (forceRefreshRate) {
+            renderer.setFrameRate = true
+        }
 
         editText.inputType = 145
         glSurfaceView.cocos2dxEditText = editText
@@ -417,10 +423,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         mIsRunning = true
 //        Cocos2dxHelper.onResume()
         mGLSurfaceView?.onResume()
-
-        if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            mGLSurfaceView?.updateRefreshRate()
-        }
     }
 
     private fun pauseGame() {
