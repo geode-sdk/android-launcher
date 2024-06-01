@@ -152,6 +152,12 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun handleGeodeException(e: Throwable) {
         e.printStackTrace()
+
+        // ignore load failures if the game is newer than what's supported
+        // so people in the future can use their save data
+        if (GamePackageUtils.getGameVersionCode(packageManager) <= Constants.SUPPORTED_VERSION_CODE) {
+            throw e
+        }
     }
 
     private fun setupRedirection(packageInfo: PackageInfo) {
