@@ -262,14 +262,10 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
                 Text(stringResource(R.string.launcher_unsupported_version_title))
             },
             text = {
-                val message = if (gdVersionCode >= Constants.SUPPORTED_VERSION_CODE) {
-                    R.string.launcher_unsupported_version_description
-                } else {
-                    R.string.launcher_outdated_version_description
-                }
-
                 Text(stringResource(
-                    message, gdVersionString, Constants.SUPPORTED_VERSION_STRING
+                    R.string.launcher_unsupported_version_description,
+                    gdVersionString,
+                    Constants.SUPPORTED_VERSION_STRING
                 ))
             },
             confirmButton = {
