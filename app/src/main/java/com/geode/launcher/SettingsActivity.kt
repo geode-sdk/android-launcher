@@ -311,6 +311,11 @@ fun SettingsScreen(
                         description = context.getString(R.string.preference_load_automatically_description),
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
+                    SettingsCard(
+                        title = context.getString(R.string.preference_auto_safe_mode_name),
+                        description = context.getString(R.string.preference_auto_safe_mode_description),
+                        preferenceKey = PreferenceUtils.Key.AUTO_SAFE_MODE,
+                    )
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_display_mode_name),
                         dialogTitle = stringResource(R.string.preference_display_mode_select),

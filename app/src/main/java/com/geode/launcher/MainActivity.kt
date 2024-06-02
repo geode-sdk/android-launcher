@@ -298,27 +298,55 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
 
 @Composable
 fun SafeModeDialog(onDismiss: () -> Unit, onLaunch: () -> Unit) {
-    AlertDialog(
-        icon = {
-            Icon(
-                Icons.Filled.Warning,
-                contentDescription = stringResource(R.string.launcher_warning_icon_alt)
-            )
-        },
-        title = { Text(stringResource(R.string.safe_mode_enable_title)) },
-        text = { Text(stringResource(R.string.safe_mode_enable_description)) },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.message_box_cancel))
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onLaunch) {
-                Text(stringResource(R.string.message_box_continue))
-            }
-        },
-        onDismissRequest = onDismiss
+    val shouldLaunchSafeAuto by PreferenceUtils.useBooleanPreference(
+        preferenceKey = PreferenceUtils.Key.AUTO_SAFE_MODE
     )
+
+    if (shouldLaunchSafeAuto) {
+        AlertDialog(
+            icon = {
+                Icon(
+                    Icons.Filled.Warning,
+                    contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                )
+            },
+            title = { Text(stringResource(R.string.safe_mode_disable_title)) },
+            text = { Text(stringResource(R.string.safe_mode_disable_description)) },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.message_box_cancel))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onLaunch) {
+                    Text(stringResource(R.string.message_box_continue))
+                }
+            },
+            onDismissRequest = onDismiss
+        )
+    } else {
+        AlertDialog(
+            icon = {
+                Icon(
+                    Icons.Filled.Warning,
+                    contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                )
+            },
+            title = { Text(stringResource(R.string.safe_mode_enable_title)) },
+            text = { Text(stringResource(R.string.safe_mode_enable_description)) },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.message_box_cancel))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onLaunch) {
+                    Text(stringResource(R.string.message_box_continue))
+                }
+            },
+            onDismissRequest = onDismiss
+        )
+    }
 }
 
 @Composable
@@ -783,10 +811,25 @@ fun PlayButton(
         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
     )
 
+    val shouldLaunchSafeAuto by PreferenceUtils.useBooleanPreference(
+        preferenceKey = PreferenceUtils.Key.AUTO_SAFE_MODE
+    )
+
+    if (shouldLaunchSafeAuto) {
+        Text(
+            stringResource(
+                R.string.auto_safe_mode_active
+            ),
+            style = Typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+        Spacer(Modifier.size(12.dp))
+    }
+
     if (shouldAutomaticallyLaunch && !stopAutomaticLaunch && !showSafeModeDialog) {
         val countdownTimer = useCountdownTimer(
             time = 3000,
-            onCountdownFinish = { onPlayGame(launchInSafeMode) }
+            onCountdownFinish = { onPlayGame((shouldLaunchSafeAuto || launchInSafeMode) && !(shouldLaunchSafeAuto && launchInSafeMode)) }
         )
 
         if (countdownTimer != 0L) {
@@ -827,7 +870,7 @@ fun PlayButton(
 
                 is PressInteraction.Release -> {
                     if (!showSafeModeDialog) {
-                        onPlayGame(launchInSafeMode)
+                        onPlayGame((shouldLaunchSafeAuto || launchInSafeMode) && !(shouldLaunchSafeAuto && launchInSafeMode))
                     }
                 }
             }
@@ -865,7 +908,7 @@ fun PlayButton(
             onLaunch = {
                 launchInSafeMode = true
 
-                onPlayGame(true)
+                onPlayGame(!shouldLaunchSafeAuto)
 
                 showSafeModeDialog = false
             }
@@ -974,11 +1017,14 @@ fun MainScreen(
                         LaunchBlockedLabel(stringResource(R.string.game_outdated, versionName))
                     } else {
                         val stopLaunch = releaseViewModel.isInUpdate || hasError
+                        val shouldLaunchSafeAuto by PreferenceUtils.useBooleanPreference(
+                            preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY
+                        )
                         PlayButton(
                             stopAutomaticLaunch = stopLaunch,
                             blockLaunch = releaseViewModel.isInUpdate,
                             onPlayGame = { safeMode ->
-                                launchInSafeMode = safeMode
+                                launchInSafeMode = (shouldLaunchSafeAuto || safeMode) && !(shouldLaunchSafeAuto && safeMode)
                                 beginLaunch = true
                             },
                         )
