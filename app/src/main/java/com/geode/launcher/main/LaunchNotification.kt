@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +34,7 @@ import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import kotlinx.coroutines.delay
 
-fun onSettings(context: Context) {
+fun onNotificationSettings(context: Context) {
     val launchIntent = Intent(context, SettingsActivity::class.java)
     context.startActivity(launchIntent)
 }
@@ -64,6 +65,7 @@ fun FadeOutContainer() {
 
     AnimatedVisibility(
         visibleState = state,
+        enter = slideInHorizontally(),
         exit = slideOutHorizontally()
     ) {
         Box(modifier = Modifier.padding(8.dp)) {
@@ -82,7 +84,7 @@ fun MainView() {
             containerColor = surfaceColor
         ),
         onClick = {
-            onSettings(context)
+            onNotificationSettings(context)
         }
     ) {
         NotificationContent()
