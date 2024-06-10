@@ -73,6 +73,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         try {
+            createVersionFile()
             tryLoadGame()
         } catch (e: UnsatisfiedLinkError) {
             Log.e("GeodeLauncher", "Library linkage failure", e)
@@ -102,6 +103,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             return
         }
+    }
+
+    private fun createVersionFile() {
+        val versionPath = File(filesDir, "game_version.txt")
+        val gameVersion = GamePackageUtils.getGameVersionCode(packageManager)
+
+        versionPath.writeText("$gameVersion")
     }
 
     private fun returnToMain(
