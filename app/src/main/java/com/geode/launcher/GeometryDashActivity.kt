@@ -16,11 +16,13 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
+import com.geode.launcher.main.LaunchNotification
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.ConstrainedFrameLayout
 import com.geode.launcher.utils.DownloadUtils
@@ -367,6 +369,16 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         this.mGLSurfaceView = glSurfaceView
         frameLayout.addView(this.mGLSurfaceView)
+
+        val showNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
+        if (showNotification) {
+            val notificationView = ComposeView(this)
+            frameLayout.addView(notificationView)
+
+            notificationView.setContent {
+                LaunchNotification()
+            }
+        }
 
         glSurfaceView.setEGLContextClientVersion(2)
         glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8)

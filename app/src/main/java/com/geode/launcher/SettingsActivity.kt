@@ -385,6 +385,10 @@ fun SettingsScreen(
                         title = stringResource(R.string.preferences_view_logs),
                         onClick = { onOpenLogs(context) }
                     )
+                    SettingsCard(
+                        title = context.getString(R.string.preference_enable_redesign),
+                        preferenceKey = PreferenceUtils.Key.ENABLE_REDESIGN,
+                    )
                 }
 
                 Text(

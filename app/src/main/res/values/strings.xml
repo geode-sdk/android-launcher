@@ -46,6 +46,7 @@
     <string name="launcher_error_export_crash">Share crash</string>
     <string name="launcher_error_export_missing">No crash dump was found!</string>
     <string name="launcher_error_device_info">Android %2$s, %1$s</string>
+    <string name="launcher_settings_notification_body">Launcher Settings</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
@@ -104,6 +105,7 @@
     <string name="preference_theme_dark">Dark</string>
     <string name="preference_black_background_name">Black background in dark theme</string>
     <string name="preference_force_hrr">Force maximum refresh rate</string>
+    <string name="preference_enable_redesign">Enable UI redesign</string>
 
     <string name="preference_display_mode_name">Screen scale</string>
     <string name="preference_display_mode_select">Select screen scale</string>

@@ -136,7 +136,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LAUNCH_ARGUMENTS,
         LIMIT_ASPECT_RATIO,
         DISPLAY_MODE,
-        FORCE_HRR
+        FORCE_HRR,
+        ENABLE_REDESIGN
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -168,6 +169,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LIMIT_ASPECT_RATIO -> "PreferenceLimitAspectRatio"
             Key.DISPLAY_MODE -> "PreferenceDisplayMode"
             Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"
+            Key.ENABLE_REDESIGN -> "PreferenceEnableRedesign"
         }
     }
 
