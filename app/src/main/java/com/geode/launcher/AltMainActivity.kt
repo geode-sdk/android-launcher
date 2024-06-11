@@ -1,17 +1,30 @@
 package com.geode.launcher
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -25,25 +38,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.main.*
-import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import com.geode.launcher.utils.GamePackageUtils
 
-class MainActivity : ComponentActivity() {
+class AltMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
-
         super.onCreate(savedInstanceState)
+
+        // requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        enableEdgeToEdge()
 
         val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
@@ -61,13 +73,6 @@ class MainActivity : ComponentActivity() {
             LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
         } else { null }
 
-        val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
-        if (redirectToAlt) {
-            val launchIntent = Intent(this, AltMainActivity::class.java)
-            startActivity(launchIntent)
-
-            return
-        }
 
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
@@ -81,11 +86,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        MainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
+                        AltMainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
                     }
                 }
             }
         }
+
         if (gdInstalled && geodeInstalled) {
             intent.getBooleanExtra("restarted", false).let {
                 if (it) {
@@ -97,7 +103,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(
+fun GeodeLogo(modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.geode_logo),
+            contentDescription = null,
+            modifier = Modifier.size(76.dp, 76.dp)
+        )
+        Text(
+            stringResource(R.string.launcher_title),
+            style = MaterialTheme.typography.displayMedium,
+            modifier = Modifier.padding(12.dp)
+        )
+    }
+}
+
+@Composable
+fun AltMainScreen(
     gdInstalled: Boolean = true,
     geodePreinstalled: Boolean = true,
     loadFailureInfo: LoadFailureInfo? = null,
@@ -126,9 +152,11 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // automatically show load failed dialog (but not crash)
-    var showErrorInfo by remember { mutableStateOf(
+    var showErrorInfo by remember {
+        mutableStateOf(
         loadFailureInfo != null && loadFailureInfo.title != LaunchUtils.LauncherError.CRASHED
-    )}
+        )
+    }
 
     val hasError = loadFailureInfo != null
     LaunchedEffect(hasError, showErrorInfo) {
@@ -146,24 +174,20 @@ fun MainScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.geode_logo),
-                contentDescription = context.getString(R.string.launcher_logo_alt),
-                modifier = Modifier.size(136.dp, 136.dp)
-            )
-            Text(
-                context.getString(R.string.launcher_title),
-                fontSize = 32.sp,
-                modifier = Modifier.padding(12.dp)
-            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                GeodeLogo()
+                Spacer(modifier = Modifier.size(128.dp))
+            }
 
             when {
                 gdInstalled && geodeInstalled -> {
@@ -178,15 +202,12 @@ fun MainScreen(
 
                         LaunchBlockedLabel(stringResource(R.string.game_outdated, versionName))
                     } else {
-                        val stopLaunch = releaseViewModel.isInUpdate || hasError
-                        PlayButton(
-                            stopAutomaticLaunch = stopLaunch,
-                            blockLaunch = releaseViewModel.isInUpdate,
-                            onPlayGame = { safeMode ->
-                                launchInSafeMode = safeMode
+                        val waitForUpdate = (shouldUpdate && !releaseViewModel.hasPerformedCheck) || releaseViewModel.isInUpdate
+                        LaunchedEffect(waitForUpdate) {
+                            if (!waitForUpdate) {
                                 beginLaunch = true
-                            },
-                        )
+                            }
+                        }
                     }
                 }
                 gdInstalled -> {
@@ -219,11 +240,18 @@ fun MainScreen(
                 else -> LaunchBlockedLabel(stringResource(R.string.game_not_found))
             }
 
-            UpdateCard(
-                releaseViewModel,
-                modifier = Modifier
-                    .padding(12.dp)
-            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Spacer(modifier = Modifier.size(128.dp))
+
+                UpdateCard(
+                    releaseViewModel,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
         }
     }
 
@@ -232,34 +260,5 @@ fun MainScreen(
             beginLaunch = false
             launchInSafeMode = false
         }
-    }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun MainScreenLightPreview() {
-    GeodeLauncherTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            MainScreen()
-        }
-    }
-}
-
-
-@Preview(showSystemUi = true)
-@Composable
-fun MainScreenDarkPreview() {
-    GeodeLauncherTheme(theme = Theme.DARK) {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            MainScreen()
-        }
-    }
-}
-
-@Preview
-@Composable
-fun MainScreenNoGeometryDashPreview() {
-    GeodeLauncherTheme {
-        MainScreen(gdInstalled = false)
     }
 }
