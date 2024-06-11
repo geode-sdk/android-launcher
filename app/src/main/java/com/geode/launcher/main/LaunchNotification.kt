@@ -9,13 +9,18 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -24,8 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
 import com.geode.launcher.SettingsActivity
@@ -41,24 +48,38 @@ fun onNotificationSettings(context: Context) {
 
 @Composable
 fun LaunchNotification() {
+    val context = LocalContext.current
     val theme = Theme.DARK
 
     CompositionLocalProvider(LocalTheme provides theme) {
         GeodeLauncherTheme(theme = theme, blackBackground = true) {
-            FadeOutContainer()
+            // surface is not in use, so this is unfortunately not provided
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                // using manual placements as column layouts seem to mess up the animation
+                AnimatedNotificationCard(
+                    onClick = { onNotificationSettings(context) }
+                ) {
+                    NotificationContent()
+                }
+            }
         }
     }
 }
 
 @Composable
-fun FadeOutContainer() {
+fun AnimatedNotificationCard(visibilityDelay: Long = 0L, offset: Dp = 0.dp, onClick: (() -> Unit)? = null, contents: @Composable () -> Unit) {
     val state = remember {
         MutableTransitionState(false).apply {
-            targetState = true
+            targetState = visibilityDelay <= 0
         }
     }
 
     LaunchedEffect(true) {
+        if (visibilityDelay > 0) {
+            delay(visibilityDelay)
+            state.targetState = true
+        }
+
         delay(3000L)
         state.targetState = false
     }
@@ -68,34 +89,76 @@ fun FadeOutContainer() {
         enter = slideInHorizontally(),
         exit = slideOutHorizontally()
     ) {
-        Box(modifier = Modifier.padding(8.dp)) {
-            MainView()
+        Box(modifier = Modifier
+                .padding(8.dp)
+                .offset(y = offset)
+        ) {
+            CardView(onClick) {
+                contents()
+            }
         }
     }
 }
 
 @Composable
-fun MainView() {
-    val context = LocalContext.current
+fun CardView(onClick: (() -> Unit)?, contents: @Composable () -> Unit) {
     val surfaceColor = MaterialTheme.colorScheme.background.copy(alpha = 0.75f)
 
-    OutlinedCard(
-        colors = CardDefaults.cardColors(
-            containerColor = surfaceColor
-        ),
-        onClick = {
-            onNotificationSettings(context)
+    if (onClick != null) {
+        OutlinedCard(
+            colors = CardDefaults.cardColors(
+                containerColor = surfaceColor
+            ),
+            onClick = onClick
+        ) {
+            contents()
         }
+    } else {
+        OutlinedCard(
+            colors = CardDefaults.cardColors(
+                containerColor = surfaceColor
+            )
+        ) {
+            contents()
+        }
+    }
+}
+
+@Composable
+fun LauncherUpdateContent(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+
+    Column(
+        // buttons add enough padding already, lower to compensate
+        modifier = modifier.padding(
+            top = 20.dp,
+            start = 12.dp,
+            end = 12.dp,
+            bottom = 8.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        NotificationContent()
+        Text(
+            stringResource(R.string.launcher_update_available),
+            modifier = Modifier.padding(horizontal = 10.dp)
+        )
+
+        Row(modifier = Modifier.align(Alignment.End)) {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.launcher_update_dismiss))
+            }
+
+            Spacer(Modifier.size(4.dp))
+
+            TextButton(onClick = { uriHandler.openUri(openTo) }) {
+                Text(stringResource(R.string.launcher_download))
+            }
+        }
     }
 }
 
 @Composable
 fun NotificationContent() {
-    // surface is not in use, so this is unfortunately not provided
-    val textColor = MaterialTheme.colorScheme.onSurface
-
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -103,14 +166,12 @@ fun NotificationContent() {
     ) {
         Image(
             painter = painterResource(id = R.drawable.geode_monochrome),
-            colorFilter = ColorFilter.tint(textColor),
             contentDescription = null,
             modifier = Modifier.size(32.dp, 32.dp)
         )
 
         Text(
-            text = stringResource(id = R.string.launcher_settings_notification_body),
-            color = textColor,
+            text = stringResource(id = R.string.launcher_notification_settings),
             style = MaterialTheme.typography.titleLarge
         )
     }
