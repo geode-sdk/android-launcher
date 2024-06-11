@@ -11,15 +11,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -84,9 +88,11 @@ class AltMainActivity : ComponentActivity() {
                 GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = Color.Transparent
                     ) {
-                        AltMainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
+                        WithWave {
+                            AltMainScreen(gdInstalled, geodeInstalled, loadFailureInfo)
+                        }
                     }
                 }
             }
@@ -98,6 +104,20 @@ class AltMainActivity : ComponentActivity() {
                     onLaunch(this)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun LaunchProgressBody(title: String, details: String, modifier: Modifier = Modifier) {
+
+}
+
+@Composable
+fun LaunchProgressCard(modifier: Modifier = Modifier) {
+    Card(modifier = modifier) {
+        Column {
+
         }
     }
 }
@@ -172,6 +192,8 @@ fun AltMainScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
+        contentColor = Color.White,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Box(
@@ -180,14 +202,7 @@ fun AltMainScreen(
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                GeodeLogo()
-                Spacer(modifier = Modifier.size(128.dp))
-            }
+            GeodeLogo(modifier = Modifier.offset(y = (-90).dp))
 
             when {
                 gdInstalled && geodeInstalled -> {
@@ -205,7 +220,7 @@ fun AltMainScreen(
                         val waitForUpdate = (shouldUpdate && !releaseViewModel.hasPerformedCheck) || releaseViewModel.isInUpdate
                         LaunchedEffect(waitForUpdate) {
                             if (!waitForUpdate) {
-                                beginLaunch = true
+                                // beginLaunch = true
                             }
                         }
                     }
@@ -240,17 +255,32 @@ fun AltMainScreen(
                 else -> LaunchBlockedLabel(stringResource(R.string.game_not_found))
             }
 
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            OutlinedCard(
+                modifier = Modifier.offset(y = 70.dp)
             ) {
-                Spacer(modifier = Modifier.size(128.dp))
-
                 UpdateCard(
                     releaseViewModel,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(16.dp)
                 )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Button(
+                    onClick = { onSettings(context) },
+                ) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(context.getString(R.string.launcher_settings))
+                }
             }
         }
     }
