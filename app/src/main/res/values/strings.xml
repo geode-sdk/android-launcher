@@ -46,7 +46,20 @@
     <string name="launcher_error_export_crash">Share crash</string>
     <string name="launcher_error_export_missing">No crash dump was found!</string>
     <string name="launcher_error_device_info">Android %2$s, %1$s</string>
-    <string name="launcher_settings_notification_body">Launcher Settings</string>
+
+    <string name="launcher_notification_settings">Launcher Settings</string>
+    <string name="launcher_notification_update_failed">Failed to check for updates.</string>
+    <string name="launcher_notification_update_cancelled">Update cancelled.</string>
+    <string name="launcher_notification_update_success">Geode updated.</string>
+
+    <string name="launcher_starting_game">Starting Geometry Dash…</string>
+    <string name="launcher_downloading_update">Downloading update…</string>
+    <string name="launcher_downloading_update_details">(%1$s/%2$s)</string>
+    <string name="launcher_cancelled_manual">Launch paused.</string>
+    <string name="launcher_cancelled_crash">Launch paused due to a crash.</string>
+    <string name="launcher_cancelled_error">Could not start Geode.</string>
+    <string name="launcher_cancelled_outdated">A Geometry Dash update is required.</string>
+    <string name="launcher_cancelled_restart">Restart</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
@@ -146,4 +159,5 @@
     <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
     <string name="application_logs_crash_only">Show Crash Buffer</string>
     <string name="application_logs_crash_only_enabled_alt">Enabled</string>
+    <string name="title_activity_alt_main">AltMainActivity</string>
 </resources>

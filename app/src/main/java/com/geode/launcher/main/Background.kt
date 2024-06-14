@@ -16,11 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.zIndex
 import kotlin.math.sin
 import kotlin.random.Random
@@ -44,9 +41,6 @@ fun WithWave(modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
         )
     ) {
         contents()
-
-        val configuration = LocalConfiguration.current
-        val screenHeight = configuration.screenHeightDp.dp
 
         WaveBackground(
             color = WAVE_COLOR_1,
