@@ -11,12 +11,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -24,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -121,13 +126,13 @@ data class LaunchStatusInfo(
 )
 
 @Composable
-fun LaunchCancelledIcon(cancelReason: LaunchViewModel.LaunchCancelReason) {
+fun LaunchCancelledIcon(cancelReason: LaunchViewModel.LaunchCancelReason, modifier: Modifier = Modifier) {
     when (cancelReason) {
         LaunchViewModel.LaunchCancelReason.GAME_OUTDATED,
-        LaunchViewModel.LaunchCancelReason.GAME_MISSING -> Icon(painterResource(R.drawable.icon_error), contentDescription = null)
+        LaunchViewModel.LaunchCancelReason.GAME_MISSING -> Icon(painterResource(R.drawable.icon_error), contentDescription = null, modifier)
         LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED,
-        LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> Icon(Icons.Default.Warning, contentDescription = null)
-        else -> Icon(Icons.Default.Info, contentDescription = null)
+        LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> Icon(Icons.Default.Warning, contentDescription = null, modifier)
+        else -> Icon(Icons.Default.Info, contentDescription = null, modifier)
     }
 }
 
@@ -192,30 +197,49 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState): LaunchStatusInf
 }
 
 @Composable
-fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Unit, inProgress: Boolean) {
-    Row {
-        icon()
-        Text(statusInfo.title)
+fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Unit, inProgress: Boolean, modifier: Modifier = Modifier) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.titleLarge) {
+                icon()
+                Spacer(Modifier.size(8.dp))
+                Text(statusInfo.title)
+            }
+        }
+
+        if (inProgress) {
+            LinearProgressIndicator()
+        }
+
+        if (statusInfo.details != null) {
+            Text(statusInfo.details)
+        }
     }
 
-    if (inProgress) {
-        LinearProgressIndicator()
-    }
-
-    if (statusInfo.details != null) {
-        Text(statusInfo.details)
-    }
 }
 
 @Composable
 fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifier) {
-    Column {
-        Text(statusInfo.title)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier.defaultMinSize(minWidth = 300.dp)
+    ) {
+        Text(statusInfo.title, style = MaterialTheme.typography.titleLarge)
 
         if (statusInfo.progress != null) {
-            LinearProgressIndicator(statusInfo.progress)
+            LinearProgressIndicator(
+                statusInfo.progress,
+                modifier = Modifier.width(300.dp).align(Alignment.CenterHorizontally)
+            )
         } else {
-            LinearProgressIndicator()
+            LinearProgressIndicator(
+                modifier = Modifier.width(300.dp).align(Alignment.CenterHorizontally)
+            )
         }
 
         if (statusInfo.details != null) {
@@ -228,26 +252,32 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
 fun LaunchProgressCard(uiState: LaunchViewModel.LaunchUIState, onCancel: () -> Unit, onResume: () -> Unit, modifier: Modifier = Modifier) {
     val status = mapLaunchStatusToInfo(uiState)
     Card(modifier = modifier) {
-        if (uiState is LaunchViewModel.LaunchUIState.Cancelled) {
-            LaunchCancelledBody(
-                statusInfo = status,
-                icon = { LaunchCancelledIcon(uiState.reason) },
-                inProgress = uiState.inProgress
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(16.dp)) {
+            if (uiState is LaunchViewModel.LaunchUIState.Cancelled) {
+                LaunchCancelledBody(
+                    statusInfo = status,
+                    icon = { LaunchCancelledIcon(uiState.reason, Modifier.size(32.dp)) },
+                    inProgress = uiState.inProgress
+                )
 
-            if (uiState.reason.allowsRetry()) {
-                TextButton(onClick = onResume) {
-                    Text(stringResource(R.string.launcher_cancelled_restart))
+                if (uiState.reason.allowsRetry()) {
+                    Button(onClick = onResume) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_cancelled_restart))
+                    }
+                }
+            } else {
+                LaunchProgressBody(statusInfo = status)
+
+                TextButton(onClick = onCancel) {
+                    Text(stringResource(R.string.release_fetch_button_cancel))
                 }
             }
-        } else {
-            LaunchProgressBody(statusInfo = status)
-
-            TextButton(onClick = onCancel) {
-                Text(stringResource(R.string.release_fetch_button_cancel))
-            }
         }
-
     }
 }
 
@@ -286,7 +316,9 @@ fun AltMainScreen(
     var launchInSafeMode by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding(),
         contentAlignment = Alignment.Center
     ) {
         GeodeLogo(modifier = Modifier.offset(y = (-90).dp))
@@ -305,7 +337,7 @@ fun AltMainScreen(
                     launchViewModel.beginLaunchFlow()
                 }
             },
-            modifier = Modifier.offset(y = 90.dp)
+            modifier = Modifier.padding(16.dp).offset(y = 90.dp)
         )
 
         Row(

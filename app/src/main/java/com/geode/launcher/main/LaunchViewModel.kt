@@ -151,8 +151,9 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             initReadyTimer()
         }
 
+        val hasGeode = LaunchUtils.isGeodeInstalled(application)
         val shouldUpdate = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
-        if (shouldUpdate && !hasCheckedForUpdates) {
+        if ((shouldUpdate && !hasCheckedForUpdates) || !hasGeode) {
             ReleaseManager.get(application).checkForUpdates(false)
         }
 

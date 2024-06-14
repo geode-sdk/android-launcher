@@ -55,7 +55,7 @@
     <string name="launcher_starting_game">Starting Geometry Dash…</string>
     <string name="launcher_downloading_update">Downloading update…</string>
     <string name="launcher_downloading_update_details">(%1$s/%2$s)</string>
-    <string name="launcher_cancelled_manual">Launch paused.</string>
+    <string name="launcher_cancelled_manual">Launch cancelled.</string>
     <string name="launcher_cancelled_crash">Launch paused due to a crash.</string>
     <string name="launcher_cancelled_error">Could not start Geode.</string>
     <string name="launcher_cancelled_outdated">A Geometry Dash update is required.</string>
