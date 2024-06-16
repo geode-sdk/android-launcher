@@ -310,23 +310,36 @@ fun LaunchProgressCard(
                     inProgress = uiState.inProgress
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (uiState.reason.allowsRetry()) {
+                if (uiState.reason == LaunchViewModel.LaunchCancelReason.GAME_OUTDATED) {
+                    val context = LocalContext.current
+
+                    // game should be downloaded if this message is showing
+                    val showDownload = remember {
+                        !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
+                    }
+
+                    if (showDownload) {
+                        GooglePlayBadge(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    }
+                }
+
+                if (uiState.reason.allowsRetry()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         LongPressButton(onClick = { onResume(false) }, onLongPress = {
                             showSafeModeDialog = true
                         }) {
                             RetryButtonContents(uiState.reason)
                         }
-                    }
 
-                    if (crashInfo != null) {
-                        FilledTonalButton(onClick = onMore) {
-                            Icon(
-                                painterResource(R.drawable.icon_question_mark),
-                                contentDescription = null
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.launcher_error_more))
+                        if (crashInfo != null) {
+                            FilledTonalButton(onClick = onMore) {
+                                Icon(
+                                    painterResource(R.drawable.icon_question_mark),
+                                    contentDescription = null
+                                )
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text(stringResource(R.string.launcher_error_more))
+                            }
                         }
                     }
                 }
