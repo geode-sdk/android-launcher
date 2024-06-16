@@ -55,10 +55,11 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     }
 
     enum class LaunchCancelReason {
-        MANUAL, LAST_LAUNCH_CRASHED, GEODE_NOT_FOUND, GAME_MISSING, GAME_OUTDATED;
+        MANUAL, AUTOMATIC, LAST_LAUNCH_CRASHED, GEODE_NOT_FOUND, GAME_MISSING, GAME_OUTDATED;
 
         fun allowsRetry() = when (this) {
             MANUAL,
+            AUTOMATIC,
             LAST_LAUNCH_CRASHED,
             GEODE_NOT_FOUND -> true
             GAME_MISSING,
@@ -178,21 +179,23 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         preReadyCheck()
     }
 
-    suspend fun cancelLaunch() {
+    suspend fun cancelLaunch(isAutomatic: Boolean = false) {
         // no need to double cancel
         if (_uiState.value is LaunchUIState.Cancelled) {
             return
         }
 
+        val reason = if (isAutomatic) LaunchCancelReason.AUTOMATIC else LaunchCancelReason.MANUAL
+
         isCancelling = true
-        _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.MANUAL, true))
+        _uiState.emit(LaunchUIState.Cancelled(reason, true))
 
         val releaseManager = ReleaseManager.get(application)
         if (releaseManager.isInUpdate) {
             releaseManager.cancelUpdate()
         }
 
-        _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.MANUAL, false))
+        _uiState.emit(LaunchUIState.Cancelled(reason, false))
     }
 
     override fun onCleared() {

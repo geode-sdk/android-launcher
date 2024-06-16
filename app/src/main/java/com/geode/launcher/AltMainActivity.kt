@@ -151,6 +151,9 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
             title = stringResource(R.string.launcher_cancelled_error),
             details = stringResource(R.string.launcher_cancelled_outdated)
         )
+        LaunchViewModel.LaunchCancelReason.AUTOMATIC -> LaunchStatusInfo(
+            title = stringResource(R.string.launcher_cancelled_navigated_away)
+        )
         else -> LaunchStatusInfo(
             title = stringResource(R.string.launcher_cancelled_manual)
         )
@@ -252,6 +255,40 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
 }
 
 @Composable
+fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
+    when (reason) {
+        LaunchViewModel.LaunchCancelReason.MANUAL -> {
+            Icon(
+                Icons.Filled.Refresh,
+                contentDescription = null
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.launcher_cancelled_restart))
+        }
+        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED,
+        LaunchViewModel.LaunchCancelReason.AUTOMATIC -> {
+            Icon(
+                painterResource(R.drawable.icon_resume),
+                contentDescription = null
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.launcher_cancelled_resume))
+        }
+        LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> {
+            Icon(
+                Icons.Filled.Refresh,
+                contentDescription = null
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.launcher_cancelled_retry))
+        }
+        // these shouldn't be allowing retries anyways
+        LaunchViewModel.LaunchCancelReason.GAME_MISSING,
+        LaunchViewModel.LaunchCancelReason.GAME_OUTDATED -> {}
+    }
+}
+
+@Composable
 fun LaunchProgressCard(
     uiState: LaunchViewModel.LaunchUIState,
     crashInfo: LoadFailureInfo?,
@@ -278,12 +315,7 @@ fun LaunchProgressCard(
                         LongPressButton(onClick = { onResume(false) }, onLongPress = {
                             showSafeModeDialog = true
                         }) {
-                            Icon(
-                                Icons.Filled.Refresh,
-                                contentDescription = null
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.launcher_cancelled_restart))
+                            RetryButtonContents(uiState.reason)
                         }
                     }
 
@@ -401,7 +433,7 @@ fun AltMainScreen(
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        launchViewModel.cancelLaunch()
+                        launchViewModel.cancelLaunch(true)
                     }
 
                     onSettings(context)
