@@ -397,31 +397,55 @@ fun AltMainScreen(
     ) {
         GeodeLogo(modifier = Modifier.offset(y = (-90).dp))
 
-        LaunchProgressCard(
-            launchUIState,
-            crashInfo = launchViewModel.currentCrashInfo(),
-            onCancel = {
-                launchInSafeMode = false
-                coroutineScope.launch {
-                    launchViewModel.cancelLaunch()
-                }
-            },
-            onResume = { safeMode ->
-                launchInSafeMode = safeMode
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.offset(y = 90.dp)
+        ) {
+            LaunchProgressCard(
+                launchUIState,
+                crashInfo = launchViewModel.currentCrashInfo(),
+                onCancel = {
+                    launchInSafeMode = false
+                    coroutineScope.launch {
+                        launchViewModel.cancelLaunch()
+                    }
+                },
+                onResume = { safeMode ->
+                    launchInSafeMode = safeMode
 
-                launchViewModel.clearCrashInfo()
-                coroutineScope.launch {
-                    launchViewModel.beginLaunchFlow()
-                }
-            },
-            onMore = {
-                showErrorInfo = true
-            },
-            safeModeEnabled = launchInSafeMode,
-            modifier = Modifier
-                .padding(16.dp)
-                .offset(y = 90.dp)
-        )
+                    launchViewModel.clearCrashInfo()
+                    coroutineScope.launch {
+                        launchViewModel.beginLaunchFlow()
+                    }
+                },
+                onMore = {
+                    showErrorInfo = true
+                },
+                safeModeEnabled = launchInSafeMode
+            )
+
+            val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
+            val launcherDownloadUrl = nextLauncherUpdate?.getLauncherDownload()?.browserDownloadUrl
+
+            // only show launcher update in a case where a user won't see it ingame
+            if (launcherDownloadUrl != null && launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
+                StatusIndicator(
+                    icon = {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        downloadUrl(context, launcherDownloadUrl)
+                    },
+                    text = {
+                        Text(stringResource(R.string.launcher_update_available))
+                    }
+                )
+            }
+        }
 
         Row(
             modifier = Modifier

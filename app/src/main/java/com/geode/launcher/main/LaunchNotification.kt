@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -76,11 +75,7 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
         LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE -> {
             AnimatedNotificationCard(
                 onClick = {
-                    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
-                    val launcherUrl = nextUpdate?.getLauncherDownload()?.browserDownloadUrl
-                    if (launcherUrl != null) {
-                        downloadUrl(context, launcherUrl)
-                    }
+                    downloadLauncherUpdate(context)
                 }
             ) {
                 LauncherUpdateContent()

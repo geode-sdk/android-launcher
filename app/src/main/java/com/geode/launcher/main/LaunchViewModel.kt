@@ -79,6 +79,8 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     private val _uiState = MutableStateFlow<LaunchUIState>(LaunchUIState.Initial)
     val uiState = _uiState.asStateFlow()
 
+    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
+
     var loadFailure: LoadFailureInfo? = null
     private var hasCheckedForUpdates = false
     private var isCancelling = false

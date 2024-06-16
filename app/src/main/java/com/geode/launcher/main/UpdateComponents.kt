@@ -49,6 +49,17 @@ fun downloadUrl(context: Context, url: String) {
     }
 }
 
+fun downloadLauncherUpdate(context: Context) {
+    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
+    val launcherUrl = nextUpdate?.getLauncherDownload()?.browserDownloadUrl
+
+    if (launcherUrl != null) {
+        downloadUrl(context, launcherUrl)
+    } else {
+        Toast.makeText(context, context.getString(R.string.release_fetch_no_releases), Toast.LENGTH_SHORT).show()
+    }
+}
+
 @Composable
 fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
