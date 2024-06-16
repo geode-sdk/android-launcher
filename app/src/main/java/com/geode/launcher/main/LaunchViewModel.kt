@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
+private const val COOLDOWN_LENGTH_MS = 1000L
+
 class LaunchViewModel(private val application: Application): ViewModel() {
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -35,7 +37,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     private var readyTimer: CountDownTimer? = null
 
     private fun initReadyTimer() {
-        readyTimer = object : CountDownTimer(1000, 1000) {
+        readyTimer = object : CountDownTimer(COOLDOWN_LENGTH_MS, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 // no tick necessary
             }
@@ -95,6 +97,22 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         // flow terminates once update check is finished
         hasCheckedForUpdates = true
         preReadyCheck()
+    }
+
+    fun currentCrashInfo(): LoadFailureInfo? {
+        val currentState = _uiState.value
+        if (currentState is LaunchUIState.Cancelled && currentState.reason == LaunchCancelReason.LAST_LAUNCH_CRASHED) {
+            return loadFailure
+        }
+
+        return null
+    }
+
+    fun clearCrashInfo() {
+        val currentState = _uiState.value
+        if (currentState is LaunchUIState.Cancelled && currentState.reason == LaunchCancelReason.LAST_LAUNCH_CRASHED) {
+            loadFailure = null
+        }
     }
 
     private suspend fun preReadyCheck() {
@@ -161,6 +179,11 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     }
 
     suspend fun cancelLaunch() {
+        // no need to double cancel
+        if (_uiState.value is LaunchUIState.Cancelled) {
+            return
+        }
+
         isCancelling = true
         _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.MANUAL, true))
 

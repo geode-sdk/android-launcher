@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
         val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
         if (redirectToAlt) {
             val launchIntent = Intent(this, AltMainActivity::class.java)
+            launchIntent.putExtras(intent)
             startActivity(launchIntent)
 
             return

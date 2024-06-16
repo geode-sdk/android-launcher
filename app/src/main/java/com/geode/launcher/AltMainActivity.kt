@@ -1,5 +1,6 @@
 package com.geode.launcher
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.text.format.Formatter
 import androidx.activity.ComponentActivity
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
@@ -44,7 +46,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -63,7 +64,7 @@ class AltMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         enableEdgeToEdge()
 
         val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
@@ -98,12 +99,9 @@ class AltMainActivity : ComponentActivity() {
             CompositionLocalProvider(LocalTheme provides theme) {
                 GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
                     Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = Color.Transparent
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        WithWave {
-                            AltMainScreen(launchViewModel)
-                        }
+                        AltMainScreen(launchViewModel)
                     }
                 }
             }
@@ -234,11 +232,15 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
         if (statusInfo.progress != null) {
             LinearProgressIndicator(
                 statusInfo.progress,
-                modifier = Modifier.width(300.dp).align(Alignment.CenterHorizontally)
+                modifier = Modifier
+                    .width(300.dp)
+                    .align(Alignment.CenterHorizontally)
             )
         } else {
             LinearProgressIndicator(
-                modifier = Modifier.width(300.dp).align(Alignment.CenterHorizontally)
+                modifier = Modifier
+                    .width(300.dp)
+                    .align(Alignment.CenterHorizontally)
             )
         }
 
@@ -249,7 +251,14 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
 }
 
 @Composable
-fun LaunchProgressCard(uiState: LaunchViewModel.LaunchUIState, onCancel: () -> Unit, onResume: () -> Unit, modifier: Modifier = Modifier) {
+fun LaunchProgressCard(
+    uiState: LaunchViewModel.LaunchUIState,
+    crashInfo: LoadFailureInfo?,
+    onCancel: () -> Unit, 
+    onResume: () -> Unit,
+    onMore: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val status = mapLaunchStatusToInfo(uiState)
     Card(modifier = modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(16.dp)) {
@@ -260,14 +269,27 @@ fun LaunchProgressCard(uiState: LaunchViewModel.LaunchUIState, onCancel: () -> U
                     inProgress = uiState.inProgress
                 )
 
-                if (uiState.reason.allowsRetry()) {
-                    Button(onClick = onResume) {
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = null
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_cancelled_restart))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (uiState.reason.allowsRetry()) {
+                        Button(onClick = onResume) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = null
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.launcher_cancelled_restart))
+                        }
+                    }
+
+                    if (crashInfo != null) {
+                        FilledTonalButton(onClick = onMore) {
+                            Icon(
+                                painterResource(R.drawable.icon_question_mark),
+                                contentDescription = null
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.launcher_error_more))
+                        }
                     }
                 }
             } else {
@@ -314,6 +336,7 @@ fun AltMainScreen(
     val launchUIState by launchViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var launchInSafeMode by remember { mutableStateOf(false) }
+    var showErrorInfo by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -325,6 +348,7 @@ fun AltMainScreen(
 
         LaunchProgressCard(
             launchUIState,
+            crashInfo = launchViewModel.currentCrashInfo(),
             onCancel = {
                 launchInSafeMode = false
                 coroutineScope.launch {
@@ -332,12 +356,17 @@ fun AltMainScreen(
                 }
             },
             onResume = {
-                launchViewModel.loadFailure = null
+                launchViewModel.clearCrashInfo()
                 coroutineScope.launch {
                     launchViewModel.beginLaunchFlow()
                 }
             },
-            modifier = Modifier.padding(16.dp).offset(y = 90.dp)
+            onMore = {
+                showErrorInfo = true
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .offset(y = 90.dp)
         )
 
         Row(
@@ -373,5 +402,10 @@ fun AltMainScreen(
                 launchViewModel.cancelLaunch()
             }
         }
+    }
+
+    val loadFailure = launchViewModel.currentCrashInfo()
+    if (showErrorInfo && loadFailure != null) {
+        ErrorInfoSheet(loadFailure, onDismiss = { showErrorInfo = false })
     }
 }
