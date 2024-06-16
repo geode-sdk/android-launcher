@@ -54,6 +54,7 @@ import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
 
 data class LoadFailureInfo(
     val title: LaunchUtils.LauncherError,
@@ -151,6 +152,15 @@ fun onShowLogs(context: Context) {
 
 @Composable
 fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val currentRelease = remember {
+        PreferenceUtils.get(context).getString(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+    }
+
+    val gameVersion = remember {
+        GamePackageUtils.getUnifiedVersionName(context.packageManager)
+    }
+
     Column(modifier = modifier) {
         Text(
             stringResource(R.string.launcher_error_details),
@@ -168,7 +178,12 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
         Spacer(Modifier.size(4.dp))
 
         Text(
-            stringResource(R.string.launcher_error_device_info, Build.MODEL, Build.VERSION.RELEASE),
+            stringResource(R.string.launcher_error_device_info,
+                Build.MODEL,
+                Build.VERSION.RELEASE,
+                currentRelease ?: "unknown",
+                gameVersion
+            ),
             style = Typography.labelMedium
         )
     }
