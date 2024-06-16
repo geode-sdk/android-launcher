@@ -1,65 +1,126 @@
 package com.geode.launcher.main
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Image
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
-import com.geode.launcher.SettingsActivity
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 
-fun onNotificationSettings(context: Context) {
-    val launchIntent = Intent(context, SettingsActivity::class.java)
-    context.startActivity(launchIntent)
+enum class LaunchNotificationType {
+    GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED;
+}
+
+fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
+    val cards = mutableListOf<LaunchNotificationType>()
+
+    val releaseManager = ReleaseManager.get(context)
+
+    val availableUpdate = releaseManager.availableLauncherUpdate.value
+    if (availableUpdate != null) {
+        cards.add(LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE)
+    }
+
+    val releaseState = releaseManager.uiState.value
+
+    if (releaseState is ReleaseManager.ReleaseManagerState.Finished && releaseState.hasUpdated) {
+        cards.add(LaunchNotificationType.GEODE_UPDATED)
+    }
+
+    if (releaseState is ReleaseManager.ReleaseManagerState.Failure) {
+        cards.add(LaunchNotificationType.UPDATE_FAILED)
+    }
+
+    return cards
+}
+
+@Composable
+fun NotificationCardFromType(type: LaunchNotificationType) {
+    val context = LocalContext.current
+
+    when (type) {
+        LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE -> {
+            AnimatedNotificationCard(
+                onClick = {
+                    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
+                    val launcherUrl = nextUpdate?.getLauncherDownload()?.browserDownloadUrl
+                    if (launcherUrl != null) {
+                        downloadUrl(context, launcherUrl)
+                    }
+                }
+            ) {
+                LauncherUpdateContent()
+            }
+        }
+        LaunchNotificationType.GEODE_UPDATED -> {
+            AnimatedNotificationCard {
+                UpdateNotificationContent()
+            }
+        }
+        LaunchNotificationType.UPDATE_FAILED -> {
+            AnimatedNotificationCard {
+                UpdateFailedContent()
+            }
+        }
+    }
 }
 
 @Composable
 fun LaunchNotification() {
     val context = LocalContext.current
-    val theme = Theme.DARK
+
+    val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
+    val theme = Theme.fromInt(themeOption)
+
+    val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
+
+    val cards = determineDisplayedCards(context)
 
     CompositionLocalProvider(LocalTheme provides theme) {
-        GeodeLauncherTheme(theme = theme, blackBackground = true) {
+        GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
             // surface is not in use, so this is unfortunately not provided
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 // using manual placements as column layouts seem to mess up the animation
-                AnimatedNotificationCard(
-                    onClick = { onNotificationSettings(context) }
+                Column(
+                    modifier = Modifier.displayCutoutPadding()
                 ) {
-                    NotificationContent()
+                    cards.forEach {
+                        NotificationCardFromType(it)
+                    }
                 }
             }
         }
@@ -67,7 +128,7 @@ fun LaunchNotification() {
 }
 
 @Composable
-fun AnimatedNotificationCard(visibilityDelay: Long = 0L, offset: Dp = 0.dp, onClick: (() -> Unit)? = null, contents: @Composable () -> Unit) {
+fun AnimatedNotificationCard(visibilityDelay: Long = 0L, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
     val state = remember {
         MutableTransitionState(false).apply {
             targetState = visibilityDelay <= 0
@@ -86,38 +147,30 @@ fun AnimatedNotificationCard(visibilityDelay: Long = 0L, offset: Dp = 0.dp, onCl
 
     AnimatedVisibility(
         visibleState = state,
-        enter = slideInHorizontally(),
-        exit = slideOutHorizontally()
+        enter = expandHorizontally() + fadeIn(),
+        exit = shrinkHorizontally() + fadeOut(),
+        modifier = modifier
     ) {
-        Box(modifier = Modifier
-                .padding(8.dp)
-                .offset(y = offset)
-        ) {
-            CardView(onClick) {
-                contents()
-            }
+        CardView(onClick, modifier = Modifier.padding(8.dp)) {
+            contents()
         }
     }
 }
 
 @Composable
-fun CardView(onClick: (() -> Unit)?, contents: @Composable () -> Unit) {
-    val surfaceColor = MaterialTheme.colorScheme.background.copy(alpha = 0.75f)
+fun CardView(onClick: (() -> Unit)?, modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
+    // val surfaceColor = MaterialTheme.colorScheme.background.copy(alpha = 0.75f)
 
     if (onClick != null) {
         OutlinedCard(
-            colors = CardDefaults.cardColors(
-                containerColor = surfaceColor
-            ),
-            onClick = onClick
+            onClick = onClick,
+            modifier = modifier
         ) {
             contents()
         }
     } else {
         OutlinedCard(
-            colors = CardDefaults.cardColors(
-                containerColor = surfaceColor
-            )
+            modifier = modifier
         ) {
             contents()
         }
@@ -125,53 +178,67 @@ fun CardView(onClick: (() -> Unit)?, contents: @Composable () -> Unit) {
 }
 
 @Composable
-fun LauncherUpdateContent(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
-    val uriHandler = LocalUriHandler.current
-
-    Column(
-        // buttons add enough padding already, lower to compensate
-        modifier = modifier.padding(
-            top = 20.dp,
-            start = 12.dp,
-            end = 12.dp,
-            bottom = 8.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+fun LauncherUpdateContent(modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(16.dp)
     ) {
-        Text(
-            stringResource(R.string.launcher_update_available),
-            modifier = Modifier.padding(horizontal = 10.dp)
+        Icon(
+            Icons.Filled.Info,
+            contentDescription = null,
+            modifier = Modifier.size(32.dp, 32.dp)
         )
 
-        Row(modifier = Modifier.align(Alignment.End)) {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.launcher_update_dismiss))
-            }
+        Column {
+            Text(
+                text = stringResource(id = R.string.launcher_update_available),
+                style = MaterialTheme.typography.titleLarge
+            )
 
-            Spacer(Modifier.size(4.dp))
-
-            TextButton(onClick = { uriHandler.openUri(openTo) }) {
-                Text(stringResource(R.string.launcher_download))
-            }
+            Text(
+                text = stringResource(id = R.string.launcher_notification_update_cta),
+                style = MaterialTheme.typography.titleMedium
+            )
         }
     }
 }
 
 @Composable
-fun NotificationContent() {
+fun UpdateNotificationContent(modifier: Modifier = Modifier) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp)
+        modifier = modifier.padding(16.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.geode_monochrome),
+        Icon(
+            painterResource(R.drawable.geode_monochrome),
             contentDescription = null,
             modifier = Modifier.size(32.dp, 32.dp)
         )
 
         Text(
-            text = stringResource(id = R.string.launcher_notification_settings),
+            text = stringResource(id = R.string.launcher_notification_update_success),
+            style = MaterialTheme.typography.titleLarge
+        )
+    }
+}
+
+@Composable
+fun UpdateFailedContent(modifier: Modifier = Modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(16.dp)
+    ) {
+        Icon(
+            Icons.Filled.Warning,
+            contentDescription = null,
+            modifier = Modifier.size(32.dp, 32.dp)
+        )
+
+        Text(
+            text = stringResource(id = R.string.launcher_notification_update_failed),
             style = MaterialTheme.typography.titleLarge
         )
     }

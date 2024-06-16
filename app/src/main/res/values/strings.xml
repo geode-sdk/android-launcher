@@ -49,8 +49,8 @@
 
     <string name="launcher_notification_settings">Launcher Settings</string>
     <string name="launcher_notification_update_failed">Failed to check for updates.</string>
-    <string name="launcher_notification_update_cancelled">Update cancelled.</string>
-    <string name="launcher_notification_update_success">Geode updated.</string>
+    <string name="launcher_notification_update_success">Geode updated!</string>
+    <string name="launcher_notification_update_cta">Tap to download.</string>
 
     <string name="launcher_starting_game">Starting Geometry Dash…</string>
     <string name="launcher_downloading_update">Downloading update…</string>

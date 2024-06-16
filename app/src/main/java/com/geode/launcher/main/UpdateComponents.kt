@@ -1,6 +1,11 @@
 package com.geode.launcher.main
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.text.format.Formatter
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,9 +40,18 @@ import java.net.ConnectException
 import java.net.UnknownHostException
 
 
+fun downloadUrl(context: Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
+    }
+}
+
 @Composable
 fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
 
     ElevatedCard(modifier) {
         Column(
@@ -62,7 +76,7 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDis
 
                 Spacer(Modifier.size(4.dp))
 
-                TextButton(onClick = { uriHandler.openUri(openTo) }) {
+                TextButton(onClick = { downloadUrl(context, openTo) }) {
                     Text(stringResource(R.string.launcher_download))
                 }
             }
