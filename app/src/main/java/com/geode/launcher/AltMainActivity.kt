@@ -158,12 +158,13 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
 }
 
 @Composable
-fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState): LaunchStatusInfo {
+fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Boolean = false): LaunchStatusInfo {
     return when (state) {
         is LaunchViewModel.LaunchUIState.Initial,
         is LaunchViewModel.LaunchUIState.Working,
         is LaunchViewModel.LaunchUIState.Ready -> LaunchStatusInfo(
-            title = stringResource(R.string.launcher_starting_game)
+            title = stringResource(R.string.launcher_starting_game),
+            details = if (inSafeMode) stringResource(R.string.launcher_in_safe_mode) else null
         )
         is LaunchViewModel.LaunchUIState.UpdateCheck -> LaunchStatusInfo(
             title = stringResource(R.string.release_fetch_in_progress)
@@ -255,11 +256,14 @@ fun LaunchProgressCard(
     uiState: LaunchViewModel.LaunchUIState,
     crashInfo: LoadFailureInfo?,
     onCancel: () -> Unit, 
-    onResume: () -> Unit,
+    onResume: (safeMode: Boolean) -> Unit,
     onMore: () -> Unit,
+    safeModeEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val status = mapLaunchStatusToInfo(uiState)
+    var showSafeModeDialog by remember { mutableStateOf(false) }
+    val status = mapLaunchStatusToInfo(uiState, safeModeEnabled)
+
     Card(modifier = modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(16.dp)) {
             if (uiState is LaunchViewModel.LaunchUIState.Cancelled) {
@@ -271,7 +275,9 @@ fun LaunchProgressCard(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (uiState.reason.allowsRetry()) {
-                        Button(onClick = onResume) {
+                        LongPressButton(onClick = { onResume(false) }, onLongPress = {
+                            showSafeModeDialog = true
+                        }) {
                             Icon(
                                 Icons.Filled.Refresh,
                                 contentDescription = null
@@ -300,6 +306,18 @@ fun LaunchProgressCard(
                 }
             }
         }
+    }
+
+    if (showSafeModeDialog) {
+        SafeModeDialog(
+            onDismiss = {
+                showSafeModeDialog = false
+            },
+            onLaunch = {
+                onResume(true)
+                showSafeModeDialog = false
+            }
+        )
     }
 }
 
@@ -336,6 +354,7 @@ fun AltMainScreen(
     val launchUIState by launchViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var launchInSafeMode by remember { mutableStateOf(false) }
+
     var showErrorInfo by remember { mutableStateOf(false) }
 
     Box(
@@ -355,7 +374,9 @@ fun AltMainScreen(
                     launchViewModel.cancelLaunch()
                 }
             },
-            onResume = {
+            onResume = { safeMode ->
+                launchInSafeMode = safeMode
+
                 launchViewModel.clearCrashInfo()
                 coroutineScope.launch {
                     launchViewModel.beginLaunchFlow()
@@ -364,6 +385,7 @@ fun AltMainScreen(
             onMore = {
                 showErrorInfo = true
             },
+            safeModeEnabled = launchInSafeMode,
             modifier = Modifier
                 .padding(16.dp)
                 .offset(y = 90.dp)

@@ -60,6 +60,7 @@
     <string name="launcher_cancelled_error">Could not start Geode.</string>
     <string name="launcher_cancelled_outdated">A Geometry Dash update is required.</string>
     <string name="launcher_cancelled_restart">Restart</string>
+    <string name="launcher_in_safe_mode">Starting in safe mode…</string>
 
     <!-- Updater strings -->
     <string name="release_fetch_failed">Update failed.\n%1$s</string>
