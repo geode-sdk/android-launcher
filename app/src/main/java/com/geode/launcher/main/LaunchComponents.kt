@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -153,6 +154,49 @@ fun onSettings(context: Context) {
 }
 
 @Composable
+fun LongPressButton(onClick: () -> Unit, onLongPress: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+    // compose apis don't provide a good way of adding long press to a button
+    var isLongPress by remember { mutableStateOf(false) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val viewConfiguration = LocalViewConfiguration.current
+    val haptics = LocalHapticFeedback.current
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    delay(viewConfiguration.longPressTimeoutMillis)
+
+                    // perform a second delay to make the action more obvious
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    delay(viewConfiguration.longPressTimeoutMillis)
+
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                    isLongPress = true
+                    onLongPress()
+                }
+                is PressInteraction.Release -> {
+                    if (!isLongPress) {
+                        onClick()
+                    }
+                    isLongPress = false
+                }
+            }
+        }
+    }
+
+    Button(
+        onClick = {},
+        enabled = enabled,
+        modifier = modifier,
+        interactionSource = interactionSource,
+        content = content
+    )
+}
+
+@Composable
 fun PlayButton(
     stopAutomaticLaunch: Boolean,
     blockLaunch: Boolean,
@@ -187,42 +231,15 @@ fun PlayButton(
         }
     }
 
-    // compose apis don't provide a good way of adding long press to a button
-    val interactionSource = remember { MutableInteractionSource() }
-    val viewConfiguration = LocalViewConfiguration.current
-    val haptics = LocalHapticFeedback.current
-
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collectLatest { interaction ->
-            when (interaction) {
-                is PressInteraction.Press -> {
-                    launchInSafeMode = false
-
-                    delay(viewConfiguration.longPressTimeoutMillis)
-
-                    // perform a second delay to make the action more obvious
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    delay(viewConfiguration.longPressTimeoutMillis)
-
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-
-                    showSafeModeDialog = true
-                }
-
-                is PressInteraction.Release -> {
-                    if (!showSafeModeDialog) {
-                        onPlayGame(launchInSafeMode)
-                    }
-                }
-            }
-        }
-    }
-
     Row {
-        Button(
-            onClick = { },
+        LongPressButton(
             enabled = !blockLaunch,
-            interactionSource = interactionSource
+            onLongPress = {
+                showSafeModeDialog = true
+            },
+            onClick = {
+                onPlayGame(launchInSafeMode)
+            }
         ) {
             Icon(
                 Icons.Filled.PlayArrow,
