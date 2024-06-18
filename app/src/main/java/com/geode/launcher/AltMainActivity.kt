@@ -466,7 +466,7 @@ fun AltMainScreen(
 
                         launchViewModel.clearCrashInfo()
                         coroutineScope.launch {
-                            launchViewModel.beginLaunchFlow()
+                            launchViewModel.beginLaunchFlow(true)
                         }
                     },
                     onMore = {

@@ -157,8 +157,12 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         _uiState.emit(LaunchUIState.Ready)
     }
 
-    suspend fun beginLaunchFlow() {
+    suspend fun beginLaunchFlow(isRestart: Boolean = false) {
         if (_uiState.value !is LaunchUIState.Initial && _uiState.value !is LaunchUIState.Cancelled) {
+            return
+        }
+
+        if (_uiState.value is LaunchUIState.Cancelled && !isRestart) {
             return
         }
 
