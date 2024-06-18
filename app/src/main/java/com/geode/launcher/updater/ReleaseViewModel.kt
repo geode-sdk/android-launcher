@@ -98,10 +98,4 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
             syncUiState(releaseFlow)
         }
     }
-
-    fun dismissLauncherUpdate() {
-        viewModelScope.launch(Dispatchers.IO) {
-            ReleaseManager.get(application).dismissLauncherUpdate()
-        }
-    }
 }

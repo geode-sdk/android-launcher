@@ -61,7 +61,7 @@ fun downloadLauncherUpdate(context: Context) {
 }
 
 @Composable
-fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDismiss: () -> Unit) {
+fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String) {
     val context = LocalContext.current
 
     ElevatedCard(modifier) {
@@ -80,19 +80,12 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String, onDis
                 modifier = Modifier.padding(horizontal = 10.dp)
             )
 
-            Row(modifier = Modifier.align(Alignment.End)) {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.launcher_update_dismiss))
-                }
-
-                Spacer(Modifier.size(4.dp))
-
-                TextButton(onClick = { downloadUrl(context, openTo) }) {
-                    Text(stringResource(R.string.launcher_download))
-                }
+            TextButton(
+                onClick = { downloadUrl(context, openTo) },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(stringResource(R.string.launcher_download))
             }
-
-
         }
     }
 }
@@ -263,10 +256,7 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
 
         LauncherUpdateIndicator(
             modifier = modifier,
-            openTo = updateUrl,
-            onDismiss = {
-                releaseViewModel.dismissLauncherUpdate()
-            }
+            openTo = updateUrl
         )
     }
 }

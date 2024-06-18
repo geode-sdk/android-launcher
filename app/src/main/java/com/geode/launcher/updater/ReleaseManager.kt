@@ -91,15 +91,6 @@ class ReleaseManager private constructor(
         }
     }
 
-    fun dismissLauncherUpdate() {
-        val update = availableLauncherUpdate.value ?: return
-
-        val sharedPreferences = PreferenceUtils.get(applicationContext)
-        sharedPreferences.setString(PreferenceUtils.Key.LAST_DISMISSED_UPDATE, update.tagName)
-
-        _availableLauncherUpdate.value = null
-    }
-
     private suspend fun getLatestRelease(): Release? {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
@@ -167,13 +158,6 @@ class ReleaseManager private constructor(
     }
 
     private fun checkLauncherUpdate(launcherUpdate: Release) {
-        val sharedPreferences = PreferenceUtils.get(applicationContext)
-        val lastDismissedVersion = sharedPreferences.getString(PreferenceUtils.Key.LAST_DISMISSED_UPDATE)
-
-        if (!lastDismissedVersion.isNullOrEmpty() && launcherUpdate.tagName == lastDismissedVersion) {
-            return
-        }
-
         if (launcherUpdate.tagName != BuildConfig.VERSION_NAME) {
             _availableLauncherUpdate.value = launcherUpdate
         }
