@@ -7,16 +7,17 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -26,7 +27,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -74,6 +74,7 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
     when (type) {
         LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE -> {
             AnimatedNotificationCard(
+                displayLength = 5000L,
                 onClick = {
                     downloadLauncherUpdate(context)
                 }
@@ -123,7 +124,7 @@ fun LaunchNotification() {
 }
 
 @Composable
-fun AnimatedNotificationCard(visibilityDelay: Long = 0L, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
+fun AnimatedNotificationCard(visibilityDelay: Long = 0L, displayLength: Long = 3000L, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
     val state = remember {
         MutableTransitionState(false).apply {
             targetState = visibilityDelay <= 0
@@ -136,7 +137,7 @@ fun AnimatedNotificationCard(visibilityDelay: Long = 0L, onClick: (() -> Unit)? 
             state.targetState = true
         }
 
-        delay(3000L)
+        delay(displayLength)
         state.targetState = false
     }
 
@@ -174,67 +175,52 @@ fun CardView(onClick: (() -> Unit)?, modifier: Modifier = Modifier, contents: @C
 
 @Composable
 fun LauncherUpdateContent(modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(16.dp)
-    ) {
-        Icon(
-            Icons.Filled.Info,
-            contentDescription = null,
-            modifier = Modifier.size(32.dp, 32.dp)
-        )
-
-        Column {
-            Text(
-                text = stringResource(id = R.string.launcher_update_available),
-                style = MaterialTheme.typography.titleLarge
+    ListItem(
+        headlineContent = {
+            Text(text = stringResource(id = R.string.launcher_update_available))
+        },
+        supportingContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_update_cta))
+        },
+        leadingContent = {
+            Icon(
+                Icons.Filled.Info,
+                contentDescription = null,
             )
-
-            Text(
-                text = stringResource(id = R.string.launcher_notification_update_cta),
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-    }
+        },
+        modifier = modifier.width(IntrinsicSize.Max)
+    )
 }
 
 @Composable
 fun UpdateNotificationContent(modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(16.dp)
-    ) {
-        Icon(
-            painterResource(R.drawable.geode_monochrome),
-            contentDescription = null,
-            modifier = Modifier.size(32.dp, 32.dp)
-        )
-
-        Text(
-            text = stringResource(id = R.string.launcher_notification_update_success),
-            style = MaterialTheme.typography.titleLarge
-        )
-    }
+    ListItem(
+        headlineContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_update_success))
+        },
+        leadingContent = {
+            Icon(
+                painterResource(R.drawable.geode_monochrome),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        modifier = modifier.width(IntrinsicSize.Max)
+    )
 }
 
 @Composable
 fun UpdateFailedContent(modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(16.dp)
-    ) {
-        Icon(
-            Icons.Filled.Warning,
-            contentDescription = null,
-            modifier = Modifier.size(32.dp, 32.dp)
-        )
-
-        Text(
-            text = stringResource(id = R.string.launcher_notification_update_failed),
-            style = MaterialTheme.typography.titleLarge
-        )
-    }
+    ListItem(
+        headlineContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_update_failed))
+        },
+        leadingContent = {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+            )
+        },
+        modifier = modifier.width(IntrinsicSize.Max)
+    )
 }
