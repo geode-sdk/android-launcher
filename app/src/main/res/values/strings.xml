@@ -122,7 +122,7 @@
     <string name="preference_theme_dark">Dark</string>
     <string name="preference_black_background_name">Black background in dark theme</string>
     <string name="preference_force_hrr">Force maximum refresh rate</string>
-    <string name="preference_enable_redesign">Enable UI redesign</string>
+    <string name="preference_enable_redesign">✨ Enable UI refresh</string>
 
     <string name="preference_display_mode_name">Screen scale</string>
     <string name="preference_display_mode_select">Select screen scale</string>
