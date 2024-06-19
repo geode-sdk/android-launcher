@@ -84,6 +84,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     var loadFailure: LoadFailureInfo? = null
     private var hasCheckedForUpdates = false
     private var isCancelling = false
+    private var hasManuallyStarted = false
 
     private suspend fun determineUpdateStatus() {
         ReleaseManager.get(application).uiState.takeWhile {
@@ -150,6 +151,11 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GEODE_NOT_FOUND))
         }
 
+        val loadAutomatically = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
+        if (!loadAutomatically && !hasManuallyStarted) {
+            return cancelLaunch(true)
+        }
+
         if (!readyTimerPassed) {
             return _uiState.emit(LaunchUIState.Working)
         }
@@ -158,6 +164,10 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     }
 
     suspend fun beginLaunchFlow(isRestart: Boolean = false) {
+        if (isRestart) {
+            hasManuallyStarted = true
+        }
+
         if (_uiState.value !is LaunchUIState.Initial && _uiState.value !is LaunchUIState.Cancelled) {
             return
         }
