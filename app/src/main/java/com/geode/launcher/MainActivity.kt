@@ -172,7 +172,7 @@ fun MainScreen(
                         GamePackageUtils.getGameVersionCode(context.packageManager)
                     }
 
-                    if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
+                    if (gdVersion < Constants.SUPPORTED_VERSION_CODE_MIN) {
                         val versionName = remember {
                             GamePackageUtils.getUnifiedVersionName(context.packageManager)
                         }

@@ -63,10 +63,11 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
         preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
     )
 
+    val onUnsupportedVersion = gdVersionCode < Constants.SUPPORTED_VERSION_CODE_MIN || gdVersionCode > Constants.SUPPORTED_VERSION_CODE
     val canDismissRelease = gdVersionCode >= Constants.SUPPORTED_VERSION_CODE
     val shouldDismiss = canDismissRelease && gdVersionCode == lastDismissedVersion
 
-    if (gdVersionCode != Constants.SUPPORTED_VERSION_CODE && !shouldDismiss) {
+    if (onUnsupportedVersion && !shouldDismiss) {
         AlertDialog(
             icon = {
                 Icon(

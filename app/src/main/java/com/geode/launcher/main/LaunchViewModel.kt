@@ -143,7 +143,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.LAST_LAUNCH_CRASHED))
         }
 
-        if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE) {
+        if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN) {
             return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
         }
 
