@@ -203,7 +203,7 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
 fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Unit, inProgress: Boolean, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         modifier = modifier.width(300.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -232,7 +232,7 @@ fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Un
 fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         modifier = modifier.width(300.dp)
     ) {
         Text(statusInfo.title, style = MaterialTheme.typography.bodyLarge)
@@ -240,16 +240,10 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
         if (statusInfo.progress != null) {
             LinearProgressIndicator(
                 statusInfo.progress,
-                modifier = Modifier
-                    .width(300.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.fillMaxWidth()
             )
         } else {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .width(300.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
         if (statusInfo.details != null) {
