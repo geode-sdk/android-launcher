@@ -63,6 +63,7 @@
     <string name="launcher_cancelled_restart">Restart</string>
     <string name="launcher_cancelled_resume">Resume</string>
     <string name="launcher_cancelled_retry">Retry</string>
+    <string name="launcher_cancelled_help_alt">Help</string>
     <string name="launcher_in_safe_mode">Starting in safe mode…</string>
 
     <!-- Updater strings -->

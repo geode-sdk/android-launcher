@@ -9,6 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -286,6 +289,7 @@ fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LaunchProgressCard(
     uiState: LaunchViewModel.LaunchUIState,
@@ -323,7 +327,7 @@ fun LaunchProgressCard(
                 }
 
                 if (uiState.reason.allowsRetry()) {
-                    Row(
+                    FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.width(300.dp)
                     ) {
@@ -333,18 +337,16 @@ fun LaunchProgressCard(
                             RetryButtonContents(uiState.reason)
                         }
 
+                        Spacer(Modifier.weight(1.0f))
+
                         if (crashInfo != null) {
-                            FilledTonalButton(onClick = onMore) {
+                            IconButton(onClick = onMore) {
                                 Icon(
                                     painterResource(R.drawable.icon_question_mark),
-                                    contentDescription = null
+                                    contentDescription = stringResource(R.string.launcher_cancelled_help_alt)
                                 )
-                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text(stringResource(R.string.launcher_error_more))
                             }
                         }
-
-                        Spacer(Modifier.weight(1.0f))
 
                         extraOptions()
                     }
