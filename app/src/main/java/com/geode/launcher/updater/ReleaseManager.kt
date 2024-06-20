@@ -95,6 +95,17 @@ class ReleaseManager private constructor(
         }
     }
 
+    private fun mapSelectedReleaseToTag(): String {
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+        val releaseChannel = sharedPreferences.getInt(PreferenceUtils.Key.RELEASE_CHANNEL_TAG)
+
+        return when (releaseChannel) {
+            2 -> "nightly"
+            1 -> TAG_BETA
+            else -> TAG_LATEST
+        }
+    }
+
     private fun getBestReleaseForGameVersion(): String? {
         if (!GamePackageUtils.isGameInstalled(applicationContext.packageManager)) {
             return null
@@ -103,7 +114,7 @@ class ReleaseManager private constructor(
         val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
 
         return when {
-            gameVersion >= 39L -> TAG_LATEST
+            gameVersion >= 39L -> mapSelectedReleaseToTag()
             gameVersion == 38L -> "v2.0.0-beta.27"
             gameVersion == 37L -> "v2.0.0-beta.5"
             else -> null
@@ -111,14 +122,7 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun getLatestRelease(): Release? {
-        val sharedPreferences = PreferenceUtils.get(applicationContext)
-        val releaseChannel = sharedPreferences.getInt(PreferenceUtils.Key.RELEASE_CHANNEL_TAG)
-
-        val targetTag = when (releaseChannel) {
-            2 -> "nightly"
-            1 -> TAG_BETA
-            else -> getBestReleaseForGameVersion()
-        } ?: return null
+        val targetTag = getBestReleaseForGameVersion() ?: return null
 
         return when (targetTag) {
             TAG_LATEST -> releaseRepository.getLatestGeodeRelease()
