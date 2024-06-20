@@ -202,6 +202,13 @@ fun displayOptionToKey(option: Int): String {
     }
 }
 
+@Composable
+fun releaseChannelToKey(option: Int): String = when (option) {
+    1 -> stringResource(R.string.preference_release_channel_beta)
+    2 -> stringResource(R.string.preference_release_channel_nightly)
+    else -> stringResource(R.string.preference_release_channel_stable)
+}
+
 fun updateTheme(context: Context, theme: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
@@ -336,9 +343,12 @@ fun SettingsScreen(
                         title = context.getString(R.string.preference_update_automatically_name),
                         preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
                     )
-                    SettingsCard(
-                        title = context.getString(R.string.preference_release_channel_name),
-                        preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL,
+                    SettingsSelectCard(
+                        title = stringResource(R.string.preference_release_channel_tag_name),
+                        dialogTitle = stringResource(R.string.preference_release_channel_select),
+                        maxVal = 2,
+                        preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL_TAG,
+                        toLabel = { releaseChannelToKey(it) }
                     )
                     OptionsCard(
                         title = {

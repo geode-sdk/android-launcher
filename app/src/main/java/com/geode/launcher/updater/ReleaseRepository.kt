@@ -32,14 +32,72 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         return getReleaseByUrl(url)
     }
 
-    suspend fun getLatestGeodeRelease(isNightly: Boolean = false): Release? {
-        val geodeBaseUrl = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases"
-        val releasePath = if (isNightly) "$geodeBaseUrl/tags/nightly"
-            else "$geodeBaseUrl/latest"
-
+    suspend fun getLatestGeodeRelease(): Release? {
+        val releasePath = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases/latest"
         val url = URL(releasePath)
 
         return getReleaseByUrl(url)
+    }
+
+    suspend fun getReleaseByTag(tag: String): Release? {
+        val releasePath = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases/tags/$tag"
+        val url = URL(releasePath)
+
+        return getReleaseByUrl(url)
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    suspend fun getLatestGeodePreRelease(): Release? {
+        val releasesUrl = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases?per_page=2"
+        val url = URL(releasesUrl)
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Accept", "application/json")
+            .addHeader(GITHUB_API_HEADER, GITHUB_API_VERSION)
+            .build()
+
+        val call = httpClient.newCall(request)
+        val response = call.executeCoroutine()
+
+        return when (response.code) {
+            200 -> {
+                val format = Json {
+                    namingStrategy = JsonNamingStrategy.SnakeCase
+                    ignoreUnknownKeys = true
+                }
+
+                val release = format.decodeFromBufferedSource<List<Release>>(
+                    response.body!!.source()
+                )
+
+                release.find { it.tagName != "nightly" }
+            }
+            403 -> {
+                // determine if the error code is a ratelimit
+                // (github docs say it sends 429 too, but haven't seen that)
+
+                val limitRemaining = response.headers.get(GITHUB_RATELIMIT_REMAINING)?.toInt()
+                val limitReset = response.headers.get(GITHUB_RATELIMIT_RESET)?.toLong()
+
+                if (limitRemaining == 0 && limitReset != null) {
+                    // handle ratelimit with a custom error
+                    // there's also a retry-after header but again, haven't seen
+                    val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
+                    val msg = generateRateLimitMessage(resetTime)
+
+                    throw IOException(msg)
+                }
+
+                throw IOException("response 403: ${response.body!!.string()}")
+            }
+            404 -> {
+                null
+            }
+            else -> {
+                throw IOException("unknown response ${response.code}")
+            }
+        }
     }
 
     private fun generateRateLimitMessage(resetTime: Instant): String {

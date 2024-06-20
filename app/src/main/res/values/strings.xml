@@ -134,6 +134,12 @@
     <string name="preference_update_automatically_name">Enable automatic updates</string>
     <string name="preference_release_channel_name">Use nightly release channel</string>
 
+    <string name="preference_release_channel_tag_name">Release channel</string>
+    <string name="preference_release_channel_select">Select release channel</string>
+    <string name="preference_release_channel_stable">Stable</string>
+    <string name="preference_release_channel_beta">Pre-release</string>
+    <string name="preference_release_channel_nightly">Nightly</string>
+
     <string name="preference_check_for_updates_button">Check for updates</string>
     <string name="preference_check_for_updates_description">Current loader version: %1$s</string>
     <string name="preference_launcher_version">Geode Launcher v%1$s</string>

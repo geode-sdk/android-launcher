@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.utils.DownloadUtils
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.CancellationException
@@ -21,6 +22,9 @@ import okio.buffer
 import okio.source
 import java.io.File
 import java.io.InterruptedIOException
+
+private const val TAG_LATEST = "latest"
+private const val TAG_BETA = "prerelease"
 
 /**
  * Singleton to manage Geode updates, from update checking to downloading.
@@ -91,11 +95,36 @@ class ReleaseManager private constructor(
         }
     }
 
+    private fun getBestReleaseForGameVersion(): String? {
+        if (!GamePackageUtils.isGameInstalled(applicationContext.packageManager)) {
+            return null
+        }
+
+        val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
+
+        return when {
+            gameVersion >= 39L -> TAG_LATEST
+            gameVersion == 38L -> "v2.0.0-beta.27"
+            gameVersion == 37L -> "v2.0.0-beta.5"
+            else -> null
+        }
+    }
+
     private suspend fun getLatestRelease(): Release? {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
-        val useNightly = sharedPreferences.getBoolean(PreferenceUtils.Key.RELEASE_CHANNEL)
+        val releaseChannel = sharedPreferences.getInt(PreferenceUtils.Key.RELEASE_CHANNEL_TAG)
 
-        return releaseRepository.getLatestGeodeRelease(useNightly)
+        val targetTag = when (releaseChannel) {
+            2 -> "nightly"
+            1 -> TAG_BETA
+            else -> getBestReleaseForGameVersion()
+        } ?: return null
+
+        return when (targetTag) {
+            TAG_LATEST -> releaseRepository.getLatestGeodeRelease()
+            TAG_BETA -> releaseRepository.getLatestGeodePreRelease()
+            else -> releaseRepository.getReleaseByTag(targetTag)
+        }
     }
 
     private suspend fun performUpdate(release: Release) {

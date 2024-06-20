@@ -137,19 +137,20 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LIMIT_ASPECT_RATIO,
         DISPLAY_MODE,
         FORCE_HRR,
-        ENABLE_REDESIGN
+        ENABLE_REDESIGN,
+        RELEASE_CHANNEL_TAG
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
-            Key.RELEASE_CHANNEL -> BuildConfig.DEBUG
             else -> false
         }
     }
 
     private fun defaultValueForIntKey(key: Key) = when (key) {
         Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
+        // people wanted a reset on nightly anyways, so this is a good excuse to do so
         else -> 0
     }
 
@@ -170,6 +171,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.DISPLAY_MODE -> "PreferenceDisplayMode"
             Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"
             Key.ENABLE_REDESIGN -> "PreferenceEnableRedesign"
+            Key.RELEASE_CHANNEL_TAG -> "PreferenceReleaseChannelTag"
         }
     }
 
