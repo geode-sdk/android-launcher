@@ -145,6 +145,12 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
         tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
 
+        if (GamePackageUtils.getGameVersionCode(packageManager) >= 39L) {
+            // this fix requires geode v3, which is 2.206+
+            // there is a short period in which 2.206 users will still have geode v2, but whatever. ig
+            LauncherFix.performExceptionsRenaming()
+        }
+
         loadInternalMods()
 
         setContentView(createView())

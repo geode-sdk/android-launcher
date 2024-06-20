@@ -12,4 +12,6 @@ object LauncherFix {
     external fun setDataPath(dataPath: String)
 
     external fun setOriginalDataPath(dataPath: String)
+
+    external fun performExceptionsRenaming()
 }
