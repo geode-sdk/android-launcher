@@ -13,9 +13,9 @@ android {
     defaultConfig {
         applicationId = "com.geode.launcher"
         minSdk = 23
-        targetSdk = 34
-        versionCode = 16
-        versionName = "1.3.4"
+        targetSdk = 35
+        versionCode = 17
+        versionName = "1.4.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -89,16 +89,16 @@ dependencies {
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
     implementation ("androidx.activity:activity-compose:1.9.0")
     implementation ("androidx.activity:activity-ktx:1.9.0")
     implementation ("androidx.appcompat:appcompat:1.7.0")
     implementation ("androidx.documentfile:documentfile:1.0.1")
     implementation ("com.squareup.okio:okio:3.9.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.6.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.7.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
