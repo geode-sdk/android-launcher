@@ -44,7 +44,8 @@ import java.net.UnknownHostException
 
 fun clearDownloadedApks(context: Context) {
     // technically we should be using the activity results but it was too inconsistent for my liking
-    val performCleanup = PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.CLEANUP_APKS)
+    val preferenceUtils = PreferenceUtils.get(context)
+    val performCleanup = preferenceUtils.getBoolean(PreferenceUtils.Key.CLEANUP_APKS)
     if (!performCleanup) {
         return
     }
@@ -57,6 +58,8 @@ fun clearDownloadedApks(context: Context) {
     }?.forEach {
         it.delete()
     }
+
+    preferenceUtils.setBoolean(PreferenceUtils.Key.CLEANUP_APKS, false)
 }
 
 fun generateInstallIntent(uri: Uri): Intent {
