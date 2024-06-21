@@ -44,12 +44,12 @@
             android:label="@string/title_activity_alt_main"
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
-            android:name=".ApplicationLogsActivity"
+            android:name=".preferences.ApplicationLogsActivity"
             android:exported="false"
             android:label="@string/title_activity_application_logs"
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".preferences.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings"
             android:theme="@style/Theme.GeodeLauncher">

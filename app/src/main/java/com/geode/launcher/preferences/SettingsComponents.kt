@@ -1,4 +1,4 @@
-package com.geode.launcher
+package com.geode.launcher.preferences
 
 import android.content.Context
 import androidx.compose.foundation.clickable
@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.geode.launcher.R
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.PreferenceUtils

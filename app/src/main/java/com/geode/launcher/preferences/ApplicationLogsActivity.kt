@@ -1,10 +1,6 @@
-package com.geode.launcher
+package com.geode.launcher.preferences
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -66,6 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geode.launcher.R
 import com.geode.launcher.log.LogLine
 import com.geode.launcher.log.LogPriority
 import com.geode.launcher.log.LogViewModel

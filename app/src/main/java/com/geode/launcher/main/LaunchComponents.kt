@@ -40,7 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.GeometryDashActivity
 import com.geode.launcher.R
-import com.geode.launcher.SettingsActivity
+import com.geode.launcher.preferences.SettingsActivity
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils

@@ -1,4 +1,4 @@
-package com.geode.launcher
+package com.geode.launcher.preferences
 
 import android.app.UiModeManager
 import android.content.ActivityNotFoundException
@@ -42,6 +42,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geode.launcher.BuildConfig
+import com.geode.launcher.R
+import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
