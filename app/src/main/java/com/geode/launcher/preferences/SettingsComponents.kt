@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import com.geode.launcher.R
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.LabelledText
 import com.geode.launcher.utils.PreferenceUtils
 
 
@@ -278,12 +279,13 @@ fun <T> SelectDialog(
 }
 
 @Composable
-fun OptionsButton(title: String, description: String? = null, onClick: () -> Unit) {
+fun OptionsButton(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     OptionsCard(
         title = {
             OptionsTitle(
                 title = title,
-                description = description
+                description = description,
+                icon = icon
             )
         },
         modifier = Modifier
@@ -292,7 +294,7 @@ fun OptionsButton(title: String, description: String? = null, onClick: () -> Uni
 }
 
 @Composable
-fun SettingsCard(title: String, description: String? = null, preferenceKey: PreferenceUtils.Key) {
+fun SettingsCard(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, preferenceKey: PreferenceUtils.Key) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceKey))
@@ -303,7 +305,8 @@ fun SettingsCard(title: String, description: String? = null, preferenceKey: Pref
             OptionsTitle(
                 Modifier.fillMaxWidth(0.75f),
                 title = title,
-                description = description
+                description = description,
+                icon = icon
             )
         },
         modifier = Modifier.toggleable(
@@ -317,18 +320,23 @@ fun SettingsCard(title: String, description: String? = null, preferenceKey: Pref
 }
 
 @Composable
-fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: String? = null) {
-    Column(
-        modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(title)
-        if (!description.isNullOrEmpty()) {
-            Text(
-                description,
-                style = Typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: String? = null, icon: (@Composable () -> Unit)? = null) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (icon != null) {
+            icon()
+        }
+        Column(
+            modifier,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(title)
+            if (!description.isNullOrEmpty()) {
+                Text(
+                    description,
+                    style = Typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
         }
     }
 }
@@ -346,6 +354,11 @@ fun OptionsCard(modifier: Modifier = Modifier, title: @Composable () -> Unit, co
         title()
         content()
     }
+}
+
+@Composable
+fun InlineText(label: String, icon: @Composable (() -> Unit)? = null, modifier: Modifier = Modifier) {
+    LabelledText(label = label, icon = icon, modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp))
 }
 
 @Preview(showBackground = true)

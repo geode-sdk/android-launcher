@@ -182,6 +182,10 @@ class ReleaseManager private constructor(
         }
 
         val sharedPreferences = PreferenceUtils.get(applicationContext)
+        if (!sharedPreferences.getBoolean(PreferenceUtils.Key.DEVELOPER_MODE)) {
+            return false
+        }
+
         val originalFileHash = sharedPreferences.getString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
             ?: return false
 

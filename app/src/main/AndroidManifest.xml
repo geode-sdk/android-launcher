@@ -41,7 +41,11 @@
         <activity
             android:name=".AltMainActivity"
             android:exported="false"
-            android:label="@string/title_activity_alt_main"
+            android:theme="@style/Theme.GeodeLauncher" />
+        <activity
+            android:name=".preferences.DeveloperSettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_developer_settings"
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
             android:name=".preferences.ApplicationLogsActivity"

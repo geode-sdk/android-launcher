@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -205,13 +206,6 @@ fun displayOptionToKey(option: Int): String {
     }
 }
 
-@Composable
-fun releaseChannelToKey(option: Int): String = when (option) {
-    1 -> stringResource(R.string.preference_release_channel_beta)
-    2 -> stringResource(R.string.preference_release_channel_nightly)
-    else -> stringResource(R.string.preference_release_channel_stable)
-}
-
 fun updateTheme(context: Context, theme: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
@@ -235,6 +229,11 @@ fun updateTheme(context: Context, theme: Int) {
 
 fun onOpenLogs(context: Context) {
     val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
+    context.startActivity(launchIntent)
+}
+
+fun onOpenDeveloperOptions(context: Context) {
+    val launchIntent = Intent(context, DeveloperSettingsActivity::class.java)
     context.startActivity(launchIntent)
 }
 
@@ -316,6 +315,13 @@ fun SettingsScreen(
                         title = stringResource(R.string.preference_black_background_name),
                         preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
                     )
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_open_file_manager),
+                        onClick = { onOpenFileManager(context) }
+                    )
+                }
+
+                OptionsGroup(stringResource(R.string.preference_category_gameplay)) {
                     SettingsCard(
                         title = context.getString(R.string.preference_load_automatically_name),
                         description = context.getString(R.string.preference_load_automatically_description),
@@ -331,27 +337,16 @@ fun SettingsScreen(
                     )
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         SettingsCard(
-                            title = context.getString(R.string.preference_force_hrr),
+                            title = stringResource(R.string.preference_force_hrr),
                             preferenceKey = PreferenceUtils.Key.FORCE_HRR,
                         )
                     }
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_open_file_manager),
-                        onClick = { onOpenFileManager(context) }
-                    )
                 }
 
                 OptionsGroup(context.getString(R.string.preference_category_updater)) {
                     SettingsCard(
                         title = context.getString(R.string.preference_update_automatically_name),
                         preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
-                    )
-                    SettingsSelectCard(
-                        title = stringResource(R.string.preference_release_channel_tag_name),
-                        dialogTitle = stringResource(R.string.preference_release_channel_select),
-                        maxVal = 2,
-                        preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL_TAG,
-                        toLabel = { releaseChannelToKey(it) }
                     )
                     OptionsCard(
                         title = {
@@ -380,27 +375,24 @@ fun SettingsScreen(
                 }
 
                 OptionsGroup(stringResource(R.string.preference_category_developer)) {
-                    SettingsStringCard(
-                        title = stringResource(R.string.preference_launch_arguments_name),
-                        dialogTitle = stringResource(R.string.preference_launch_arguments_set_title),
-                        preferenceKey = PreferenceUtils.Key.LAUNCH_ARGUMENTS,
-                        filterInput = { it.filter { c ->
-                            // if only there was a better way to define this!
-                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
-                        }}
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_logs),
+                        icon = {
+                            Icon(painterResource(R.drawable.icon_description), contentDescription = null)
+                        },
+                        onClick = { onOpenLogs(context) }
+                    )
+                    OptionsButton(
+                        title = stringResource(R.string.preference_open_developer_options),
+                        icon = {
+                            Icon(painterResource(R.drawable.icon_data_object), contentDescription = null)
+                        },
+                        onClick = { onOpenDeveloperOptions(context) }
                     )
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
                         description = LaunchUtils.getBaseDirectory(context).path,
                         onClick = { onOpenFolder(context) }
-                    )
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_view_logs),
-                        onClick = { onOpenLogs(context) }
-                    )
-                    SettingsCard(
-                        title = context.getString(R.string.preference_enable_redesign),
-                        preferenceKey = PreferenceUtils.Key.ENABLE_REDESIGN,
                     )
                 }
 

@@ -135,6 +135,8 @@
     <string name="preference_update_automatically_name">Enable automatic updates</string>
     <string name="preference_release_channel_name">Use nightly release channel</string>
 
+    <string name="preference_category_gameplay">Gameplay</string>
+
     <string name="preference_release_channel_tag_name">Release channel</string>
     <string name="preference_release_channel_select">Select release channel</string>
     <string name="preference_release_channel_stable">Stable</string>
@@ -151,10 +153,12 @@
     <string name="preference_check_for_updates_no_internet">No internet found.</string>
     <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 
-    <string name="preference_category_developer">Developer</string>
+    <string name="preference_category_developer">Advanced</string>
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
     <string name="preference_text_clear">Clear</string>
+
+    <string name="preference_open_developer_options">Open developer options</string>
 
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
@@ -170,5 +174,9 @@
     <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
     <string name="application_logs_crash_only">Show Crash Buffer</string>
     <string name="application_logs_crash_only_enabled_alt">Enabled</string>
-    <string name="title_activity_alt_main">AltMainActivity</string>
+
+    <string name="title_activity_developer_settings">Developer Settings</string>
+    <string name="preference_developer_mode">Enable developer options</string>
+    <string name="preference_developer_mode_about">Developer mode enables some options that may make the game unstable. Please do not modify them unless you know what you\'re doing!\nThese options may change behavior, or be removed entirely in future updates.</string>
+    <string name="preference_developer_update_notice">Enabling developer mode automatically disallows the updater from overwriting custom loader builds.</string>
 </resources>

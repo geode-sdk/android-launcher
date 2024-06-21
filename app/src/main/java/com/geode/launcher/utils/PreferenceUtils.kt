@@ -138,12 +138,14 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         DISPLAY_MODE,
         FORCE_HRR,
         ENABLE_REDESIGN,
-        RELEASE_CHANNEL_TAG
+        RELEASE_CHANNEL_TAG,
+        DEVELOPER_MODE
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
+            Key.DEVELOPER_MODE -> BuildConfig.DEBUG
             else -> false
         }
     }
@@ -172,6 +174,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"
             Key.ENABLE_REDESIGN -> "PreferenceEnableRedesign"
             Key.RELEASE_CHANNEL_TAG -> "PreferenceReleaseChannelTag"
+            Key.DEVELOPER_MODE -> "PreferenceDeveloperMode"
         }
     }
 
