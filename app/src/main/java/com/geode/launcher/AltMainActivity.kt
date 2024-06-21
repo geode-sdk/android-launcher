@@ -70,6 +70,7 @@ class AltMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+        clearDownloadedApks(this)
 
         val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
@@ -483,11 +484,9 @@ fun AltMainScreen(
                 )
 
                 val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
-                val launcherDownloadUrl =
-                    nextLauncherUpdate?.getLauncherDownload()?.browserDownloadUrl
 
                 // only show launcher update in a case where a user won't see it ingame
-                if (launcherDownloadUrl != null && launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
+                if (nextLauncherUpdate != null && launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
                     StatusIndicator(
                         icon = {
                             Icon(
@@ -496,7 +495,7 @@ fun AltMainScreen(
                             )
                         },
                         onClick = {
-                            downloadUrl(context, launcherDownloadUrl)
+                            installLauncherUpdate(context)
                         },
                         text = {
                             Text(

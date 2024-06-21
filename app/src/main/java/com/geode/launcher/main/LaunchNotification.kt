@@ -76,7 +76,7 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
             AnimatedNotificationCard(
                 displayLength = 5000L,
                 onClick = {
-                    downloadLauncherUpdate(context)
+                    installLauncherUpdate(context)
                 }
             ) {
                 LauncherUpdateContent()
@@ -110,7 +110,6 @@ fun LaunchNotification() {
         GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
             // surface is not in use, so this is unfortunately not provided
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                // using manual placements as column layouts seem to mess up the animation
                 Column(
                     modifier = Modifier.displayCutoutPadding()
                 ) {
@@ -124,7 +123,7 @@ fun LaunchNotification() {
 }
 
 @Composable
-fun AnimatedNotificationCard(visibilityDelay: Long = 0L, displayLength: Long = 3000L, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier, contents: @Composable () -> Unit) {
+fun AnimatedNotificationCard(modifier: Modifier = Modifier, visibilityDelay: Long = 0L, displayLength: Long = 3000L, onClick: (() -> Unit)? = null, contents: @Composable () -> Unit) {
     val state = remember {
         MutableTransitionState(false).apply {
             targetState = visibilityDelay <= 0

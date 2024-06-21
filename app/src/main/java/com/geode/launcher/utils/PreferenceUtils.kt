@@ -139,7 +139,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         FORCE_HRR,
         ENABLE_REDESIGN,
         RELEASE_CHANNEL_TAG,
-        DEVELOPER_MODE
+        DEVELOPER_MODE,
+        CLEANUP_APKS
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -175,6 +176,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.ENABLE_REDESIGN -> "PreferenceEnableRedesign"
             Key.RELEASE_CHANNEL_TAG -> "PreferenceReleaseChannelTag"
             Key.DEVELOPER_MODE -> "PreferenceDeveloperMode"
+            Key.CLEANUP_APKS -> "PreferenceCleanupPackages"
         }
     }
 

@@ -4,11 +4,11 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -29,39 +29,76 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
+import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.updater.ReleaseViewModel
+import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
+import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
 
+fun clearDownloadedApks(context: Context) {
+    // technically we should be using the activity results but it was too inconsistent for my liking
+    val performCleanup = PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.CLEANUP_APKS)
+    if (!performCleanup) {
+        return
+    }
 
-fun downloadUrl(context: Context, url: String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
+    val baseDirectory = LaunchUtils.getBaseDirectory(context)
+
+    baseDirectory.listFiles {
+        // only select apk files
+            _, name -> name.lowercase().endsWith(".apk")
+    }?.forEach {
+        it.delete()
     }
 }
 
-fun downloadLauncherUpdate(context: Context) {
-    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
-    val launcherUrl = nextUpdate?.getLauncherDownload()?.browserDownloadUrl
+fun generateInstallIntent(uri: Uri): Intent {
+    // maybe one day i'll rewrite this to use packageinstaller. not today
+    return Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+        setDataAndType(uri, "application/vnd.android.package-archive")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+}
 
-    if (launcherUrl != null) {
-        downloadUrl(context, launcherUrl)
+fun installLauncherUpdate(context: Context) {
+    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
+    val launcherDownload = nextUpdate?.getLauncherDownload()
+
+    if (launcherDownload != null) {
+        val outputFile = launcherDownload.name
+        val baseDirectory = LaunchUtils.getBaseDirectory(context)
+
+        val outputPathFile = File(baseDirectory, outputFile)
+        if (!outputPathFile.exists()) {
+            return
+        }
+
+        val outputPath = "${UserDirectoryProvider.ROOT}${outputFile}"
+
+        val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", outputPath)
+
+        PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.CLEANUP_APKS, true)
+
+        try {
+            val intent = generateInstallIntent(uri)
+            context.startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
+        }
     } else {
         Toast.makeText(context, context.getString(R.string.release_fetch_no_releases), Toast.LENGTH_SHORT).show()
     }
 }
 
 @Composable
-fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String) {
+fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     ElevatedCard(modifier) {
@@ -81,10 +118,10 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier, openTo: String) {
             )
 
             TextButton(
-                onClick = { downloadUrl(context, openTo) },
+                onClick = { installLauncherUpdate(context) },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(stringResource(R.string.launcher_download))
+                Text(stringResource(R.string.launcher_install))
             }
         }
     }
@@ -248,15 +285,10 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
     }
 
     val nextUpdate by releaseViewModel.nextLauncherUpdate.collectAsState()
-    val nextUpdateValue = nextUpdate
 
-    if (!releaseViewModel.isInUpdate && nextUpdateValue != null) {
-        val updateUrl = nextUpdateValue.getLauncherDownload()?.browserDownloadUrl
-            ?: nextUpdateValue.htmlUrl
-
+    if (!releaseViewModel.isInUpdate && nextUpdate != null) {
         LauncherUpdateIndicator(
-            modifier = modifier,
-            openTo = updateUrl
+            modifier = modifier
         )
     }
 }

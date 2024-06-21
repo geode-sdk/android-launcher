@@ -42,6 +42,7 @@ import com.geode.launcher.utils.GamePackageUtils
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
+        clearDownloadedApks(this)
 
         super.onCreate(savedInstanceState)
 

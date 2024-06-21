@@ -131,6 +131,34 @@ class ReleaseManager private constructor(
         }
     }
 
+    private suspend fun downloadLauncherUpdate(release: Release) {
+        val download = release.getLauncherDownload() ?: return
+
+        val outputDirectory = LaunchUtils.getBaseDirectory(applicationContext)
+        val outputFile = File(outputDirectory, download.name)
+
+        if (outputFile.exists()) {
+            // only download the apk once
+            return
+        }
+
+        _uiState.value = ReleaseManagerState.InDownload(0, download.size.toLong())
+
+        try {
+            val fileStream = DownloadUtils.downloadStream(
+                httpClient,
+                download.browserDownloadUrl
+            ) { progress, outOf ->
+                _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+            }
+
+            fileStream.copyTo(outputFile.outputStream())
+        } catch (e: Exception) {
+            sendError(e)
+            return
+        }
+    }
+
     private suspend fun performUpdate(release: Release) {
         val releaseAsset = release.getGeodeDownload()
         if (releaseAsset == null) {
@@ -170,6 +198,8 @@ class ReleaseManager private constructor(
             return
         }
 
+        downloadLauncherUpdateIfNecessary()
+
         // extraction performed
         updatePreferences(release)
         _uiState.value = ReleaseManagerState.Finished(true)
@@ -200,6 +230,11 @@ class ReleaseManager private constructor(
         }
     }
 
+    private suspend fun downloadLauncherUpdateIfNecessary() {
+        val update = _availableLauncherUpdate.value ?: return
+        downloadLauncherUpdate(update)
+    }
+
     private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
         val release = try {
             getLatestRelease()
@@ -220,6 +255,8 @@ class ReleaseManager private constructor(
         }
 
         if (release == null) {
+            downloadLauncherUpdateIfNecessary()
+
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
@@ -234,12 +271,16 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion == currentVersion && geodeFile.exists()) {
+            downloadLauncherUpdateIfNecessary()
+
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
 
         // check if the file was externally modified
         if (!allowOverwriting && fileWasExternallyModified()) {
+            downloadLauncherUpdateIfNecessary()
+
             sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
             return
         }
