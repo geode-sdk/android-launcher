@@ -14,4 +14,6 @@ object LauncherFix {
     external fun setOriginalDataPath(dataPath: String)
 
     external fun performExceptionsRenaming()
+
+    external fun enableCustomSymbolList(symbolsPath: String)
 }

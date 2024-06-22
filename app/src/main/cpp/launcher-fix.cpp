@@ -1,5 +1,6 @@
 #include <dlfcn.h>
 #include <jni.h>
+#include <fstream>
 #include <string>
 #include <cstdint>
 #include <android/log.h>
@@ -17,8 +18,9 @@
 
 class DataPaths {
 public:
-    std::string original_data_path;
-    std::string data_path;
+    std::string original_data_path{};
+    std::string data_path{};
+    std::string load_symbols_from{};
 
     static DataPaths& get_instance() {
         static auto paths_instance = DataPaths();
@@ -26,7 +28,7 @@ public:
     }
 
 private:
-    DataPaths() : original_data_path(), data_path() {}
+    DataPaths() {}
 };
 
 extern "C"
@@ -41,6 +43,20 @@ JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_setDataPath(
     DataPaths::get_instance().data_path = std::string(data_path_str);
 
     env->ReleaseStringUTFChars(data_path, data_path_str);
+}
+
+extern "C"
+JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_enableCustomSymbolList(
+    JNIEnv* env,
+    jobject,
+    jstring symbol_path
+) {
+    auto is_copy = jboolean();
+    auto symbol_path_str = env->GetStringUTFChars(symbol_path, &is_copy);
+
+    DataPaths::get_instance().load_symbols_from = std::string(symbol_path_str);
+
+    env->ReleaseStringUTFChars(symbol_path, symbol_path_str);
 }
 
 #ifdef __arm__
@@ -119,6 +135,43 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, Elf_Sym* sym_table
     return false;
 }
 
+std::vector<std::string> get_symbols_listing() {
+    auto symbol_path = DataPaths::get_instance().load_symbols_from;
+    if (symbol_path.empty()) {
+        // this is every function that i thought would be relevant
+        return {
+                "__gxx_personality_v0",
+                "__cxa_throw",
+                "__cxa_rethrow",
+                "__cxa_allocate_exception",
+                "__cxa_end_catch",
+                "__cxa_begin_catch",
+                "__cxa_guard_abort",
+                "__cxa_guard_acquire",
+                "__cxa_guard_release",
+                "__cxa_free_exception",
+                "_Unwind_RaiseException",
+                "_Unwind_Resume"
+        };
+    }
+
+    std::ifstream symbol_file{symbol_path};
+    if (!symbol_file) {
+        __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "failed to read symbol file at %s", symbol_path.c_str());
+        return {};
+    }
+
+    std::vector<std::string> symbols_list{};
+    std::string current_line{};
+    while (std::getline(symbol_file, current_line)) {
+        if (!current_line.empty()) {
+            symbols_list.push_back(current_line);
+        }
+    }
+
+    return symbols_list;
+}
+
 int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
     // this is probably going to be gd
     if (strstr(info->dlpi_name, "libcocos2dcpp.so") != nullptr) {
@@ -178,20 +231,11 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         auto str_table = reinterpret_cast<char*>(str_table_addr);
         auto sym_table = reinterpret_cast<Elf_Sym*>(sym_table_addr);
 
-        // this is every function that i thought would be relevant
-        patch_symbol(hash_table, str_table, sym_table, "__gxx_personality_v0");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_throw");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_rethrow");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_allocate_exception");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_end_catch");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_begin_catch");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_guard_abort");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_guard_acquire");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_guard_release");
-        patch_symbol(hash_table, str_table, sym_table, "__cxa_free_exception");
+        auto symbols_listing = get_symbols_listing();
+        for (const auto& symbol : symbols_listing) {
+            patch_symbol(hash_table, str_table, sym_table, symbol.c_str());
+        }
 
-        patch_symbol(hash_table, str_table, sym_table, "_Unwind_RaiseException");
-        patch_symbol(hash_table, str_table, sym_table, "_Unwind_Resume");
         return 1;
     }
 

@@ -180,4 +180,7 @@
     <string name="preference_developer_mode">Enable developer options</string>
     <string name="preference_developer_mode_about">Developer mode enables some options that may make the game unstable. Please do not modify them unless you know what you\'re doing!\nThese options may change behavior, or be removed entirely in future updates.</string>
     <string name="preference_developer_update_notice">Enabling developer mode automatically disallows the updater from overwriting custom loader builds.</string>
+
+    <string name="preference_override_exceptions_name">Custom exceptions fix symbols</string>
+    <string name="preference_override_exceptions_description">Uses exception_symbols.txt to patch</string>
 </resources>

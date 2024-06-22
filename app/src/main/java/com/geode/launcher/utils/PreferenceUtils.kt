@@ -140,7 +140,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         ENABLE_REDESIGN,
         RELEASE_CHANNEL_TAG,
         DEVELOPER_MODE,
-        CLEANUP_APKS
+        CLEANUP_APKS,
+        CUSTOM_SYMBOL_LIST
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -177,6 +178,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.RELEASE_CHANNEL_TAG -> "PreferenceReleaseChannelTag"
             Key.DEVELOPER_MODE -> "PreferenceDeveloperMode"
             Key.CLEANUP_APKS -> "PreferenceCleanupPackages"
+            Key.CUSTOM_SYMBOL_LIST -> "PreferenceCustomSymbolList"
         }
     }
 

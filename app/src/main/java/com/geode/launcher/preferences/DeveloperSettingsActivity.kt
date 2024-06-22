@@ -134,7 +134,12 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                             // if only there was a better way to define this!
                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
                         }}
-                    )                    
+                    )
+                    SettingsCard(
+                        title = stringResource(R.string.preference_override_exceptions_name),
+                        description = stringResource(R.string.preference_override_exceptions_description),
+                        preferenceKey = PreferenceUtils.Key.CUSTOM_SYMBOL_LIST
+                    )
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
