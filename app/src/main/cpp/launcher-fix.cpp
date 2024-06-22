@@ -174,7 +174,7 @@ std::vector<std::string> get_symbols_listing() {
 
 int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
     // this is probably going to be gd
-    if (strstr(info->dlpi_name, "libcocos2dcpp.so") != nullptr) {
+    if (info->dlpi_name != nullptr && strstr(info->dlpi_name, "libcocos2dcpp.so") != nullptr) {
         // step 1: get the dynamic table
         std::uintptr_t dyn_addr = 0u;
 
