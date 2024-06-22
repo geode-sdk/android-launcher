@@ -182,7 +182,9 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
                 Build.MODEL,
                 Build.VERSION.RELEASE,
                 currentRelease ?: "unknown",
-                gameVersion
+                gameVersion,
+                LaunchUtils.applicationArchitecture,
+                BuildConfig.VERSION_NAME
             ),
             style = Typography.labelMedium
         )

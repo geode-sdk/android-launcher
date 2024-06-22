@@ -46,7 +46,7 @@
     <string name="launcher_error_copy">Copy details</string>
     <string name="launcher_error_export_crash">Share crash</string>
     <string name="launcher_error_export_missing">No crash dump was found!</string>
-    <string name="launcher_error_device_info">Android %2$s, %1$s\nGeometry Dash %4$s with Geode %3$s</string>
+    <string name="launcher_error_device_info">Android %2$s, %1$s (%5$s)\nGD %4$s, Geode %3$s + v%6$s</string>
 
     <string name="launcher_notification_settings">Launcher Settings</string>
     <string name="launcher_notification_update_failed">Failed to check for updates.</string>
