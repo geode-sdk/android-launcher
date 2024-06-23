@@ -127,11 +127,13 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, Elf_Sym* sym_table
 #endif
 
                 return true;
+            } else {
+                __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "found symbol %s, but of incorrect type %hhu ???", orig_name, sym->st_info);
             }
         }
     }
 
-    __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "could not find symbol %s to patch", orig_name);
+    __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "could not find symbol %s to patch (hash: %u)", orig_name, hash);
     return false;
 }
 
@@ -202,6 +204,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         std::uintptr_t sym_table_addr = 0u;
         std::uintptr_t str_table_addr = 0u;
         std::uintptr_t hash_table_addr = 0u;
+        std::uintptr_t soname_idx = 0u;
 
         while (!dyn_end_reached) {
             auto tag = dyn_entry->d_tag;
@@ -216,6 +219,9 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
                 case DT_HASH:
                     hash_table_addr = info->dlpi_addr + dyn_entry->d_un.d_val;
                     break;
+                case DT_SONAME:
+                    soname_idx = dyn_entry->d_un.d_val;
+                    break;
                 case DT_NULL:
                     dyn_end_reached = true;
                     break;
@@ -225,7 +231,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         }
 
         if (hash_table_addr == 0u || str_table_addr == 0u || sym_table_addr == 0u) {
-            __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "failed to parse dynamic section (at least one table is null)");
+            __android_log_print(ANDROID_LOG_ERROR, "GeodeLauncher-fix", "failed to parse dynamic section (at least one table is null)");
             return -1;
         }
 
@@ -234,9 +240,26 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         auto str_table = reinterpret_cast<char*>(str_table_addr);
         auto sym_table = reinterpret_cast<Elf_Sym*>(sym_table_addr);
 
+        auto so_name = str_table + soname_idx;
+        if (strcmp(so_name, "libcocos2dcpp.so") != 0) {
+            __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "DT_SONAME gives us %s! that's not good", so_name);
+        }
+
+        auto has_error = false;
         auto symbols_listing = get_symbols_listing();
         for (const auto& symbol : symbols_listing) {
-            patch_symbol(hash_table, str_table, sym_table, symbol.c_str());
+            if (!patch_symbol(hash_table, str_table, sym_table, symbol.c_str())) {
+                has_error = true;
+            }
+        }
+
+        if (has_error) {
+            __android_log_print(
+                    ANDROID_LOG_INFO,
+                    "GeodeLauncher-fix",
+                    "symbol patch diagnostics\nlibrary path: %s\naddrs: base=%p sym=%p str=%p hash=%p",
+                    info->dlpi_name, reinterpret_cast<void*>(info->dlpi_addr), sym_table, str_table, hash_table
+                );
         }
 
         return 1;
