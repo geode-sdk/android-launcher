@@ -149,9 +149,12 @@ std::vector<std::string> get_symbols_listing() {
                 "__cxa_guard_abort",
                 "__cxa_guard_acquire",
                 "__cxa_guard_release",
-                "__cxa_free_exception",
-                "_Unwind_RaiseException",
-                "_Unwind_Resume"
+                "__cxa_free_exception"
+
+                // android 10's libc doesn't have these symbols
+                // and the ndk is forbidden from exporting them!! so keep it for old mods...
+                // "_Unwind_RaiseException",
+                // "_Unwind_Resume"
         };
     }
 
