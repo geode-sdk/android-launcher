@@ -194,6 +194,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             val saveDir = LaunchUtils.getSaveDirectory(this)
             saveDir.mkdir()
 
+            // make sure it's loaded, just in case
+            System.loadLibrary("c++_shared")
+
             LauncherFix.loadLibrary()
             LauncherFix.setOriginalDataPath(Constants.GJ_DATA_DIR)
             LauncherFix.setDataPath(saveDir.path)
