@@ -59,16 +59,6 @@ JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_enableCustomSymbolLis
     env->ReleaseStringUTFChars(symbol_path, symbol_path_str);
 }
 
-#ifdef __arm__
-// 32bit code
-typedef Elf32_Dyn Elf_Dyn;
-typedef Elf32_Sym Elf_Sym;
-#else
-// otherwise we're probably 64bit
-typedef Elf64_Dyn Elf_Dyn;
-typedef Elf64_Sym Elf_Sym;
-#endif
-
 extern "C"
 JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_setOriginalDataPath(
         JNIEnv *env,
@@ -98,7 +88,7 @@ std::uint32_t elfhash(const char *_name) {
     return h;
 }
 
-bool patch_symbol(std::uint32_t* hash_table, char* str_table, Elf_Sym* sym_table, const char* orig_name) {
+bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_table, const char* orig_name) {
     auto hash = elfhash(orig_name);
 
     auto nbucket = hash_table[0];
@@ -127,8 +117,6 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, Elf_Sym* sym_table
 #endif
 
                 return true;
-            } else {
-                __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "found symbol %s, but of incorrect type %hhu ???", orig_name, sym->st_info);
             }
         }
     }
@@ -198,7 +186,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         }
 
         // step 2: get the symbol table
-        auto dyn_entry = reinterpret_cast<Elf_Dyn*>(dyn_addr);
+        auto dyn_entry = reinterpret_cast<ElfW(Dyn)*>(dyn_addr);
         auto dyn_end_reached = false;
 
         std::uintptr_t sym_table_addr = 0u;
@@ -238,7 +226,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         // patch symbol names
         auto hash_table = reinterpret_cast<std::uint32_t*>(hash_table_addr);
         auto str_table = reinterpret_cast<char*>(str_table_addr);
-        auto sym_table = reinterpret_cast<Elf_Sym*>(sym_table_addr);
+        auto sym_table = reinterpret_cast<ElfW(Sym)*>(sym_table_addr);
 
         auto so_name = str_table + soname_idx;
         if (strcmp(so_name, "libcocos2dcpp.so") != 0) {
