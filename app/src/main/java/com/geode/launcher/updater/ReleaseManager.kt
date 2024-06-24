@@ -205,16 +205,14 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.Finished(true)
     }
 
-    private fun fileWasExternallyModified(): Boolean {
+    private fun fileWasExternallyModified(modifiedOnly: Boolean = false): Boolean {
+        // make sure geode is still here. just in case
         val geodeFile = getGeodeOutputPath()
         if (!geodeFile.exists()) {
-            return false
+            return !modifiedOnly
         }
 
         val sharedPreferences = PreferenceUtils.get(applicationContext)
-        if (!sharedPreferences.getBoolean(PreferenceUtils.Key.DEVELOPER_MODE)) {
-            return false
-        }
 
         val originalFileHash = sharedPreferences.getString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
             ?: return false
@@ -235,7 +233,7 @@ class ReleaseManager private constructor(
         downloadLauncherUpdate(update)
     }
 
-    private suspend fun checkForNewRelease(allowOverwriting: Boolean = false) {
+    private suspend fun checkForNewRelease(isManual: Boolean = false) {
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
@@ -266,19 +264,18 @@ class ReleaseManager private constructor(
         val currentVersion = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP)
         val latestVersion = release.getDescriptor()
 
-        // make sure geode is still here. just in case
-        val geodeFile = getGeodeOutputPath()
-
         // check if an update is needed
-        if (latestVersion == currentVersion && geodeFile.exists()) {
+        if (latestVersion == currentVersion && !fileWasExternallyModified()) {
             downloadLauncherUpdateIfNecessary()
 
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
 
+        val allowOverwriting = !sharedPreferences.getBoolean(PreferenceUtils.Key.DEVELOPER_MODE) || isManual
+
         // check if the file was externally modified
-        if (!allowOverwriting && fileWasExternallyModified()) {
+        if (!allowOverwriting && fileWasExternallyModified(true)) {
             downloadLauncherUpdateIfNecessary()
 
             sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
