@@ -5,6 +5,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
+import okio.Buffer
 import okio.BufferedSource
 import java.io.IOException
 
@@ -161,7 +162,7 @@ data class LogLine(
                 };
             */
 
-            /* val payloadLength = */ source.readShortLe()
+            val payloadLength = source.readShortLe().toLong()
             val headerSize = source.readShortLe().toUShort()
 
             val entryVersion = headerSizeToVersion(headerSize)
@@ -177,11 +178,17 @@ data class LogLine(
             val processInformation = ProcessInformation(pid, tid, uid)
             val time = Instant.fromEpochSeconds(sec, nSec)
 
-            val priorityByte = source.readByte()
+            // the payload is split into three parts
+            // initial priority byte -> null terminated tag -> non null terminated message
+
+            val packetBuffer = Buffer()
+            source.readFully(packetBuffer, payloadLength)
+
+            val priorityByte = packetBuffer.readByte()
             val priority = LogPriority.fromByte(priorityByte)
 
-            val tag = source.readCString()
-            val message = source.readCString()
+            val tag = packetBuffer.readCString()
+            val message = packetBuffer.readUtf8()
 
             return LogLine(
                 process = processInformation,

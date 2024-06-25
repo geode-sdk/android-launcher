@@ -9,7 +9,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import okio.Buffer
 import okio.buffer
 import okio.source
 import java.io.EOFException
@@ -61,7 +63,9 @@ class LogViewModel: ViewModel() {
             else "logcat -B -d"
 
         val logProcess = try {
-            Runtime.getRuntime().exec(logCommand)
+            withContext(Dispatchers.IO) {
+                Runtime.getRuntime().exec(logCommand)
+            }
         } catch (ioe: IOException) {
             ioe.printStackTrace()
             logLines += LogLine.showException(ioe)
@@ -71,13 +75,15 @@ class LogViewModel: ViewModel() {
             return logLines
         }
 
-        val logSource = logProcess.inputStream.source().buffer()
+        // read entire log into a buffer so no logs are added to the buffer during processing
+        val logBuffer = Buffer()
+        logProcess.inputStream.source().buffer().readAll(logBuffer)
 
         try {
             coroutineScope {
                 // this runs until the stream is exhausted
                 while (true) {
-                    val line = LogLine.fromBufferedSource(logSource)
+                    val line = LogLine.fromBufferedSource(logBuffer)
 
                     if (line.priority >= logLevel) {
                         logLines += line
