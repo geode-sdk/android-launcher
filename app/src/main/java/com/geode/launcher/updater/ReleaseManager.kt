@@ -116,7 +116,7 @@ class ReleaseManager private constructor(
         return when {
             gameVersion >= 39L -> mapSelectedReleaseToTag()
             gameVersion == 38L -> "v2.0.0-beta.27"
-            gameVersion == 37L -> "v2.0.0-beta.5"
+            gameVersion == 37L -> "v2.0.0-beta.4"
             else -> null
         }
     }
