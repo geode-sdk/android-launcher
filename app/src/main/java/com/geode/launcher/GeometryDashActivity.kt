@@ -3,7 +3,6 @@ package com.geode.launcher
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -58,13 +57,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mIsRunning = false
     private var mIsOnPause = false
     private var mHasWindowFocus = false
-    private var mReceiver: BroadcastReceiver? = null
 
     private var displayMode = DisplayMode.DEFAULT
     private var forceRefreshRate = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
+        FMOD.init(this)
 
         super.onCreate(savedInstanceState)
 
@@ -206,8 +205,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun setupPostLibraryLoad(packageInfo: PackageInfo) {
-        FMOD.init(this)
-
         // call native functions after native libraries init
         JniToCpp.setupHSSAssets(
             packageInfo.applicationInfo.sourceDir,
@@ -216,7 +213,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         Cocos2dxHelper.nativeSetApkPath(packageInfo.applicationInfo.sourceDir)
 
         BaseRobTopActivity.setCurrentActivity(this)
-        registerReceiver()
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
@@ -455,7 +451,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceivers()
         FMOD.close()
     }
 
@@ -495,25 +490,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         BaseRobTopActivity.isPaused = true
         if (mIsRunning) {
             pauseGame()
-        }
-    }
-
-    private fun registerReceiver() {
-        unregisterReceivers()
-        try {
-            val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
-            filter.addAction(Intent.ACTION_SCREEN_OFF)
-            filter.addAction(Intent.ACTION_USER_PRESENT)
-            mReceiver = BaseRobTopActivity.ReceiverScreen()
-            registerReceiver(mReceiver, filter)
-        } catch (_: Exception) {
-        }
-    }
-
-    private fun unregisterReceivers() {
-        if (mReceiver != null) {
-            unregisterReceiver(mReceiver)
-            mReceiver = null
         }
     }
 

@@ -2,7 +2,6 @@ package com.customRobTop
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.KeyguardManager
 import android.content.*
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -11,7 +10,6 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import com.customRobTop.JniToCpp.resumeSound
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.openIMEKeyboard
 import java.lang.ref.WeakReference
@@ -259,29 +257,4 @@ object BaseRobTopActivity {
         level = DeprecationLevel.HIDDEN
     )
     fun logEvent(event: String) {}
-
-    class ReceiverScreen : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                Intent.ACTION_SCREEN_ON -> {
-                    Log.d("TAG", "ACTION_SCREEN_ON")
-                    if (!(me.get()?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked) {
-                        shouldResumeSound = true
-                    }
-                    if (!isPaused && shouldResumeSound) {
-                        resumeSound()
-                    }
-                }
-                Intent.ACTION_SCREEN_OFF -> {
-                    shouldResumeSound = false
-                }
-                Intent.ACTION_USER_PRESENT -> {
-                    shouldResumeSound = true
-                    if (!isPaused) {
-                        resumeSound()
-                    }
-                }
-            }
-        }
-    }
 }
