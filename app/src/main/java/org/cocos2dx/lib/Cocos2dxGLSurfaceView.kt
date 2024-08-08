@@ -126,11 +126,13 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
     override fun onPause() {
         queueEvent { cocos2dxRenderer.handleOnPause() }
+        renderMode = RENDERMODE_WHEN_DIRTY
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
+        renderMode = RENDERMODE_CONTINUOUSLY
         queueEvent { cocos2dxRenderer.handleOnResume() }
     }
 
