@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -189,6 +190,16 @@ fun MainScreen(
                                 beginLaunch = true
                             },
                         )
+
+                        if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
+                            ElevatedCard(modifier = Modifier.padding(8.dp)) {
+                                Text(
+                                    stringResource(R.string.launcher_game_update_required),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(8.dp).sizeIn(maxWidth = 512.dp)
+                                )
+                            }
+                        }
                     }
                 }
                 gdInstalled -> {

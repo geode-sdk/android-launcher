@@ -51,6 +51,8 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import java.net.ConnectException
@@ -178,9 +180,16 @@ fun UpdateIndicator(
                         context.getString(R.string.preference_check_for_updates_success)
                     )
                 } else {
-                    snackbarHostState.showSnackbar(
-                        context.getString(R.string.preference_check_for_updates_none_found)
-                    )
+                    val gdInstalled = GamePackageUtils.isGameInstalled(context.packageManager)
+                    if (gdInstalled && GamePackageUtils.getGameVersionCode(context.packageManager) < Constants.SUPPORTED_VERSION_CODE) {
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.launcher_game_update_required_short)
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.preference_check_for_updates_none_found)
+                        )
+                    }
                 }
             }
             else -> {}
