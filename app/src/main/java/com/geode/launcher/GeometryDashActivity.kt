@@ -207,17 +207,17 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private fun setupPostLibraryLoad(packageInfo: PackageInfo) {
         // call native functions after native libraries init
         JniToCpp.setupHSSAssets(
-            packageInfo.applicationInfo.sourceDir,
+            packageInfo.applicationInfo!!.sourceDir,
             Environment.getExternalStorageDirectory().absolutePath
         )
-        Cocos2dxHelper.nativeSetApkPath(packageInfo.applicationInfo.sourceDir)
+        Cocos2dxHelper.nativeSetApkPath(packageInfo.applicationInfo!!.sourceDir)
 
         BaseRobTopActivity.setCurrentActivity(this)
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
-        val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo)
+        val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo!!)
         val libraryPath = if (nativeDir.endsWith('/')) "${nativeDir}lib$libraryName.so" else "$nativeDir/lib$libraryName.so"
 
         try {
@@ -421,6 +421,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         )
 
         forceRefreshRate = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.FORCE_HRR)
+
+        if (forceRefreshRate) {
+            val maxRefreshRate = display?.supportedModes?.maxBy { it.refreshRate }?.refreshRate
+            if (maxRefreshRate != null) {
+                window.attributes.preferredRefreshRate = maxRefreshRate
+            }
+        }
 
         if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES

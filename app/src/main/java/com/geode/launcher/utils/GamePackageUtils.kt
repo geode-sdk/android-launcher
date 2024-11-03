@@ -53,8 +53,8 @@ object GamePackageUtils {
     fun detectAbiMismatch(context: Context, packageInfo: PackageInfo, loadException: Error): Boolean {
         val abi = LaunchUtils.applicationArchitecture
         val isExtracted =
-            packageInfo.applicationInfo.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
-        val isSplit = (packageInfo.applicationInfo.splitSourceDirs?.size ?: 0) > 1
+            packageInfo.applicationInfo!!.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
+        val isSplit = (packageInfo.applicationInfo?.splitSourceDirs?.size ?: 0) > 1
 
         val metadata =
             "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
@@ -74,7 +74,7 @@ object GamePackageUtils {
         val oppositeArchitecture = if (abi == "arm64-v8a") "armeabi-v7a" else "arm64-v8a"
 
         // detect issues using native library directory (only works on extracted libraries)
-        val nativeLibraryDir = packageInfo.applicationInfo.nativeLibraryDir
+        val nativeLibraryDir = packageInfo.applicationInfo!!.nativeLibraryDir
 
         if (nativeLibraryDir.contains(oppositeArchitecture)) {
             return true
@@ -105,8 +105,8 @@ object GamePackageUtils {
         val clazz = assetManager.javaClass
         val aspMethod = clazz.getDeclaredMethod("addAssetPath", String::class.java)
 
-        aspMethod.invoke(assetManager, packageInfo.applicationInfo.sourceDir)
-        packageInfo.applicationInfo.splitSourceDirs?.forEach {
+        aspMethod.invoke(assetManager, packageInfo.applicationInfo?.sourceDir)
+        packageInfo.applicationInfo?.splitSourceDirs?.forEach {
             aspMethod.invoke(assetManager, it)
         }
     }
@@ -122,14 +122,14 @@ object GamePackageUtils {
             val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNING_CERTIFICATES)
             val signingInfo = game.signingInfo
 
-            signingInfo.signingCertificateHistory
+            signingInfo?.signingCertificateHistory ?: return false
         } else {
             val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNATURES)
             game.signatures
         }
 
-        return certificates.any {
+        return certificates?.any {
             validateCertificate(it.toByteArray())
-        }
+        } ?: false
     }
 }
