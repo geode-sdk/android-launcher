@@ -62,9 +62,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     fun initView() {
         setEGLContextClientVersion(2)
         isFocusableInTouchMode = true
-//        if (Build.VERSION.SDK_INT >= 11) {
         preserveEGLContextOnPause = true
-//        }
         cocos2dxGLSurfaceView = this
         cocos2dxTextInputWrapper = Cocos2dxTextInputWrapper(this)
         Cocos2dxGLSurfaceView.handler = object : Handler(Looper.getMainLooper()) {

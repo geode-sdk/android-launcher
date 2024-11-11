@@ -16,5 +16,5 @@ object Constants {
     const val SUPPORTED_VERSION_CODE_MIN = 37L
     const val SUPPORTED_VERSION_CODE = 40L
 
-    const val SUPPORTED_VERSION_STRING = "2.2.142"
+    const val SUPPORTED_VERSION_STRING = "2.2.143"
 }
