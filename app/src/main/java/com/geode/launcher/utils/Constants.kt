@@ -14,7 +14,7 @@ object Constants {
     const val GJ_DATA_DIR = "/data/data/${PACKAGE_NAME}"
 
     const val SUPPORTED_VERSION_CODE_MIN = 37L
-    const val SUPPORTED_VERSION_CODE = 39L
+    const val SUPPORTED_VERSION_CODE = 40L
 
     const val SUPPORTED_VERSION_STRING = "2.2.142"
 }
