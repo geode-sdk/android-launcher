@@ -35,7 +35,7 @@
     </string>
 
     <string name="launcher_game_update_required_short">A Geometry Dash update is required.</string>
-    <string name="launcher_game_update_required">The currently installed version of Geometry Dash is out-of-date. Please update to continue receiving Geode updates.</string>
+    <string name="launcher_game_update_required">The currently installed version of Geometry Dash is no longer supported. Please update Geometry Dash to continue receiving Geode updates.</string>
 
     <string name="launcher_update_available">A new launcher update is available!</string>
     <string name="launcher_update_dismiss">Dismiss</string>

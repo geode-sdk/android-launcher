@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -162,7 +162,7 @@ fun MainScreen(
             Image(
                 painter = painterResource(id = R.drawable.geode_logo),
                 contentDescription = context.getString(R.string.launcher_logo_alt),
-                modifier = Modifier.size(136.dp, 136.dp)
+                modifier = Modifier.size(100.dp, 100.dp)
             )
             Text(
                 context.getString(R.string.launcher_title),
@@ -194,13 +194,26 @@ fun MainScreen(
                         )
 
                         if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
-                            ElevatedCard(modifier = Modifier.padding(8.dp)) {
-                                Text(
-                                    stringResource(R.string.launcher_game_update_required),
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(8.dp).sizeIn(maxWidth = 512.dp)
-                                )
-                            }
+                            InlineDialog(
+                                headline = {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+
+                                    Text(
+                                        stringResource(R.string.launcher_unsupported_version_title),
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
+                                body = {
+                                    Text(
+                                        stringResource(R.string.launcher_game_update_required),
+                                    )
+                                },
+                                modifier = Modifier.padding(8.dp)
+                            )
                         }
                     }
                 }
