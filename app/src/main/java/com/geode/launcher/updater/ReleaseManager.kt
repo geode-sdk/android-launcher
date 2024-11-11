@@ -114,7 +114,8 @@ class ReleaseManager private constructor(
         val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
 
         return when {
-            gameVersion >= 39L -> mapSelectedReleaseToTag()
+            gameVersion >= 40L -> mapSelectedReleaseToTag()
+            gameVersion == 39L -> "v3.9.0"
             gameVersion == 38L -> "v2.0.0-beta.27"
             gameVersion == 37L -> "v2.0.0-beta.4"
             else -> null
