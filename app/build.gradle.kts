@@ -14,8 +14,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 18
-        versionName = "1.4.1"
+        versionCode = 19
+        versionName = "1.4.2"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -80,7 +80,7 @@ android {
         }
     }
     namespace = "com.geode.launcher"
-    ndkVersion = "26.3.11579264"
+    ndkVersion = "27.2.12479018"
 }
 
 dependencies {
@@ -95,11 +95,11 @@ dependencies {
     implementation ("androidx.activity:activity-ktx:1.9.3")
     implementation ("androidx.appcompat:appcompat:1.7.0")
     implementation ("androidx.documentfile:documentfile:1.0.1")
-    implementation ("com.squareup.okio:okio:3.9.0")
+    implementation ("com.squareup.okio:okio:3.9.1")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.7.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.7.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
     debugImplementation ("androidx.compose.ui:ui-tooling")
-    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.2")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.3")
 }

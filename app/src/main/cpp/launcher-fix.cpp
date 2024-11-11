@@ -2,6 +2,7 @@
 #include <jni.h>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <cstdint>
 #include <android/log.h>
 #include <link.h>
