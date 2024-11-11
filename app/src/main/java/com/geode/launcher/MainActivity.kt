@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
             LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
         } else { null }
 
+        /*
         val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
         if (redirectToAlt) {
             val launchIntent = Intent(this, AltMainActivity::class.java)
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
             return
         }
+        */
 
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
