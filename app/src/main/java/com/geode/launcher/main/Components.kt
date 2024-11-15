@@ -74,11 +74,11 @@ fun StatusIndicator(
 @Composable
 fun InlineDialog(headline: @Composable () -> Unit, body: @Composable () -> Unit, modifier: Modifier = Modifier) {
     ElevatedCard(modifier = modifier) {
-        Column(modifier = Modifier.padding(8.dp).sizeIn(maxWidth = 512.dp)) {
+        Column(modifier = Modifier.padding(18.dp).sizeIn(maxWidth = 512.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 headline()
             }
