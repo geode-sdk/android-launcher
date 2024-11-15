@@ -13,7 +13,13 @@ object Constants {
     @SuppressLint("SdCardPath")
     const val GJ_DATA_DIR = "/data/data/${PACKAGE_NAME}"
 
+    // anything below this version code is blocked from opening the game
     const val SUPPORTED_VERSION_CODE_MIN = 37L
+
+    // anything below this version code shows a warning on the main menu
+    const val SUPPORTED_VERSION_CODE_MIN_WARNING = 39L
+
+    // anything above this version code will show a warning when starting the game
     const val SUPPORTED_VERSION_CODE = 40L
 
     const val SUPPORTED_VERSION_STRING = "2.2.143"

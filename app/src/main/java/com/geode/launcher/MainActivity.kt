@@ -193,7 +193,7 @@ fun MainScreen(
                             },
                         )
 
-                        if (gdVersion < Constants.SUPPORTED_VERSION_CODE) {
+                        if (gdVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
                             InlineDialog(
                                 headline = {
                                     Icon(
