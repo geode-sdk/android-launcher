@@ -366,8 +366,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         frameLayout.layoutParams = frameLayoutParams
 
         if (displayMode == DisplayMode.LIMITED) {
-            // despite not being perfectly 16:9, this is what Android calls "16:9"
-            frameLayout.aspectRatio = 1.86f
+            frameLayout.aspectRatio = 1.77f
         }
 
         val editTextLayoutParams = ViewGroup.LayoutParams(
