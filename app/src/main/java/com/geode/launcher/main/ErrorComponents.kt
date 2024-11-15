@@ -70,8 +70,20 @@ fun ErrorInfoBody(failureReason: LaunchUtils.LauncherError, modifier: Modifier =
         else -> stringResource(R.string.load_failed_generic_error_description)
     }
 
+    val context = LocalContext.current
     val recommendations = when (failureReason) {
-        LaunchUtils.LauncherError.LINKER_FAILED -> listOf(
+        LaunchUtils.LauncherError.LINKER_FAILED_STL -> {
+            val isDeveloper = PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.DEVELOPER_MODE)
+
+            buildList {
+                add(stringResource(R.string.load_failed_recommendation_update))
+                add(stringResource(R.string.load_failed_recommendation_report))
+
+                if (isDeveloper)
+                    add(stringResource(R.string.load_failed_recommendation_dev_stl))
+            }
+        }
+        LaunchUtils.LauncherError.LINKER_FAILED -> listOfNotNull(
             stringResource(R.string.load_failed_recommendation_reinstall),
             stringResource(R.string.load_failed_recommendation_update),
         )
@@ -100,6 +112,7 @@ fun ErrorInfoTitle(failureReason: LaunchUtils.LauncherError) {
     val message = when (failureReason) {
         LaunchUtils.LauncherError.LINKER_NEEDS_64BIT,
         LaunchUtils.LauncherError.LINKER_NEEDS_32BIT,
+        LaunchUtils.LauncherError.LINKER_FAILED_STL,
         LaunchUtils.LauncherError.LINKER_FAILED -> stringResource(R.string.load_failed_link_error)
         LaunchUtils.LauncherError.GENERIC -> stringResource(R.string.load_failed_generic_error)
         LaunchUtils.LauncherError.CRASHED -> stringResource(R.string.load_failed_crashed)

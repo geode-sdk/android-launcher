@@ -95,6 +95,7 @@ object LaunchUtils {
     enum class LauncherError {
         LINKER_NEEDS_64BIT,
         LINKER_NEEDS_32BIT,
+        LINKER_FAILED_STL,
         LINKER_FAILED,
         GENERIC,
         CRASHED;

@@ -99,6 +99,7 @@
     <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>
     <string name="load_failed_recommendation_report">Report this issue to the developers.</string>
     <string name="load_failed_recommendation_safe_mode">Hold the Launch button to launch in safe mode.</string>
+    <string name="load_failed_recommendation_dev_stl">Devs: If this is a locally built Geode version, please use the c++_shared ANDROID_STL!</string>
 
     <string name="message_box_cancel">Cancel</string>
     <string name="message_box_accept">OK</string>

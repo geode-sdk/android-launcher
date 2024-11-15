@@ -87,6 +87,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             val errorMessage = when {
                 abiMismatch && is64bit -> LaunchUtils.LauncherError.LINKER_NEEDS_32BIT
                 abiMismatch -> LaunchUtils.LauncherError.LINKER_NEEDS_64BIT
+                e.message?.contains("__gxx_personality_v0") == true ->
+                    LaunchUtils.LauncherError.LINKER_FAILED_STL
                 else -> LaunchUtils.LauncherError.LINKER_FAILED
             }
 
