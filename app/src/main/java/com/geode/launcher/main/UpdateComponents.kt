@@ -92,7 +92,7 @@ fun installLauncherUpdate(context: Context) {
         try {
             val intent = generateInstallIntent(uri)
             context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
             Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
         }
     } else {

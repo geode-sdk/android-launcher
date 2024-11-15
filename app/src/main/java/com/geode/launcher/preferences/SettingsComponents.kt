@@ -177,7 +177,7 @@ fun StringDialog(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Ascii,
-                    autoCorrect = false
+                    autoCorrectEnabled = false
                 ),
                 trailingIcon = {
                     if (enteredValue.isNotEmpty()) {
