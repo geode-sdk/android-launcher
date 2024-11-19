@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -142,7 +143,7 @@ fun UpdateProgressIndicator(
         horizontalAlignment = Alignment.Start,
         modifier = modifier
     ) {
-        Text(message)
+        Text(message, style = MaterialTheme.typography.labelMedium)
 
         Spacer(modifier = Modifier.padding(4.dp))
 
