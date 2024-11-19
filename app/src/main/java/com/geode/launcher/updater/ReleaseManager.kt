@@ -114,8 +114,7 @@ class ReleaseManager private constructor(
         val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
 
         return when {
-            // default 2.2074 to prereleases while we're in the prerelease era
-            gameVersion >= 40L -> mapSelectedReleaseToTag().takeIf { it != TAG_LATEST } ?: TAG_BETA
+            gameVersion >= 40L -> mapSelectedReleaseToTag()
             gameVersion == 39L -> "v3.9.2"
             gameVersion == 38L -> "v2.0.0-beta.27"
             gameVersion == 37L -> "v2.0.0-beta.4"
