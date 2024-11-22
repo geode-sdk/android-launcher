@@ -172,7 +172,7 @@ object GeodeUtils {
             val manager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = manager.primaryClip
             if (clip != null && clip.itemCount > 0) {
-                return clip.getItemAt(0).text.toString()
+                return clip.getItemAt(0).coerceToText(this).toString()
             }
         }
         return ""
