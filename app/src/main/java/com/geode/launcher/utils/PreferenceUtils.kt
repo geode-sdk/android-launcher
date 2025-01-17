@@ -74,7 +74,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
             val preferences = get(sharedPreferences)
 
-            val preferenceValue = remember {
+            // inferring the type causes an internal compiler error. lol
+            val preferenceValue: MutableState<T> = remember {
                 val state = mutableStateOf(preferenceGet(preferences, preferenceKey))
                 object : MutableState<T> by state {
                     override var value: T
