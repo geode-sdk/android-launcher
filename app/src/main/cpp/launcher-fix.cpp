@@ -265,8 +265,8 @@ JNIEXPORT int JNICALL Java_com_geode_launcher_LauncherFix_performExceptionsRenam
 }
 
 std::string redirect_path(const char* pathname) {
-    auto data_path = DataPaths::get_instance().data_path;
-    auto original_data_path = DataPaths::get_instance().original_data_path;
+    auto& data_path = DataPaths::get_instance().data_path;
+    auto& original_data_path = DataPaths::get_instance().original_data_path;
 
     if (!data_path.empty() && !original_data_path.empty()) {
         // call this a c string optimization
