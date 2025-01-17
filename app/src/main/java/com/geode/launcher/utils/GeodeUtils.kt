@@ -10,6 +10,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.DocumentsContract
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
@@ -442,6 +445,40 @@ object GeodeUtils {
     }
 
     private external fun permissionCallback(granted: Boolean)
+
+    internal fun getVibrator(): Vibrator? = activity.get()?.run {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    // vibration
+    @JvmStatic
+    fun vibrateSupported(): Boolean = getVibrator()?.hasVibrator() == true
+
+    @JvmStatic
+    fun vibrate(ms: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getVibrator()?.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            getVibrator()?.vibrate(ms)
+        }
+    }
+
+    @JvmStatic
+    fun vibratePattern(pattern: LongArray, repeat: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getVibrator()?.vibrate(VibrationEffect.createWaveform(pattern, repeat))
+        } else {
+            @Suppress("DEPRECATION")
+            getVibrator()?.vibrate(pattern, repeat)
+        }
+    }
 
     const val ARGUMENT_SAFE_MODE = "--geode:safe-mode"
 
