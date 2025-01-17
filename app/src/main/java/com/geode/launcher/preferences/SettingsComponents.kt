@@ -24,10 +24,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -109,9 +112,11 @@ fun SettingsSelectCard(
                 extraSelectBehavior?.invoke(selected)
             },
             initialValue = preferenceValue,
-            toLabel = toLabel,
-            optionsCount = 0..maxVal
-        )
+        ) {
+            (0..maxVal).forEach {
+                SelectOption(name = toLabel(it), value = it)
+            }
+        }
     }
 }
 
@@ -204,16 +209,42 @@ fun StringDialog(
     )
 }
 
+internal val LocalSelectValue = compositionLocalOf<Any> { 0 }
+internal val LocalSelectSetValue = staticCompositionLocalOf<(Any) -> Unit> { {} }
+
+@Composable
+fun <T> SelectOption(name: String, value: T) {
+    val currentValue = LocalSelectValue.current
+    val setValue = LocalSelectSetValue.current
+
+    // do not give the row or column padding!! it messes up the selection effect
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                onClick = { setValue(value as Any) },
+                role = Role.RadioButton
+            )
+            .padding(horizontal = 12.dp)
+    ) {
+        RadioButton(
+            selected = currentValue.equals(value),
+            onClick = { setValue(value as Any) }
+        )
+        Text(name, style = Typography.bodyMedium)
+    }
+}
+
 @Composable
 fun <T> SelectDialog(
     title: String,
     onDismissRequest: () -> Unit,
     onSelect: (T) -> Unit,
     initialValue: T,
-    toLabel: @Composable (T) -> String,
-    optionsCount: Iterable<T>,
+    options: @Composable () -> Unit,
 ) {
-    var selectedValue by remember { mutableStateOf(initialValue) }
+    val (selectedValue, setSelectedValue) = remember { mutableStateOf(initialValue) }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
@@ -232,27 +263,14 @@ fun <T> SelectDialog(
                     )
                 )
 
-                // do not give the row or column padding!! it messes up the selection effect
-                optionsCount.forEach { id ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                onClick = { selectedValue = id },
-                                role = Role.RadioButton
-                            )
-                            .padding(horizontal = 12.dp)
-                    ) {
-                        RadioButton(
-                            selected = selectedValue == id,
-                            onClick = { selectedValue = id }
-                        )
-                        Text(
-                            toLabel(id),
-                            style = Typography.bodyMedium
-                        )
-                    }
+                CompositionLocalProvider(
+                    LocalSelectValue provides (selectedValue as Any),
+                    LocalSelectSetValue provides ({
+                        @Suppress("UNCHECKED_CAST")
+                        setSelectedValue(it as T)
+                    })
+                ) {
+                    options()
                 }
 
                 Row(

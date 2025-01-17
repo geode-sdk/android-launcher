@@ -135,12 +135,14 @@ fun SelectLogLevelDialog(
         onDismissRequest = onDismissRequest,
         onSelect = { onSelect(it) },
         initialValue = initialValue,
-        toLabel = {
-            // i'm lazy
-            it.name.lowercase().replaceFirstChar { c -> c.uppercaseChar() }
-        },
-        optionsCount = LogPriority.FATAL downTo LogPriority.VERBOSE
-    )
+    ) {
+        (LogPriority.VERBOSE..LogPriority.FATAL).reversed().forEach {
+            SelectOption(
+                name = it.name.lowercase().replaceFirstChar { c -> c.uppercaseChar() },
+                value = it
+            )
+        }
+    }
 }
 
 @Composable
