@@ -351,11 +351,8 @@ fun SettingsScreen(
                         preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
                         toLabel = { displayOptionToKey(it) }
                     )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        SettingsCard(
-                            title = stringResource(R.string.preference_force_hrr),
-                            preferenceKey = PreferenceUtils.Key.FORCE_HRR,
                     val currentDisplayMode by PreferenceUtils.useIntPreference(PreferenceUtils.Key.DISPLAY_MODE)
+
                     if (currentDisplayMode == 1) {
                         SettingsStringSelectCard(
                             title = stringResource(R.string.preference_custom_aspect_ratio_name),

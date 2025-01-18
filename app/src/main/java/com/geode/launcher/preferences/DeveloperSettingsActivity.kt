@@ -1,5 +1,6 @@
 package com.geode.launcher.preferences
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -135,6 +136,13 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
                         }}
                     )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        SettingsCard(
+                            title = stringResource(R.string.preference_force_hrr),
+                            preferenceKey = PreferenceUtils.Key.FORCE_HRR,
+                        )
+                    }
                     /*
                     SettingsCard(
                         title = stringResource(R.string.preference_override_exceptions_name),
