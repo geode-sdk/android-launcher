@@ -185,16 +185,18 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
             }
 
             val outOf = remember(state.outOf) {
-                Formatter.formatShortFileSize(context, state.outOf)
+                state.outOf?.apply {
+                    Formatter.formatShortFileSize(context, this)
+                }
             }
 
             LaunchStatusInfo(
                 title = stringResource(R.string.launcher_downloading_update),
-                details = stringResource(R.string.launcher_downloading_update_details, downloaded, outOf),
+                details = stringResource(R.string.launcher_downloading_update_details, downloaded, outOf ?: "…"),
                 progress = {
-                    val progress = state.downloaded / state.outOf.toDouble()
+                    val progress = state.downloaded / state.outOf!!.toDouble()
                     progress.toFloat()
-                }
+                }.takeIf { state.outOf != null }
             )
         }
         is LaunchViewModel.LaunchUIState.Cancelled -> {

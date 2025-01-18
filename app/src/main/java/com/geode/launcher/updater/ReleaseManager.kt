@@ -61,7 +61,7 @@ class ReleaseManager private constructor(
     sealed class ReleaseManagerState {
         data object InUpdateCheck : ReleaseManagerState()
         data class Failure(val exception: Exception) : ReleaseManagerState()
-        data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseManagerState()
+        data class InDownload(val downloaded: Long, val outOf: Long?) : ReleaseManagerState()
         data class Finished(val hasUpdated: Boolean = false) : ReleaseManagerState()
     }
 
@@ -82,7 +82,7 @@ class ReleaseManager private constructor(
     val isInUpdate: Boolean
         get() = _uiState.value !is ReleaseManagerState.Failure && _uiState.value !is ReleaseManagerState.Finished
 
-    private val _availableLauncherUpdate = MutableStateFlow<Release?>(null)
+    private val _availableLauncherUpdate = MutableStateFlow<DownloadableLauncherRelease?>(null)
     val availableLauncherUpdate = _availableLauncherUpdate.asStateFlow()
 
     private fun sendError(e: Exception) {
@@ -106,24 +106,21 @@ class ReleaseManager private constructor(
         }
     }
 
-    private fun getBestReleaseForGameVersion(): String? {
+    private fun getBestReleaseForGameVersion(gameVersion: Long): String? = when {
+        gameVersion >= 40L -> mapSelectedReleaseToTag()
+        gameVersion == 39L -> "v3.9.2"
+        gameVersion == 38L -> "v2.0.0-beta.27"
+        gameVersion == 37L -> "v2.0.0-beta.4"
+        else -> null
+    }
+
+    private suspend fun getLatestRelease(): Downloadable? {
         if (!GamePackageUtils.isGameInstalled(applicationContext.packageManager)) {
             return null
         }
 
         val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
-
-        return when {
-            gameVersion >= 40L -> mapSelectedReleaseToTag()
-            gameVersion == 39L -> "v3.9.2"
-            gameVersion == 38L -> "v2.0.0-beta.27"
-            gameVersion == 37L -> "v2.0.0-beta.4"
-            else -> null
-        }
-    }
-
-    private suspend fun getLatestRelease(): Release? {
-        val targetTag = getBestReleaseForGameVersion() ?: return null
+        val targetTag = getBestReleaseForGameVersion(gameVersion) ?: return null
 
         return when (targetTag) {
             TAG_LATEST -> releaseRepository.getLatestGeodeRelease()
@@ -132,23 +129,23 @@ class ReleaseManager private constructor(
         }
     }
 
-    private suspend fun downloadLauncherUpdate(release: Release) {
-        val download = release.getLauncherDownload() ?: return
+    private suspend fun downloadLauncherUpdate(release: Downloadable) {
+        val download = release.getDownload() ?: return
 
         val outputDirectory = LaunchUtils.getBaseDirectory(applicationContext)
-        val outputFile = File(outputDirectory, download.name)
+        val outputFile = File(outputDirectory, download.filename)
 
         if (outputFile.exists()) {
             // only download the apk once
             return
         }
 
-        _uiState.value = ReleaseManagerState.InDownload(0, download.size.toLong())
+        _uiState.value = ReleaseManagerState.InDownload(0, download.size)
 
         try {
             val fileStream = DownloadUtils.downloadStream(
                 httpClient,
-                download.browserDownloadUrl
+                download.url
             ) { progress, outOf ->
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
             }
@@ -160,8 +157,8 @@ class ReleaseManager private constructor(
         }
     }
 
-    private suspend fun performUpdate(release: Release) {
-        val releaseAsset = release.getGeodeDownload()
+    private suspend fun performUpdate(release: Downloadable) {
+        val releaseAsset = release.getDownload()
         if (releaseAsset == null) {
             val noAssetException = Exception("missing Android download")
             _uiState.value = ReleaseManagerState.Failure(noAssetException)
@@ -170,12 +167,12 @@ class ReleaseManager private constructor(
         }
 
         // set an initial download size
-        _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size.toLong())
+        _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size)
 
         try {
             val fileStream = DownloadUtils.downloadStream(
                 httpClient,
-                releaseAsset.browserDownloadUrl
+                releaseAsset.url
             ) { progress, outOf ->
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
             }
@@ -223,8 +220,8 @@ class ReleaseManager private constructor(
         return originalFileHash != currentFileHash
     }
 
-    private fun checkLauncherUpdate(launcherUpdate: Release) {
-        if (launcherUpdate.tagName != BuildConfig.VERSION_NAME) {
+    private fun checkLauncherUpdate(launcherUpdate: DownloadableLauncherRelease) {
+        if (launcherUpdate.release.tagName != BuildConfig.VERSION_NAME) {
             _availableLauncherUpdate.value = launcherUpdate
         }
     }
@@ -286,7 +283,7 @@ class ReleaseManager private constructor(
         performUpdate(release)
     }
 
-    private fun updatePreferences(release: Release) {
+    private fun updatePreferences(release: Downloadable) {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
 
         sharedPreferences.setString(

@@ -73,10 +73,10 @@ fun generateInstallIntent(uri: Uri): Intent {
 
 fun installLauncherUpdate(context: Context) {
     val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
-    val launcherDownload = nextUpdate?.getLauncherDownload()
+    val launcherDownload = nextUpdate?.getDownload()
 
     if (launcherDownload != null) {
-        val outputFile = launcherDownload.name
+        val outputFile = launcherDownload.filename
         val baseDirectory = LaunchUtils.getBaseDirectory(context)
 
         val outputPathFile = File(baseDirectory, outputFile)
@@ -237,21 +237,23 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
             }
 
             val outOf = remember(state.outOf) {
-                Formatter.formatShortFileSize(context, state.outOf)
+                state.outOf?.run {
+                    Formatter.formatShortFileSize(context, this)
+                }
             }
 
             UpdateProgressIndicator(
                 stringResource(
                     R.string.release_fetch_downloading,
                     downloaded,
-                    outOf
+                    outOf ?: "…"
                 ),
                 modifier = modifier,
                 releaseViewModel = releaseViewModel,
                 progress = {
-                    val progress = state.downloaded / state.outOf.toDouble()
+                    val progress = state.downloaded / state.outOf!!.toDouble()
                     progress.toFloat()
-                }
+                }.takeIf { state.outOf != null }
             )
         }
         is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {

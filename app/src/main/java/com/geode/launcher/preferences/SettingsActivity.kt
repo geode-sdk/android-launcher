@@ -151,11 +151,16 @@ fun UpdateIndicator(
         is ReleaseViewModel.ReleaseUIState.InDownload -> {
             // is this the ideal design? idk
             enablePopup = true
-            val progress = updateStatus.downloaded / updateStatus.outOf.toDouble()
-
-            CircularProgressIndicator(
-                progress = { progress.toFloat() },
-            )
+            if (updateStatus.outOf != null) {
+                CircularProgressIndicator(
+                    progress = {
+                        val progress = updateStatus.downloaded / updateStatus.outOf.toDouble()
+                        progress.toFloat()
+                    },
+                )
+            } else {
+                CircularProgressIndicator()
+            }
         }
         else -> {}
     }

@@ -70,7 +70,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     sealed class LaunchUIState {
         data object Initial : LaunchUIState()
         data object UpdateCheck : LaunchUIState()
-        data class Updating(val downloaded: Long, val outOf: Long) : LaunchUIState()
+        data class Updating(val downloaded: Long, val outOf: Long?) : LaunchUIState()
         data class Cancelled(val reason: LaunchCancelReason, val inProgress: Boolean = false) : LaunchUIState()
         data object Working : LaunchUIState()
         data object Ready : LaunchUIState()

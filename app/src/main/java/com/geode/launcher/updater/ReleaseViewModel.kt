@@ -30,7 +30,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     sealed class ReleaseUIState {
         data object InUpdateCheck : ReleaseUIState()
         data class Failure(val exception: Exception) : ReleaseUIState()
-        data class InDownload(val downloaded: Long, val outOf: Long) : ReleaseUIState()
+        data class InDownload(val downloaded: Long, val outOf: Long?) : ReleaseUIState()
         data class Finished(val hasUpdated: Boolean = false) : ReleaseUIState()
         data class Cancelled(val isCancelling: Boolean = false) : ReleaseUIState()
 
