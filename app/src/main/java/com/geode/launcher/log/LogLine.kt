@@ -212,7 +212,9 @@ data class LogLine(
 
     val identifier = time.toJavaInstant()
 
-    val messageTrimmed by lazy { this.message.trim() }
+    val messageTrimmed by lazy {
+        this.message.trim { it <= ' ' }
+    }
 
     val formattedTime by lazy { this.time.toLocalDateTime(TimeZone.currentSystemDefault()) }
     val asSimpleString by lazy {
