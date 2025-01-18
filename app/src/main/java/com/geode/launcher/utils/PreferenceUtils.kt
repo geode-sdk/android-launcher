@@ -142,7 +142,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         RELEASE_CHANNEL_TAG,
         DEVELOPER_MODE,
         CLEANUP_APKS,
-        CUSTOM_SYMBOL_LIST
+        CUSTOM_SYMBOL_LIST,
+        CUSTOM_ASPECT_RATIO,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -157,6 +158,11 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
         // people wanted a reset on nightly anyways, so this is a good excuse to do so
         else -> 0
+    }
+
+    private fun defaultValueForStringKey(key: Key) = when (key) {
+        Key.CUSTOM_ASPECT_RATIO -> "16_9"
+        else -> null
     }
 
     private fun keyToName(key: Key): String {
@@ -180,6 +186,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.DEVELOPER_MODE -> "PreferenceDeveloperMode"
             Key.CLEANUP_APKS -> "PreferenceCleanupPackages"
             Key.CUSTOM_SYMBOL_LIST -> "PreferenceCustomSymbolList"
+            Key.CUSTOM_ASPECT_RATIO -> "PreferenceCustomAspectRatio"
         }
     }
 
@@ -210,7 +217,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     fun getString(key: Key): String? {
         val keyName = keyToName(key)
-        return sharedPreferences.getString(keyName, null)
+        return sharedPreferences.getString(keyName, defaultValueForStringKey(key))
     }
 
     fun setString(key: Key, value: String?) {

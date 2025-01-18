@@ -1,7 +1,6 @@
 package com.geode.launcher
 
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
@@ -9,6 +8,7 @@ import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.text.InputType
 import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -51,6 +51,13 @@ enum class DisplayMode {
     }
 }
 
+fun ratioForPreference(value: String) = when (value) {
+    "4_3" -> 4/3.0f
+    "1_1" -> 1.0f
+    "16_10" -> 16/10.0f
+    else -> 1.77f
+}
+
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private val sTag = GeometryDashActivity::class.simpleName
@@ -60,6 +67,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private var displayMode = DisplayMode.DEFAULT
     private var forceRefreshRate = false
+    private var mAspectRatio = 0.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -368,7 +376,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         frameLayout.layoutParams = frameLayoutParams
 
         if (displayMode == DisplayMode.LIMITED) {
-            frameLayout.aspectRatio = 1.77f
+            frameLayout.aspectRatio = mAspectRatio
         }
 
         val editTextLayoutParams = ViewGroup.LayoutParams(
@@ -410,7 +418,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             renderer.setFrameRate = true
         }
 
-        editText.inputType = 145
+        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
         glSurfaceView.cocos2dxEditText = editText
 
         return frameLayout
@@ -419,11 +427,15 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private fun setupUIState() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
+        val preferenceUtils = PreferenceUtils.get(this)
+
         displayMode = DisplayMode.fromInt(
-            PreferenceUtils.get(this).getInt(PreferenceUtils.Key.DISPLAY_MODE)
+            preferenceUtils.getInt(PreferenceUtils.Key.DISPLAY_MODE)
         )
 
-        forceRefreshRate = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.FORCE_HRR)
+        mAspectRatio = ratioForPreference(preferenceUtils.getString(PreferenceUtils.Key.CUSTOM_ASPECT_RATIO) ?: "16_9")
+
+        forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
 
         if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val maxRefreshRate = display?.supportedModes?.maxBy { it.refreshRate }?.refreshRate

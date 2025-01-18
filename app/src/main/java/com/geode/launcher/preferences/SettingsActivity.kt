@@ -355,6 +355,18 @@ fun SettingsScreen(
                         SettingsCard(
                             title = stringResource(R.string.preference_force_hrr),
                             preferenceKey = PreferenceUtils.Key.FORCE_HRR,
+                    val currentDisplayMode by PreferenceUtils.useIntPreference(PreferenceUtils.Key.DISPLAY_MODE)
+                    if (currentDisplayMode == 1) {
+                        SettingsStringSelectCard(
+                            title = stringResource(R.string.preference_custom_aspect_ratio_name),
+                            dialogTitle = stringResource(R.string.preference_custom_aspect_ratio_select),
+                            preferenceKey = PreferenceUtils.Key.CUSTOM_ASPECT_RATIO,
+                            options = linkedMapOf(
+                                "16_9" to stringResource(R.string.preference_custom_aspect_ratio_16x9),
+                                "16_10" to stringResource(R.string.preference_custom_aspect_ratio_16x10),
+                                "4_3" to stringResource(R.string.preference_custom_aspect_ratio_4x3),
+                                "1_1" to stringResource(R.string.preference_custom_aspect_ratio_1x1),
+                            )
                         )
                     }
                 }

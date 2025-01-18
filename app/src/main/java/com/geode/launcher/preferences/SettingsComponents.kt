@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
@@ -116,6 +118,54 @@ fun SettingsSelectCard(
         ) {
             (0..maxVal).forEach {
                 SelectOption(name = toLabel(it), value = it)
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsStringSelectCard(
+    title: String,
+    dialogTitle: String,
+    preferenceKey: PreferenceUtils.Key,
+    options: Map<String, String>,
+    extraSelectBehavior: ((String?) -> Unit)? = null
+) {
+    val preferenceValue by PreferenceUtils.useStringPreference(preferenceKey)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsCard(
+        title = { OptionsTitle(title = title) },
+        modifier = Modifier
+            .clickable(
+                onClick = {
+                    showDialog = true
+                },
+                role = Role.Button
+            )
+    ) {
+        Text(options[preferenceValue] ?: preferenceValue ?: "")
+    }
+
+    if (showDialog) {
+        val context = LocalContext.current
+
+        SelectDialog(
+            title = dialogTitle,
+            onDismissRequest = {
+                showDialog = false
+            },
+            onSelect = { selected ->
+                showDialog = false
+                PreferenceUtils.get(context)
+                    .setString(preferenceKey, selected)
+                extraSelectBehavior?.invoke(selected)
+            },
+            initialValue = preferenceValue,
+        ) {
+            options.forEach { (k, v) ->
+                SelectOption(name = v, value = k)
             }
         }
     }
@@ -253,7 +303,7 @@ fun <T> SelectDialog(
         ) {
             // styling a dialog is actually a little hard if you're doing what i'm doing
             // maybe there's a better way to make these padding values...
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
                     title,
                     style = Typography.titleLarge,
