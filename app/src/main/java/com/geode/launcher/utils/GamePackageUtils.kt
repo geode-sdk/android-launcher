@@ -113,24 +113,40 @@ object GamePackageUtils {
     }
 
     private const val GAME_CERTIFICATE_HASH = "f5e7d8284d72c461a5f022d0cf755df101c3bb1e69cbe241bc1aef2cc5610a43"
+    private const val AMAZON_CERTIFICATE_HASH = "1f228081e4d66e006887d4ba0f3d40e96a80c758b84231f11cd5c1c9aef6048f"
 
-    private fun validateCertificate(certificate: ByteArray): Boolean =
-        certificate.toByteString().sha256().hex() == GAME_CERTIFICATE_HASH
+    private fun validateCertificate(certificate: ByteArray): GameSource = when (val hash = certificate.toByteString().sha256().hex()) {
+        GAME_CERTIFICATE_HASH -> GameSource.GOOGLE
+        AMAZON_CERTIFICATE_HASH -> GameSource.AMAZON
+        else -> {
+            println("Encountered certificate hash: $hash")
+            GameSource.UNKNOWN
+        }
+    }
 
-    fun identifyGameLegitimacy(packageManager: PackageManager): Boolean {
+    enum class GameSource {
+        UNKNOWN, GOOGLE, AMAZON
+    }
+
+    fun identifyGameSource(packageManager: PackageManager): GameSource {
         @Suppress("DEPRECATION")
         val certificates = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNING_CERTIFICATES)
             val signingInfo = game.signingInfo
 
-            signingInfo?.signingCertificateHistory ?: return false
+            signingInfo?.signingCertificateHistory ?: return GameSource.UNKNOWN
         } else {
             val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, PackageManager.GET_SIGNATURES)
             game.signatures
         }
 
-        return certificates?.any {
+        return certificates?.map {
             validateCertificate(it.toByteArray())
-        } ?: false
+        }?.firstOrNull {
+            it != GameSource.UNKNOWN
+        } ?: GameSource.UNKNOWN
     }
+
+    fun identifyGameLegitimacy(packageManager: PackageManager) =
+        identifyGameSource(packageManager) != GameSource.UNKNOWN
 }

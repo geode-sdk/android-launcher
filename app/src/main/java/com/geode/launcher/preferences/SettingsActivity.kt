@@ -35,10 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -405,11 +407,73 @@ fun SettingsScreen(
                     )
                 }
 
-                Text(
-                    stringResource(R.string.preference_launcher_version, BuildConfig.VERSION_NAME),
-                    style = Typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                OptionsGroup(stringResource(R.string.preference_category_about)) {
+                    val clipboard = LocalClipboardManager.current
+
+                    OptionsButton(
+                        stringResource(R.string.preference_launcher_version_name),
+                        stringResource(R.string.preference_launcher_version_description, BuildConfig.VERSION_NAME),
+                        displayInline = true
+                    ) {
+                        clipboard.setText(AnnotatedString(context.getString(
+                            R.string.preference_launcher_version,
+                            BuildConfig.VERSION_NAME
+                        )))
+                    }
+
+                    OptionsButton(
+                        stringResource(R.string.preference_loader_version_name),
+                        stringResource(R.string.preference_loader_version_description, currentRelease ?: "unknown"),
+                        displayInline = true
+                    ) {
+                        clipboard.setText(AnnotatedString(context.getString(
+                            R.string.preference_loader_version,
+                            currentRelease ?: "unknown"
+                        )))
+                    }
+
+                    val gameInstalled = remember {
+                        GamePackageUtils.isGameInstalled(context.packageManager)
+                    }
+
+                    if (gameInstalled) {
+                        val gameVersion = remember {
+                            GamePackageUtils.getUnifiedVersionName(context.packageManager)
+                        }
+
+                        val gameSource = remember {
+                            context.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
+                                GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
+                                GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
+                                else -> R.string.preference_game_source_unknown
+                            })
+                        }
+
+                        OptionsButton(
+                            stringResource(R.string.preference_game_version_name),
+                            stringResource(R.string.preference_game_version_description, gameVersion, gameSource),
+                            displayInline = true
+                        ) {
+                            clipboard.setText(AnnotatedString(context.getString(
+                                R.string.preference_game_version,
+                                gameVersion,
+                                gameSource
+                            )))
+                        }
+
+                        OptionsButton(
+                            stringResource(R.string.preference_architecture_name),
+                            stringResource(R.string.preference_architecture_description, Build.MODEL, LaunchUtils.applicationArchitecture),
+                            displayInline = true
+                        ) {
+                            clipboard.setText(AnnotatedString(context.getString(
+                                R.string.preference_architecture,
+                                Build.MODEL,
+                                LaunchUtils.applicationArchitecture
+                            )))
+                        }
+                    }
+                }
             }
         }
     )
