@@ -100,6 +100,8 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.7.3")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.29.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.29.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.3")
 }

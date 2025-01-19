@@ -24,7 +24,9 @@ data class Release(
     val createdAt: Instant,
     val publishedAt: Instant,
     val assets: List<Asset>,
-    val htmlUrl: String
+    val htmlUrl: String,
+    val body: String?,
+    val name: String?,
 )
 
 @Serializable

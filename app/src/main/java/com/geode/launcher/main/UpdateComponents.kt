@@ -8,40 +8,60 @@ import android.provider.DocumentsContract
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
+import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import com.mikepenz.markdown.compose.LocalBulletListHandler
+import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.markdownColor
+import com.mikepenz.markdown.m3.markdownTypography
+import kotlinx.datetime.toJavaInstant
 import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
+import java.text.DateFormat
+import java.util.Date
 
 fun clearDownloadedApks(context: Context) {
     // technically we should be using the activity results but it was too inconsistent for my liking
@@ -101,9 +121,77 @@ fun installLauncherUpdate(context: Context) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LauncherUpdateInformation(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+
+    val nextRelease = remember { ReleaseManager.get(context).availableLauncherUpdate.value }
+    val sheetState = rememberModalBottomSheetState()
+
+    if (nextRelease != null) {
+        ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
+            Box(Modifier.verticalScroll(rememberScrollState())) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    Text(
+                        stringResource(R.string.launcher_update_name, nextRelease.release.tagName),
+                        style = Typography.headlineSmall,
+                    )
+
+                    val releasedTime = remember {
+                        DateFormat.getDateInstance().format(
+                            Date.from(nextRelease.release.publishedAt.toJavaInstant())
+                        )
+                    }
+
+                    Text(
+                        stringResource(R.string.launcher_update_released, "$releasedTime"),
+                        style = Typography.labelLarge
+                    )
+
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    if (nextRelease.release.body != null) {
+                        CompositionLocalProvider(LocalBulletListHandler provides { _, _, _ -> "•  " }) {
+                            Markdown(
+                                content = nextRelease.release.body.replace("\r", ""),
+                                colors = markdownColor(
+                                    linkText = MaterialTheme.colorScheme.primary
+                                ),
+                                typography = markdownTypography(
+                                    link = MaterialTheme.typography.bodyLarge.copy(
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                ),
+                            )
+                        }
+                    }
+
+                    TextButton(
+                        modifier = Modifier.align(Alignment.End),
+                        onClick = { installLauncherUpdate(context) },
+                    ) {
+                        Icon(painterResource(R.drawable.icon_download), contentDescription = null)
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_install))
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    if (showInfoDialog) {
+        LauncherUpdateInformation {
+            showInfoDialog = false
+        }
+    }
 
     ElevatedCard(modifier) {
         Column(
@@ -121,11 +209,18 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(horizontal = 10.dp)
             )
 
-            TextButton(
-                onClick = { installLauncherUpdate(context) },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(stringResource(R.string.launcher_install))
+            Row(modifier = Modifier.align(Alignment.End)) {
+                TextButton(
+                    onClick = { showInfoDialog = true },
+                ) {
+                    Text(stringResource(R.string.launcher_update_view))
+                }
+
+                TextButton(
+                    onClick = { installLauncherUpdate(context) },
+                ) {
+                    Text(stringResource(R.string.launcher_install))
+                }
             }
         }
     }
