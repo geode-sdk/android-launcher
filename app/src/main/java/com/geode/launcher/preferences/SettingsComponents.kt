@@ -3,17 +3,21 @@ package com.geode.launcher.preferences
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -38,6 +42,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
@@ -51,6 +56,8 @@ import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LabelledText
 import com.geode.launcher.utils.PreferenceUtils
 import kotlin.math.log10
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 
@@ -133,14 +140,15 @@ fun SettingsStringSelectCard(
     dialogTitle: String,
     preferenceKey: PreferenceUtils.Key,
     options: Map<String, String>,
-    extraSelectBehavior: ((String?) -> Unit)? = null
+    extraSelectBehavior: ((String?) -> Unit)? = null,
+    description: String? = null,
 ) {
     val preferenceValue by PreferenceUtils.useStringPreference(preferenceKey)
 
     var showDialog by remember { mutableStateOf(false) }
 
     OptionsCard(
-        title = { OptionsTitle(title = title) },
+        title = { OptionsTitle(title = title, description = description) },
         modifier = Modifier
             .clickable(
                 onClick = {
@@ -323,6 +331,170 @@ fun RangeDialog(
 }
 
 @Composable
+fun FrameRateDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onSelect: (Int) -> Unit,
+    initialValue: Int,
+    maxFrameRate: Int,
+) {
+    var enteredValue by remember {
+        mutableStateOf(
+            if (initialValue == 0) maxFrameRate.toString()
+            else initialValue.toString()
+        )
+    }
+
+    var minFrameRate = 5
+    val currentValue = enteredValue.toIntOrNull()
+    var maximumReached = currentValue != null && currentValue > maxFrameRate
+    var minimumReached = currentValue != null && currentValue < minFrameRate
+
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = {
+            Text(title)
+        },
+        text = {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1.0f, false)
+                ) {
+                    IconButton(onClick = {
+                        val prevValue = max((currentValue ?: 0) - 5, minFrameRate)
+                        enteredValue = prevValue.toString()
+                    }, enabled = currentValue == null || currentValue > minFrameRate) {
+                        Icon(
+                            painterResource(R.drawable.icon_remove),
+                            contentDescription = stringResource(R.string.preference_limit_framerate_subtract)
+                        )
+                    }
+
+                    Spacer(Modifier.size(8.dp))
+
+                    OutlinedTextField(
+                        value = enteredValue.toString(),
+                        onValueChange = {
+                            enteredValue = it
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                        ),
+                        suffix = {
+                            Text(stringResource(R.string.preference_limit_framerate_suffix))
+                        },
+                        label = {
+                            Text(stringResource(R.string.preference_limit_framerate_label))
+                        },
+                        isError = minimumReached || maximumReached,
+                        modifier = Modifier.weight(1.0f),
+                    )
+
+                    Spacer(Modifier.size(8.dp))
+
+                    IconButton(onClick = {
+                        val nextValue = min((currentValue ?: 0) + 5, maxFrameRate)
+                        enteredValue = nextValue.toString()
+                    }, enabled = currentValue == null || currentValue < maxFrameRate) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.preference_limit_framerate_add)
+                        )
+                    }
+
+                    IconButton(onClick = { onSelect(0) }) {
+                        Icon(
+                            painterResource(R.drawable.icon_delete),
+                            contentDescription = stringResource(R.string.preference_limit_framerate_reset)
+                        )
+                    }
+                }
+
+
+                if (minimumReached) {
+                    Spacer(Modifier.size(8.dp))
+
+                    Text(
+                        stringResource(R.string.preference_limit_framerate_error_min, minFrameRate),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                } else if (maximumReached) {
+                    Spacer(Modifier.size(8.dp))
+
+                    Text(
+                        stringResource(
+                            R.string.preference_limit_framerate_error_max,
+                            maxFrameRate
+                        ),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSelect(currentValue ?: 0) },
+                enabled = !minimumReached && !maximumReached && currentValue != null
+            ) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+fun SettingsFPSCard(
+    title: String,
+    dialogTitle: String,
+    preferenceKey: PreferenceUtils.Key,
+    maxFrameRate: Int,
+    description: String? = null,
+) {
+    var preferenceValue by PreferenceUtils.useIntPreference(preferenceKey)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsCard(
+        title = { OptionsTitle(title = title, description = description) },
+        modifier = Modifier
+            .clickable(
+                onClick = {
+                    showDialog = true
+                },
+                role = Role.Button
+            )
+    ) {
+        if (preferenceValue == 0) {
+            Text(stringResource(R.string.preference_limit_framerate_default))
+        } else {
+            Text(stringResource(R.string.preference_limit_framerate_value, preferenceValue))
+        }
+    }
+
+    if (showDialog) {
+        FrameRateDialog(
+            title = dialogTitle,
+            onDismissRequest = { showDialog = false },
+            onSelect = {
+                preferenceValue = it
+                showDialog = false
+            },
+            initialValue = preferenceValue,
+            maxFrameRate = maxFrameRate
+        )
+    }
+}
+
+@Composable
 fun SettingsRangeCard(
     title: String,
     dialogTitle: String,
@@ -331,6 +503,7 @@ fun SettingsRangeCard(
     range: IntRange,
     scale: Int,
     step: Int,
+    description: String? = null,
     children: @Composable () -> Unit = {}
 ) {
     var preferenceValue by PreferenceUtils.useIntPreference(preferenceKey)
@@ -338,7 +511,9 @@ fun SettingsRangeCard(
     var showDialog by remember { mutableStateOf(false) }
 
     OptionsCard(
-        title = { OptionsTitle(title = title) },
+        title = {
+            OptionsTitle(title = title, description = description)
+        },
         modifier = Modifier
             .clickable(
                 onClick = {
@@ -469,7 +644,8 @@ fun OptionsButton(title: String, description: String? = null, icon: (@Composable
             )
         },
         modifier = Modifier
-            .clickable(onClick = onClick, role = Role.Button)
+            .clickable(onClick = onClick, role = Role.Button),
+        wrapContent = true
     ) {
         if (displayInline && description != null) {
             Text(description, textAlign = TextAlign.End)
@@ -487,7 +663,6 @@ fun SettingsCard(title: String, description: String? = null, icon: (@Composable 
     OptionsCard(
         title = {
             OptionsTitle(
-                Modifier.fillMaxWidth(0.75f),
                 title = title,
                 description = description,
                 icon = icon
@@ -531,7 +706,7 @@ fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: Stri
 }
 
 @Composable
-fun OptionsCard(modifier: Modifier = Modifier, title: @Composable () -> Unit, content: @Composable () -> Unit) {
+fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, title: @Composable () -> Unit, content: @Composable () -> Unit) {
     Row(
         modifier
             .fillMaxWidth()
@@ -540,7 +715,15 @@ fun OptionsCard(modifier: Modifier = Modifier, title: @Composable () -> Unit, co
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,
     ) {
-        title()
+        if (!wrapContent) {
+            Box(modifier = Modifier.weight(1.0f)) {
+                title()
+            }
+            Spacer(modifier = Modifier.size(12.dp))
+        } else {
+            title()
+        }
+
         content()
     }
 }

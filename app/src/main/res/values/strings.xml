@@ -141,6 +141,7 @@
     <string name="preference_display_mode_default">Default</string>
 
     <string name="preference_custom_aspect_ratio_name">Aspect ratio</string>
+    <string name="preference_custom_aspect_ratio_description">Limits aspect ratio of the game.</string>
     <string name="preference_custom_aspect_ratio_select">Select aspect ratio</string>
     <string name="preference_custom_aspect_ratio_16x9">16:9</string>
     <string name="preference_custom_aspect_ratio_16x10">16:10</string>
@@ -148,8 +149,22 @@
     <string name="preference_custom_aspect_ratio_1x1">1:1</string>
 
     <string name="preference_screen_zoom_name">Screen zoom</string>
+    <string name="preference_screen_zoom_description">Reduces the size of the game window.</string>
     <string name="preference_screen_zoom_select">Edit screen zoom</string>
     <string name="preference_screen_zoom_fit_name">Fit to screen</string>
+
+    <string name="preference_limit_framerate_name">Limit max framerate</string>
+    <string name="preference_limit_framerate_description">Limits framerate during rendering.</string>
+    <string name="preference_limit_framerate_select">Edit maximum framerate</string>
+    <string name="preference_limit_framerate_default">Disabled</string>
+    <string name="preference_limit_framerate_label">Framerate</string>
+    <string name="preference_limit_framerate_suffix">FPS</string>
+    <string name="preference_limit_framerate_value">%1$d FPS</string>
+    <string name="preference_limit_framerate_error_max">This device supports at most %1$s FPS.</string>
+    <string name="preference_limit_framerate_error_min">Framerate must be at least %1$s FPS.</string>
+    <string name="preference_limit_framerate_subtract">Decrement</string>
+    <string name="preference_limit_framerate_add">Increment</string>
+    <string name="preference_limit_framerate_reset">Disable</string>
 
     <string name="preference_category_updater">Updates</string>
     <string name="preference_update_automatically_name">Enable automatic updates</string>

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
@@ -52,13 +53,13 @@ import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
-import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import java.net.ConnectException
 import java.net.UnknownHostException
+import kotlin.math.roundToInt
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -356,6 +357,7 @@ fun SettingsScreen(
                     if (currentDisplayMode == 1) {
                         SettingsStringSelectCard(
                             title = stringResource(R.string.preference_custom_aspect_ratio_name),
+                            description = stringResource(R.string.preference_custom_aspect_ratio_description),
                             dialogTitle = stringResource(R.string.preference_custom_aspect_ratio_select),
                             preferenceKey = PreferenceUtils.Key.CUSTOM_ASPECT_RATIO,
                             options = linkedMapOf(
@@ -369,6 +371,7 @@ fun SettingsScreen(
 
                     SettingsRangeCard(
                         title = stringResource(R.string.preference_screen_zoom_name),
+                        description = stringResource(R.string.preference_screen_zoom_description),
                         dialogTitle = stringResource(R.string.preference_screen_zoom_select),
                         preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM,
                         labelSuffix = "x",
@@ -382,6 +385,22 @@ fun SettingsScreen(
                             asCard = false
                         )
                     }
+
+                    val maxFrameRate = remember {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            context.display.supportedModes.maxOf { it.refreshRate }
+                        } else {
+                            @Suppress("DEPRECATION")
+                            (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.refreshRate
+                        }.roundToInt()
+                    }
+
+                    SettingsFPSCard(
+                        title = stringResource(R.string.preference_limit_framerate_name),
+                        dialogTitle = stringResource(R.string.preference_limit_framerate_select),
+                        preferenceKey = PreferenceUtils.Key.LIMIT_FRAME_RATE,
+                        maxFrameRate = maxFrameRate
+                    )
                 }
 
                 OptionsGroup(context.getString(R.string.preference_category_updater)) {

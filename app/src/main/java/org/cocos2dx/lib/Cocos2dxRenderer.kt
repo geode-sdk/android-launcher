@@ -5,6 +5,9 @@ import android.os.Build
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
+private const val NANOSECONDS_PER_SECOND = 1000000000L
+private const val NANOSECONDS_PER_MICROSECOND = 1000000L
+
 @Suppress("unused", "KotlinJniMissingFunction")
 class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceView.Renderer {
     companion object {
@@ -62,6 +65,11 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
     private var screenHeight = 0
     var sendResizeEvents = false
     var setFrameRate = false
+    private var mAnimationInterval: Long? = null
+
+    fun limitFrameRate(rate: Int) {
+        mAnimationInterval = NANOSECONDS_PER_SECOND/rate
+    }
 
     fun setScreenWidthAndHeight(surfaceWidth: Int, surfaceHeight: Int) {
         screenWidth = surfaceWidth
@@ -80,7 +88,23 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        nativeRender()
+        val animationInterval = mAnimationInterval
+        if (animationInterval == null) {
+            nativeRender()
+        } else {
+            nativeRender()
+
+            var now = System.nanoTime()
+            var interval = now - this.lastTickInNanoSeconds
+
+            if (interval < animationInterval) {
+                try {
+                    Thread.sleep((animationInterval - interval) / NANOSECONDS_PER_MICROSECOND)
+                } catch (e: Exception) {}
+            }
+
+            lastTickInNanoSeconds = System.nanoTime()
+        }
     }
 
     fun handleActionDown(id: Int, x: Float, y: Float) {

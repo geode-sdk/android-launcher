@@ -67,6 +67,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private var displayMode = DisplayMode.DEFAULT
     private var forceRefreshRate = false
+    private var mLimitedRefreshRate: Int? = null
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
@@ -425,8 +426,15 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val renderer = Cocos2dxRenderer(glSurfaceView)
         glSurfaceView.setCocos2dxRenderer(renderer)
 
-        if (forceRefreshRate) {
+        val frameRate = mLimitedRefreshRate
+
+        // force refresh rate causes some issues if the limited framerate isn't supported by device
+        if (forceRefreshRate && frameRate == null) {
             renderer.setFrameRate = true
+        }
+
+        if (frameRate != null) {
+            renderer.limitFrameRate(frameRate)
         }
 
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -449,6 +457,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         mScreenZoomFit = preferenceUtils.getBoolean(PreferenceUtils.Key.SCREEN_ZOOM_FIT)
 
         forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
+        mLimitedRefreshRate = preferenceUtils.getInt(PreferenceUtils.Key.LIMIT_FRAME_RATE).takeIf { it != 0 }
 
         if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val maxRefreshRate = display?.supportedModes?.maxBy { it.refreshRate }?.refreshRate
