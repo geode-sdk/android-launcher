@@ -134,9 +134,9 @@
     <string name="preference_force_hrr">Force maximum refresh rate</string>
     <string name="preference_enable_redesign">✨ Enable UI refresh</string>
 
-    <string name="preference_display_mode_name">Screen scale</string>
-    <string name="preference_display_mode_select">Select screen scale</string>
-    <string name="preference_display_mode_legacy">Limited (16:9)</string>
+    <string name="preference_display_mode_name">Display mode</string>
+    <string name="preference_display_mode_select">Select display mode</string>
+    <string name="preference_display_mode_legacy">Limited (Custom)</string>
     <string name="preference_display_mode_fullscreen">Edge-to-edge</string>
     <string name="preference_display_mode_default">Default</string>
 
@@ -146,6 +146,10 @@
     <string name="preference_custom_aspect_ratio_16x10">16:10</string>
     <string name="preference_custom_aspect_ratio_4x3">4:3</string>
     <string name="preference_custom_aspect_ratio_1x1">1:1</string>
+
+    <string name="preference_screen_zoom_name">Screen zoom</string>
+    <string name="preference_screen_zoom_select">Edit screen zoom</string>
+    <string name="preference_screen_zoom_fit_name">Fit to screen</string>
 
     <string name="preference_category_updater">Updates</string>
     <string name="preference_update_automatically_name">Enable automatic updates</string>

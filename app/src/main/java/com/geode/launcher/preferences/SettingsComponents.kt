@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +50,8 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LabelledText
 import com.geode.launcher.utils.PreferenceUtils
+import kotlin.math.log10
+import kotlin.math.roundToInt
 
 
 fun toggleSetting(context: Context, preferenceKey: PreferenceUtils.Key): Boolean {
@@ -260,6 +264,113 @@ fun StringDialog(
     )
 }
 
+@Composable
+fun RangeDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onSelect: (Int) -> Unit,
+    labelSuffix: String,
+    initialValue: Int,
+    range: IntRange,
+    scale: Int,
+    step: Int,
+    children: @Composable () -> Unit
+) {
+    var enteredValue by remember {
+        mutableFloatStateOf(initialValue / scale.toFloat())
+    }
+
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = {
+            Text(title)
+        },
+        text = {
+            Column {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1.0f, false)
+                ) {
+                    val precision = log10(scale.toFloat()).roundToInt()
+
+                    Slider(
+                        value = enteredValue,
+                        onValueChange = { enteredValue = it },
+                        valueRange = (range.first.toFloat()/scale)..(range.last.toFloat()/scale),
+                        steps = ((range.last - range.first) - 1) / step,
+                        modifier = Modifier.weight(1.0f)
+                    )
+
+                    Text("%.${precision}f$labelSuffix".format(enteredValue))
+                }
+
+                children()
+
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSelect((enteredValue * scale).roundToInt()) }) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+fun SettingsRangeCard(
+    title: String,
+    dialogTitle: String,
+    preferenceKey: PreferenceUtils.Key,
+    labelSuffix: String,
+    range: IntRange,
+    scale: Int,
+    step: Int,
+    children: @Composable () -> Unit = {}
+) {
+    var preferenceValue by PreferenceUtils.useIntPreference(preferenceKey)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsCard(
+        title = { OptionsTitle(title = title) },
+        modifier = Modifier
+            .clickable(
+                onClick = {
+                    showDialog = true
+                },
+                role = Role.Button
+            )
+    ) {
+        val precision = log10(scale.toFloat()).roundToInt()
+        val scaledValue = preferenceValue / scale.toFloat()
+
+        Text("%.${precision}f$labelSuffix".format(scaledValue))
+    }
+
+    if (showDialog) {
+        RangeDialog(
+            title = dialogTitle,
+            onDismissRequest = { showDialog = false },
+            onSelect = {
+                preferenceValue = it
+                showDialog = false
+            },
+            initialValue = preferenceValue,
+            range = range,
+            scale = scale,
+            labelSuffix = labelSuffix,
+            step = step,
+            children = children,
+        )
+    }
+}
+
 internal val LocalSelectValue = compositionLocalOf<Any> { 0 }
 internal val LocalSelectSetValue = staticCompositionLocalOf<(Any) -> Unit> { {} }
 
@@ -367,7 +478,7 @@ fun OptionsButton(title: String, description: String? = null, icon: (@Composable
 }
 
 @Composable
-fun SettingsCard(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, preferenceKey: PreferenceUtils.Key) {
+fun SettingsCard(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, asCard: Boolean = true, preferenceKey: PreferenceUtils.Key) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceKey))
@@ -382,13 +493,18 @@ fun SettingsCard(title: String, description: String? = null, icon: (@Composable 
                 icon = icon
             )
         },
-        modifier = Modifier.toggleable(
+        modifier = if (asCard) Modifier.toggleable(
             value = settingEnabled.value,
             onValueChange = { settingEnabled.value = toggleSetting(context, preferenceKey) },
             role = Role.Switch,
-        )
+        ) else Modifier
     ) {
-        Switch(checked = settingEnabled.value, onCheckedChange = null)
+        Switch(
+            checked = settingEnabled.value,
+            onCheckedChange = if (!asCard)
+                { _ -> settingEnabled.value = toggleSetting(context, preferenceKey) }
+            else null
+        )
     }
 }
 

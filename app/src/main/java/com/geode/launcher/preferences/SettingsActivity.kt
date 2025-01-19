@@ -366,6 +366,22 @@ fun SettingsScreen(
                             )
                         )
                     }
+
+                    SettingsRangeCard(
+                        title = stringResource(R.string.preference_screen_zoom_name),
+                        dialogTitle = stringResource(R.string.preference_screen_zoom_select),
+                        preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM,
+                        labelSuffix = "x",
+                        range = 25..100,
+                        scale = 100,
+                        step = 5,
+                    ) {
+                        SettingsCard(
+                            title = context.getString(R.string.preference_screen_zoom_fit_name),
+                            preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM_FIT,
+                            asCard = false
+                        )
+                    }
                 }
 
                 OptionsGroup(context.getString(R.string.preference_category_updater)) {

@@ -68,6 +68,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var displayMode = DisplayMode.DEFAULT
     private var forceRefreshRate = false
     private var mAspectRatio = 0.0f
+    private var mScreenZoom = 1.0f
+    private var mScreenZoomFit = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -379,6 +381,15 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             frameLayout.aspectRatio = mAspectRatio
         }
 
+        if (mScreenZoomFit && mScreenZoom != 1.0f) {
+            frameLayout.scaleX = 1/mScreenZoom
+            frameLayout.scaleY = 1/mScreenZoom
+        }
+
+        if (mScreenZoom != 1.0f) {
+            frameLayout.zoom = mScreenZoom
+        }
+
         val editTextLayoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -434,6 +445,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         )
 
         mAspectRatio = ratioForPreference(preferenceUtils.getString(PreferenceUtils.Key.CUSTOM_ASPECT_RATIO) ?: "16_9")
+        mScreenZoom = preferenceUtils.getInt(PreferenceUtils.Key.SCREEN_ZOOM) / 100.0f
+        mScreenZoomFit = preferenceUtils.getBoolean(PreferenceUtils.Key.SCREEN_ZOOM_FIT)
 
         forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
 

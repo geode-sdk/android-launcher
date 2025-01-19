@@ -144,6 +144,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         CLEANUP_APKS,
         CUSTOM_SYMBOL_LIST,
         CUSTOM_ASPECT_RATIO,
+        SCREEN_ZOOM,
+        SCREEN_ZOOM_FIT,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -156,6 +158,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForIntKey(key: Key) = when (key) {
         Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
+        Key.SCREEN_ZOOM -> 10
         // people wanted a reset on nightly anyways, so this is a good excuse to do so
         else -> 0
     }
@@ -187,6 +190,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.CLEANUP_APKS -> "PreferenceCleanupPackages"
             Key.CUSTOM_SYMBOL_LIST -> "PreferenceCustomSymbolList"
             Key.CUSTOM_ASPECT_RATIO -> "PreferenceCustomAspectRatio"
+            Key.SCREEN_ZOOM -> "PreferenceScreenZoom"
+            Key.SCREEN_ZOOM_FIT -> "PreferenceScreenZoomFit"
         }
     }
 
