@@ -30,7 +30,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -119,7 +118,17 @@ fun installLauncherUpdate(context: Context) {
             val intent = generateInstallIntent(uri)
             context.startActivity(intent)
         } catch (_: ActivityNotFoundException) {
-            Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
+            // if it fails to install, just open it in the browser
+            try {
+                val downloadUrl = launcherDownload.url
+                val downloadIntent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(downloadUrl)
+                }
+
+                context.startActivity(downloadIntent)
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(context, context.getString(R.string.no_activity_found), Toast.LENGTH_SHORT).show()
+            }
         }
     } else {
         Toast.makeText(context, context.getString(R.string.release_fetch_no_releases), Toast.LENGTH_SHORT).show()
@@ -196,6 +205,8 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.size(4.dp))
                 }
             }
         }
