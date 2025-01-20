@@ -1,5 +1,11 @@
 val composeBOM: String by rootProject.extra
 
+kotlin {
+    compilerOptions {
+        extraWarnings.set(true)
+    }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -14,8 +20,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 19
-        versionName = "1.4.2"
+        versionCode = 20
+        versionName = "1.5.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -91,17 +97,17 @@ dependencies {
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation ("androidx.activity:activity-compose:1.9.3")
-    implementation ("androidx.activity:activity-ktx:1.9.3")
+    implementation ("androidx.activity:activity-compose:1.10.0")
+    implementation ("androidx.activity:activity-ktx:1.10.0")
     implementation ("androidx.appcompat:appcompat:1.7.0")
     implementation ("androidx.documentfile:documentfile:1.0.1")
-    implementation ("com.squareup.okio:okio:3.9.1")
+    implementation ("com.squareup.okio:okio:3.10.2")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.7.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.8.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.29.0")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.29.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.30.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.30.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
-    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.3")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.4")
 }
