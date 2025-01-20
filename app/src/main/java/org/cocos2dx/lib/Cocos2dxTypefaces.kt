@@ -10,8 +10,9 @@ object Cocos2dxTypefaces {
 
     @Synchronized
     operator fun get(pContext: Context, pAssetName: String): Typeface? {
-        var typeface: Typeface?
-        var typeface2: Typeface
+        val typeface: Typeface?
+        val typeface2: Typeface
+
         synchronized(Cocos2dxTypefaces::class.java) {
             if (!typefaceCache.containsKey(pAssetName)) {
                 typeface2 = if (pAssetName.startsWith("/")) {

@@ -94,8 +94,8 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         } else {
             nativeRender()
 
-            var now = System.nanoTime()
-            var interval = now - this.lastTickInNanoSeconds
+            val now = System.nanoTime()
+            val interval = now - this.lastTickInNanoSeconds
 
             if (interval < animationInterval) {
                 try {

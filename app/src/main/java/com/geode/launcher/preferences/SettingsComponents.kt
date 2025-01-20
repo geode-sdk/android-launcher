@@ -345,10 +345,10 @@ fun FrameRateDialog(
         )
     }
 
-    var minFrameRate = 5
+    val minFrameRate = 5
     val currentValue = enteredValue.toIntOrNull()
-    var maximumReached = currentValue != null && currentValue > maxFrameRate
-    var minimumReached = currentValue != null && currentValue < minFrameRate
+    val maximumReached = currentValue != null && currentValue > maxFrameRate
+    val minimumReached = currentValue != null && currentValue < minFrameRate
 
     AlertDialog(
         onDismissRequest = { onDismissRequest() },
@@ -374,7 +374,7 @@ fun FrameRateDialog(
                     Spacer(Modifier.size(8.dp))
 
                     OutlinedTextField(
-                        value = enteredValue.toString(),
+                        value = enteredValue,
                         onValueChange = {
                             enteredValue = it
                         },
