@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -437,7 +437,14 @@ fun FrameRateDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSelect(currentValue ?: 0) },
+                onClick = {
+                    // automatically disable if already max
+                    if (currentValue == maxFrameRate) {
+                        onSelect(0)
+                    } else {
+                        onSelect(currentValue ?: 0)
+                    }
+                },
                 enabled = !minimumReached && !maximumReached && currentValue != null
             ) {
                 Text(stringResource(R.string.message_box_accept))
@@ -710,7 +717,7 @@ fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, tit
     Row(
         modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .defaultMinSize(minHeight = 64.dp)
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,
