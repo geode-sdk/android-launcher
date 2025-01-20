@@ -500,13 +500,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     private fun resumeGame() {
         mIsRunning = true
-//        Cocos2dxHelper.onResume()
+        Cocos2dxHelper.onResume()
         mGLSurfaceView?.onResume()
     }
 
     private fun pauseGame() {
         mIsRunning = false
-//        Cocos2dxHelper.onPause()
+        Cocos2dxHelper.onPause()
         mGLSurfaceView?.onPause()
     }
 
