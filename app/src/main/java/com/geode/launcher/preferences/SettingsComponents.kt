@@ -89,9 +89,8 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
 fun SettingsSelectCard(
     title: String,
     dialogTitle: String,
-    maxVal: Int,
     preferenceKey: PreferenceUtils.Key,
-    toLabel: @Composable (Int) -> String,
+    options: Map<Int, String>,
     extraSelectBehavior: ((Int) -> Unit)? = null
 ) {
     val preferenceValue by PreferenceUtils.useIntPreference(preferenceKey)
@@ -108,7 +107,7 @@ fun SettingsSelectCard(
                 role = Role.Button
             )
     ) {
-        Text(toLabel(preferenceValue))
+        Text(options[preferenceValue] ?: preferenceValue.toString())
     }
 
     if (showDialog) {
@@ -127,8 +126,8 @@ fun SettingsSelectCard(
             },
             initialValue = preferenceValue,
         ) {
-            (0..maxVal).forEach {
-                SelectOption(name = toLabel(it), value = it)
+            options.forEach { (k, v) ->
+                SelectOption(name = v, value = k)
             }
         }
     }

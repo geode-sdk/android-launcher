@@ -205,24 +205,6 @@ fun UpdateIndicator(
     }
 }
 
-@Composable
-fun themeToKey(theme: Int): String {
-    return when (theme) {
-        1 -> stringResource(R.string.preference_theme_light)
-        2 -> stringResource(R.string.preference_theme_dark)
-        else -> stringResource(R.string.preference_theme_default)
-    }
-}
-
-@Composable
-fun displayOptionToKey(option: Int): String {
-    return when (option) {
-        1 -> stringResource(R.string.preference_display_mode_legacy)
-        2 -> stringResource(R.string.preference_display_mode_fullscreen)
-        else -> stringResource(R.string.preference_display_mode_default)
-    }
-}
-
 fun updateTheme(context: Context, theme: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
@@ -323,9 +305,12 @@ fun SettingsScreen(
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_theme_name),
                         dialogTitle = stringResource(R.string.preference_theme_select),
-                        maxVal = 2,
                         preferenceKey = PreferenceUtils.Key.THEME,
-                        toLabel = { themeToKey(it) },
+                        options = linkedMapOf(
+                            0 to stringResource(R.string.preference_theme_default),
+                            1 to stringResource(R.string.preference_theme_light),
+                            2 to stringResource(R.string.preference_theme_dark),
+                        ),
                         extraSelectBehavior = { updateTheme(context, it) }
                     )
                     SettingsCard(
@@ -347,10 +332,16 @@ fun SettingsScreen(
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_display_mode_name),
                         dialogTitle = stringResource(R.string.preference_display_mode_select),
-                        // necessary api doesn't exist on older versions of android
-                        maxVal = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 2 else 1,
                         preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
-                        toLabel = { displayOptionToKey(it) }
+                        options = buildMap {
+                            put(0, stringResource(R.string.preference_display_mode_default))
+                            put(1, stringResource(R.string.preference_display_mode_legacy))
+
+                            // necessary api doesn't exist on older versions of android
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                put(2, stringResource(R.string.preference_display_mode_fullscreen))
+                            }
+                        }
                     )
                     val currentDisplayMode by PreferenceUtils.useIntPreference(PreferenceUtils.Key.DISPLAY_MODE)
 

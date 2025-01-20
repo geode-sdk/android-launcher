@@ -67,13 +67,6 @@ class DeveloperSettingsActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun releaseChannelToKey(option: Int): String = when (option) {
-    1 -> stringResource(R.string.preference_release_channel_beta)
-    2 -> stringResource(R.string.preference_release_channel_nightly)
-    else -> stringResource(R.string.preference_release_channel_stable)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
@@ -156,9 +149,12 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_release_channel_tag_name),
                         dialogTitle = stringResource(R.string.preference_release_channel_select),
-                        maxVal = 2,
                         preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL_TAG,
-                        toLabel = { releaseChannelToKey(it) }
+                        options = linkedMapOf(
+                            0 to stringResource(R.string.preference_release_channel_stable),
+                            1 to stringResource(R.string.preference_release_channel_beta),
+                            2 to stringResource(R.string.preference_release_channel_nightly),
+                        )
                     )
 
                     ElevatedCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {

@@ -183,14 +183,14 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
 
                     }
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    Text(
-                        stringResource(R.string.launcher_update_changelog),
-                        style = Typography.titleLarge
-                    )
-
                     if (nextRelease.release.body != null) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        Text(
+                            stringResource(R.string.launcher_update_changelog),
+                            style = Typography.titleLarge
+                        )
+
                         CompositionLocalProvider(LocalBulletListHandler provides { _, _, _ -> "•  " }) {
                             Markdown(
                                 content = nextRelease.release.body.replace("\r", ""),
