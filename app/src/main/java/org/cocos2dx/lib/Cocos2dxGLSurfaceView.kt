@@ -39,6 +39,11 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             msg.what = HANDLER_CLOSE_IME_KEYBOARD
             handler.sendMessage(msg)
         }
+
+        fun queueAccelerometer(x: Float, y: Float, z: Float, timestamp: Long) =
+            cocos2dxGLSurfaceView.queueEvent {
+                Cocos2dxAccelerometer.onSensorChanged(x, y, z, timestamp)
+            }
     }
 
     private lateinit var cocos2dxRenderer: Cocos2dxRenderer

@@ -2,6 +2,7 @@ package org.cocos2dx.lib
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.res.AssetManager
 import android.os.Process
 import com.customRobTop.BaseRobTopActivity
 import com.geode.launcher.utils.LaunchUtils
@@ -11,9 +12,9 @@ import com.geode.launcher.utils.LaunchUtils
 object Cocos2dxHelper {
 //    private val sCocos2dMusic: Cocos2dxMusic? = null
 //    private val sCocos2dSound: Cocos2dxSound? = null
-//    private val sAssetManager: AssetManager? = null
-//    private val sCocos2dxAccelerometer: Cocos2dxAccelerometer? = null
-//    private val sAccelerometerEnabled = false
+    private var sAssetManager: AssetManager? = null
+    private var sCocos2dxAccelerometer: Cocos2dxAccelerometer? = null
+    private var sAccelerometerEnabled = false
     private var packageName: String? = null
     private var fileDirectory: String? = null
 
@@ -37,6 +38,40 @@ object Cocos2dxHelper {
     }
 
     @JvmStatic
+    fun getAssetManager(): AssetManager? {
+        return sAssetManager
+    }
+
+    @JvmStatic
+    fun enableAccelerometer() {
+        sAccelerometerEnabled = true
+        sCocos2dxAccelerometer?.enable()
+    }
+
+    @JvmStatic
+    fun setAccelerometerInterval(interval: Float) {
+        sCocos2dxAccelerometer?.setInterval(interval)
+    }
+
+    @JvmStatic
+    fun disableAccelerometer() {
+        sAccelerometerEnabled = false
+        sCocos2dxAccelerometer?.disable()
+    }
+
+    fun onResume() {
+        if (sAccelerometerEnabled) {
+            sCocos2dxAccelerometer?.enable()
+        }
+    }
+
+    fun onPause() {
+        if (sAccelerometerEnabled) {
+            sCocos2dxAccelerometer?.disable()
+        }
+    }
+
+    @JvmStatic
     fun getDPI(): Int {
         return BaseRobTopActivity.me.get()?.resources?.configuration?.densityDpi ?: -1
     }
@@ -52,14 +87,14 @@ object Cocos2dxHelper {
         this.cocos2dxHelperListener = cocos2dxHelperListener
         packageName = applicationInfo.packageName
         fileDirectory = LaunchUtils.getSaveDirectory(context).absolutePath
-//        Cocos2dxHelper.sCocos2dxAccelerometer = Cocos2dxAccelerometer(pContext)
+        sCocos2dxAccelerometer = Cocos2dxAccelerometer(context)
 //        Cocos2dxHelper.sCocos2dMusic = Cocos2dxMusic(pContext)
 //        var simultaneousStreams: Int = Cocos2dxSound.MAX_SIMULTANEOUS_STREAMS_DEFAULT
 //        if (Cocos2dxHelper.getDeviceModel().indexOf("GT-I9100") !== -1) {
 //            simultaneousStreams = Cocos2dxSound.MAX_SIMULTANEOUS_STREAMS_I9100
 //        }
 //        Cocos2dxHelper.sCocos2dSound = Cocos2dxSound(pContext, simultaneousStreams)
-//        Cocos2dxHelper.sAssetManager = pContext.getAssets()
+        sAssetManager = context.assets
         Cocos2dxBitmap.setContext(context)
 //            Cocos2dxETCLoader.setContext(pContext)
     }
