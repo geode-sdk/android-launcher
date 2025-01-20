@@ -19,14 +19,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -40,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -149,7 +154,32 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                         style = Typography.labelLarge
                     )
 
-                    Spacer(modifier = Modifier.size(8.dp))
+                    Row(modifier = Modifier.padding(vertical = 12.dp)) {
+                        Button(
+                            onClick = { installLauncherUpdate(context) },
+                        ) {
+                            Icon(painterResource(R.drawable.icon_download), contentDescription = null)
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.launcher_install))
+                        }
+
+                        val uriHandler = LocalUriHandler.current
+
+                        IconButton(onClick = { uriHandler.openUri(nextRelease.release.htmlUrl) }) {
+                            Icon(
+                                painterResource(R.drawable.icon_link),
+                                stringResource(R.string.launcher_update_external_link)
+                            )
+                        }
+
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    Text(
+                        stringResource(R.string.launcher_update_changelog),
+                        style = Typography.titleLarge
+                    )
 
                     if (nextRelease.release.body != null) {
                         CompositionLocalProvider(LocalBulletListHandler provides { _, _, _ -> "•  " }) {
@@ -165,15 +195,6 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                                 ),
                             )
                         }
-                    }
-
-                    TextButton(
-                        modifier = Modifier.align(Alignment.End),
-                        onClick = { installLauncherUpdate(context) },
-                    ) {
-                        Icon(painterResource(R.drawable.icon_download), contentDescription = null)
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.launcher_install))
                     }
                 }
             }

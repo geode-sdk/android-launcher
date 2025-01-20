@@ -26,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -69,22 +71,23 @@ fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
 
 @Composable
 fun NotificationCardFromType(type: LaunchNotificationType) {
-    val context = LocalContext.current
-
     when (type) {
         LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE -> {
+            var showInfoDialog by remember { mutableStateOf(false) }
+
+            if (showInfoDialog) {
+                LauncherUpdateInformation {
+                    showInfoDialog = false
+                }
+            }
+
             AnimatedNotificationCard(
                 displayLength = 5000L,
                 onClick = {
-                    installLauncherUpdate(context)
+                    showInfoDialog = true
                 }
             ) {
                 LauncherUpdateContent()
-            }
-        }
-        LaunchNotificationType.GEODE_UPDATED -> {
-            AnimatedNotificationCard {
-                UpdateNotificationContent()
             }
         }
         LaunchNotificationType.UPDATE_FAILED -> {
@@ -92,6 +95,7 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
                 UpdateFailedContent()
             }
         }
+        else -> {}
     }
 }
 
