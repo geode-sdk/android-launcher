@@ -3,7 +3,7 @@
     <string name="no_activity_found">No activity found for this action.</string>
 
     <!-- MainActivity strings -->
-    <string name="game_not_found">Geometry Dash was not found.</string>
+    <string name="game_not_found">Geometry Dash was not found.\nThe full version of the game is required.</string>
     <string name="launcher_launch">Launch</string>
     <string name="launcher_settings">Settings</string>
     <string name="launcher_download">Download</string>
