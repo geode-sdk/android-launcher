@@ -159,7 +159,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForIntKey(key: Key) = when (key) {
         Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
-        Key.SCREEN_ZOOM -> 10
+        Key.SCREEN_ZOOM -> 100
         // people wanted a reset on nightly anyways, so this is a good excuse to do so
         else -> 0
     }
