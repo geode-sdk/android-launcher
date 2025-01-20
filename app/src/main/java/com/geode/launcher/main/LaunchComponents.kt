@@ -279,10 +279,7 @@ fun PlayButton(
 fun LaunchBlockedLabel(text: String) {
     val context = LocalContext.current
 
-    val showDownload = remember {
-        !GamePackageUtils.isGameInstalled(context.packageManager) ||
-                !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
-    }
+    val showDownload = remember { GamePackageUtils.showDownloadBadge(context.packageManager) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text, textAlign = TextAlign.Center, modifier = Modifier.padding(12.dp))
@@ -291,4 +288,28 @@ fun LaunchBlockedLabel(text: String) {
             GooglePlayBadge()
         }
     }
+}
+
+@Composable
+fun UnsupportedVersionWarning(modifier: Modifier = Modifier) {
+    InlineDialog(
+        headline = {
+            Icon(
+                Icons.Default.Warning,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
+            )
+
+            Text(
+                stringResource(R.string.launcher_unsupported_version_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        },
+        body = {
+            Text(
+                stringResource(R.string.launcher_game_update_required),
+            )
+        },
+        modifier = modifier.padding(8.dp)
+    )
 }

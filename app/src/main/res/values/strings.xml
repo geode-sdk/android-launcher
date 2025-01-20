@@ -58,14 +58,16 @@
     <string name="launcher_error_device_info">Android %2$s, %1$s (%5$s)\nGD %4$s, Geode %3$s + v%6$s</string>
 
     <string name="launcher_notification_settings">Launcher Settings</string>
-    <string name="launcher_notification_update_failed">Failed to check for updates.</string>
+    <string name="launcher_notification_update_failed">Failed to update Geode.</string>
     <string name="launcher_notification_update_success">Geode updated!</string>
-    <string name="launcher_notification_update_cta">Tap to view.</string>
+    <string name="launcher_notification_compatibility">Unsupported Geometry Dash version.</string>
+    <string name="launcher_notification_compatibility_description">An update is required to receive Geode updates.</string>
+    <string name="launcher_notification_update_cta">Tap for more information.</string>
 
     <string name="launcher_starting_game">Starting Geometry Dash…</string>
     <string name="launcher_downloading_update">Downloading update…</string>
     <string name="launcher_downloading_update_details">(%1$s/%2$s)</string>
-    <string name="launcher_cancelled_manual">Launch cancelled.</string>
+    <string name="launcher_cancelled_manual">Launch paused.</string>
     <string name="launcher_cancelled_navigated_away">Launch paused.</string>
     <string name="launcher_cancelled_crash">Launch paused due to a crash.</string>
     <string name="launcher_cancelled_error">Could not start Geode.</string>

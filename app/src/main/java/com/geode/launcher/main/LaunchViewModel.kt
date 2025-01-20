@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-private const val COOLDOWN_LENGTH_MS = 1000L
+private const val COOLDOWN_LENGTH_MS = 3000L
 
 class LaunchViewModel(private val application: Application): ViewModel() {
     companion object {
@@ -64,6 +64,12 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             GEODE_NOT_FOUND -> true
             GAME_MISSING,
             GAME_OUTDATED -> false
+        }
+
+        fun isGameInstallIssue() = when (this) {
+            GAME_OUTDATED,
+            GAME_MISSING -> true
+            else -> false
         }
     }
 

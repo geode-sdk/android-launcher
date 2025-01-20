@@ -171,14 +171,13 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         )
                     }
                 }
-/*
+
                 OptionsGroup(title = stringResource(R.string.preference_category_testing)) {
                     SettingsCard(
                         title = stringResource(R.string.preference_enable_redesign),
                         preferenceKey = PreferenceUtils.Key.ENABLE_REDESIGN,
                     )
                 }
- */
             }
         }
     }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -24,13 +23,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -60,6 +58,7 @@ import com.geode.launcher.main.*
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -123,7 +122,7 @@ class AltMainActivity : ComponentActivity() {
 }
 
 data class LaunchStatusInfo(
-    val title: String,
+    val title: String?,
     val details: String? = null,
     val progress: (() -> Float)? = null
 )
@@ -156,8 +155,9 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
             title = stringResource(R.string.launcher_cancelled_error),
             details = stringResource(R.string.launcher_cancelled_outdated)
         )
-        LaunchViewModel.LaunchCancelReason.AUTOMATIC -> LaunchStatusInfo(
-            title = stringResource(R.string.launcher_cancelled_navigated_away)
+        LaunchViewModel.LaunchCancelReason.AUTOMATIC,
+        LaunchViewModel.LaunchCancelReason.MANUAL-> LaunchStatusInfo(
+            title = null
         )
         else -> LaunchStatusInfo(
             title = stringResource(R.string.launcher_cancelled_manual)
@@ -185,7 +185,7 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
             }
 
             val outOf = remember(state.outOf) {
-                state.outOf?.apply {
+                state.outOf?.run {
                     Formatter.formatShortFileSize(context, this)
                 }
             }
@@ -207,16 +207,22 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
 
 @Composable
 fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Unit, inProgress: Boolean, modifier: Modifier = Modifier) {
+    if (statusInfo.title == null && statusInfo.details == null && !inProgress) {
+        return
+    }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.width(300.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
-                icon()
-                Spacer(Modifier.size(8.dp))
-                Text(statusInfo.title)
+        if (statusInfo.title != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
+                    icon()
+                    Spacer(Modifier.size(8.dp))
+                    Text(statusInfo.title)
+                }
             }
         }
 
@@ -227,7 +233,8 @@ fun LaunchCancelledBody(statusInfo: LaunchStatusInfo, icon: @Composable () -> Un
         if (statusInfo.details != null) {
             Text(
                 statusInfo.details,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -241,7 +248,9 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
         horizontalAlignment = Alignment.Start,
         modifier = modifier.width(300.dp)
     ) {
-        Text(statusInfo.title, style = MaterialTheme.typography.bodyLarge)
+        if (statusInfo.title != null) {
+            Text(statusInfo.title, style = MaterialTheme.typography.bodyLarge)
+        }
 
         if (statusInfo.progress != null) {
             LinearProgressIndicator(
@@ -261,22 +270,22 @@ fun LaunchProgressBody(statusInfo: LaunchStatusInfo, modifier: Modifier = Modifi
 @Composable
 fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
     when (reason) {
-        LaunchViewModel.LaunchCancelReason.MANUAL -> {
-            Icon(
-                Icons.Filled.Refresh,
-                contentDescription = null
-            )
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(stringResource(R.string.launcher_cancelled_restart))
-        }
-        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED,
-        LaunchViewModel.LaunchCancelReason.AUTOMATIC -> {
+        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED -> {
             Icon(
                 painterResource(R.drawable.icon_resume),
                 contentDescription = null
             )
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.launcher_cancelled_resume))
+        }
+        LaunchViewModel.LaunchCancelReason.MANUAL,
+        LaunchViewModel.LaunchCancelReason.AUTOMATIC -> {
+            Icon(
+                Icons.Filled.PlayArrow,
+                contentDescription = null
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.launcher_launch))
         }
         LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> {
             Icon(
@@ -307,8 +316,8 @@ fun LaunchProgressCard(
     var showSafeModeDialog by remember { mutableStateOf(false) }
     val status = mapLaunchStatusToInfo(uiState, safeModeEnabled)
 
-    Card(modifier = modifier.width(300.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(16.dp)) {
+    Box(modifier = modifier) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (uiState is LaunchViewModel.LaunchUIState.Cancelled) {
                 LaunchCancelledBody(
                     statusInfo = status,
@@ -316,13 +325,9 @@ fun LaunchProgressCard(
                     inProgress = uiState.inProgress
                 )
 
-                if (uiState.reason == LaunchViewModel.LaunchCancelReason.GAME_OUTDATED) {
+                if (uiState.reason.isGameInstallIssue()) {
                     val context = LocalContext.current
-
-                    // game should be downloaded if this message is showing
-                    val showDownload = remember {
-                        !GamePackageUtils.identifyGameLegitimacy(context.packageManager)
-                    }
+                    val showDownload = remember { GamePackageUtils.showDownloadBadge(context.packageManager) }
 
                     if (showDownload) {
                         GooglePlayBadge(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -331,8 +336,8 @@ fun LaunchProgressCard(
 
                 if (uiState.reason.allowsRetry()) {
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.width(300.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterHorizontally),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         LongPressButton(onClick = { onResume(false) }, onLongPress = {
                             showSafeModeDialog = true
@@ -340,14 +345,14 @@ fun LaunchProgressCard(
                             RetryButtonContents(uiState.reason)
                         }
 
-                        Spacer(Modifier.weight(1.0f))
-
                         if (crashInfo != null) {
-                            IconButton(onClick = onMore) {
+                            FilledTonalButton(onClick = onMore) {
                                 Icon(
                                     painterResource(R.drawable.icon_question_mark),
-                                    contentDescription = stringResource(R.string.launcher_cancelled_help_alt)
+                                    contentDescription = null
                                 )
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text(stringResource(R.string.launcher_cancelled_help_alt))
                             }
                         }
 
@@ -355,7 +360,7 @@ fun LaunchProgressCard(
                     }
                 }
             } else {
-                LaunchProgressBody(statusInfo = status)
+                LaunchProgressBody(statusInfo = status, modifier = Modifier.padding(top = 16.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.width(300.dp)) {
                     TextButton(onClick = onCancel) {
@@ -438,10 +443,9 @@ fun AltMainScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .height(350.dp)
                 .padding(8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
@@ -485,27 +489,18 @@ fun AltMainScreen(
                     safeModeEnabled = launchInSafeMode
                 )
 
-                val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
-
                 // only show launcher update in a case where a user won't see it ingame
-                if (nextLauncherUpdate != null && launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
-                    StatusIndicator(
-                        icon = {
-                            Icon(
-                                Icons.Default.Info,
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            installLauncherUpdate(context)
-                        },
-                        text = {
-                            Text(
-                                stringResource(R.string.launcher_update_available),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    )
+                if (launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
+                    val gameVersion = remember { GamePackageUtils.getGameVersionCodeOrNull(context.packageManager) }
+
+                    if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
+                        UnsupportedVersionWarning()
+                    }
+
+                    val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
+                    if (nextLauncherUpdate != null) {
+                        LauncherUpdateIndicator()
+                    }
                 }
             }
         }

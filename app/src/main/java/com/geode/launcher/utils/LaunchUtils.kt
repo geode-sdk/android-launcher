@@ -3,6 +3,7 @@ package com.geode.launcher.utils
 import android.content.Context
 import android.os.Build
 import java.io.File
+import java.io.Serializable
 
 object LaunchUtils {
     // supposedly CPU_ABI returns the current arch for the running application
@@ -92,7 +93,7 @@ object LaunchUtils {
         return crashIndicatorFile.exists()
     }
 
-    enum class LauncherError {
+    enum class LauncherError : Serializable {
         LINKER_NEEDS_64BIT,
         LINKER_NEEDS_32BIT,
         LINKER_FAILED_STL,

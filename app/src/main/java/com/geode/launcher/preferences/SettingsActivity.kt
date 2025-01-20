@@ -188,8 +188,8 @@ fun UpdateIndicator(
                         context.getString(R.string.preference_check_for_updates_success)
                     )
                 } else {
-                    val gdInstalled = GamePackageUtils.isGameInstalled(context.packageManager)
-                    if (gdInstalled && GamePackageUtils.getGameVersionCode(context.packageManager) < Constants.SUPPORTED_VERSION_CODE) {
+                    val gameVersion = GamePackageUtils.getGameVersionCodeOrNull(context.packageManager)
+                    if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE) {
                         snackbarHostState.showSnackbar(
                             context.getString(R.string.launcher_game_update_required_short)
                         )

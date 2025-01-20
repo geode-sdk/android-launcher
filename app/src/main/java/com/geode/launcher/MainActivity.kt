@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
             LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
         } else { null }
 
-        /*
         val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
         if (redirectToAlt) {
             val launchIntent = Intent(this, AltMainActivity::class.java)
@@ -72,7 +71,6 @@ class MainActivity : ComponentActivity() {
 
             return
         }
-        */
 
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
@@ -114,7 +112,7 @@ fun MainScreen(
     val autoUpdateState by releaseViewModel.uiState.collectAsState()
 
     val geodeJustInstalled = (autoUpdateState as? ReleaseViewModel.ReleaseUIState.Finished)
-        ?.hasUpdated ?: false
+        ?.hasUpdated == true
     val geodeInstalled = geodePreinstalled || geodeJustInstalled
 
     var beginLaunch by remember { mutableStateOf(false) }
@@ -194,26 +192,7 @@ fun MainScreen(
                         )
 
                         if (gdVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
-                            InlineDialog(
-                                headline = {
-                                    Icon(
-                                        Icons.Default.Warning,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-
-                                    Text(
-                                        stringResource(R.string.launcher_unsupported_version_title),
-                                        style = MaterialTheme.typography.titleMedium,
-                                    )
-                                },
-                                body = {
-                                    Text(
-                                        stringResource(R.string.launcher_game_update_required),
-                                    )
-                                },
-                                modifier = Modifier.padding(8.dp)
-                            )
+                            UnsupportedVersionWarning()
                         }
                     }
                 }

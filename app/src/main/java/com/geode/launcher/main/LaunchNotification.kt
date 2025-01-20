@@ -39,15 +39,21 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 
 enum class LaunchNotificationType {
-    GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED;
+    GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED, UNSUPPORTED_VERSION;
 }
 
 fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
     val cards = mutableListOf<LaunchNotificationType>()
+
+    if (GamePackageUtils.getGameVersionCode(context.packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
+        cards.add(LaunchNotificationType.UNSUPPORTED_VERSION)
+    }
 
     val releaseManager = ReleaseManager.get(context)
 
@@ -93,6 +99,11 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
         LaunchNotificationType.UPDATE_FAILED -> {
             AnimatedNotificationCard {
                 UpdateFailedContent()
+            }
+        }
+        LaunchNotificationType.UNSUPPORTED_VERSION -> {
+            AnimatedNotificationCard {
+                OutdatedVersionContent()
             }
         }
         else -> {}
@@ -207,6 +218,25 @@ fun UpdateNotificationContent(modifier: Modifier = Modifier) {
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
+        },
+        modifier = modifier.width(IntrinsicSize.Max)
+    )
+}
+
+@Composable
+fun OutdatedVersionContent(modifier: Modifier = Modifier) {
+    ListItem(
+        headlineContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_compatibility))
+        },
+        leadingContent = {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+            )
+        },
+        supportingContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_compatibility_description))
         },
         modifier = modifier.width(IntrinsicSize.Max)
     )

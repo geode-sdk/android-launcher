@@ -20,6 +20,9 @@ object GamePackageUtils {
         }
     }
 
+    fun showDownloadBadge(packageManager: PackageManager) =
+        !isGameInstalled(packageManager) || !identifyGameLegitimacy(packageManager)
+
     fun getGameVersionCode(packageManager: PackageManager): Long {
         val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
 
@@ -28,6 +31,14 @@ object GamePackageUtils {
         } else {
             @Suppress("DEPRECATION")
             game.versionCode.toLong()
+        }
+    }
+
+    fun getGameVersionCodeOrNull(packageManager: PackageManager): Long? {
+        return try {
+            getGameVersionCode(packageManager)
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
         }
     }
 

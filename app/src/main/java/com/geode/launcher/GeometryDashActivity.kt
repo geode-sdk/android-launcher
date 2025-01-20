@@ -22,6 +22,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.main.LaunchNotification
+import com.geode.launcher.main.determineDisplayedCards
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.ConstrainedFrameLayout
 import com.geode.launcher.utils.DownloadUtils
@@ -406,11 +407,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         val showNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
         if (showNotification) {
-            val notificationView = ComposeView(this)
-            frameLayout.addView(notificationView)
+            val hasCards = determineDisplayedCards(this)
+            if (hasCards.isNotEmpty()) {
+                val notificationView = ComposeView(this)
+                frameLayout.addView(notificationView)
 
-            notificationView.setContent {
-                LaunchNotification()
+                notificationView.setContent {
+                    LaunchNotification()
+                }
             }
         }
 
