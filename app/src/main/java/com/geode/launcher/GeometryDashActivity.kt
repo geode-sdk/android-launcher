@@ -460,12 +460,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         val forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
         if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            var chosenRefreshRate = display.supportedModes?.maxByOrNull { it.refreshRate }?.refreshRate
-            if (chosenRefreshRate != null) {
-                window.attributes.preferredRefreshRate = chosenRefreshRate
-            }
+            var chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
+            if (chosenDisplay != null) {
+                var chosenRefreshRate = chosenDisplay.refreshRate
+                println("Forcing a refresh rate of $chosenRefreshRate (display ${chosenDisplay.modeId})")
 
-            mChosenDisplayRate = chosenRefreshRate
+                window.attributes.preferredRefreshRate = chosenRefreshRate
+                mChosenDisplayRate = chosenRefreshRate
+            }
         }
 
         if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
