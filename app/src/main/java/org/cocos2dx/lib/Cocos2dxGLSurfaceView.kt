@@ -119,12 +119,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
-    fun updateRefreshRate() {
-        val maxRefreshRate = display.supportedModes.maxBy { it.refreshRate }.refreshRate
-        holder.surface.setFrameRate(
-            maxRefreshRate,
-            Surface.FRAME_RATE_COMPATIBILITY_DEFAULT
-        )
+    fun updateRefreshRate(refreshRate: Float) {
+        holder.surface.setFrameRate(refreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
     }
 
     override fun onPause() {

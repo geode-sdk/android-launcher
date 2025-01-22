@@ -70,7 +70,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mHasWindowFocus = false
 
     private var displayMode = DisplayMode.DEFAULT
-    private var forceRefreshRate = false
+    private var mChosenDisplayRate: Float? = null
     private var mLimitedRefreshRate: Int? = null
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
@@ -429,13 +429,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val renderer = Cocos2dxRenderer(glSurfaceView)
         glSurfaceView.setCocos2dxRenderer(renderer)
 
+        renderer.setFrameRate = mChosenDisplayRate
+
         val frameRate = mLimitedRefreshRate
-
-        // force refresh rate causes some issues if the limited framerate isn't supported by device
-        if (forceRefreshRate && frameRate == null) {
-            renderer.setFrameRate = true
-        }
-
         if (frameRate != null) {
             renderer.limitFrameRate(frameRate)
         }
@@ -459,14 +455,17 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         mScreenZoom = preferenceUtils.getInt(PreferenceUtils.Key.SCREEN_ZOOM) / 100.0f
         mScreenZoomFit = preferenceUtils.getBoolean(PreferenceUtils.Key.SCREEN_ZOOM_FIT)
 
-        forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
-        mLimitedRefreshRate = preferenceUtils.getInt(PreferenceUtils.Key.LIMIT_FRAME_RATE).takeIf { it != 0 }
+        val limitedRefreshRate = preferenceUtils.getInt(PreferenceUtils.Key.LIMIT_FRAME_RATE).takeIf { it != 0 }
+        mLimitedRefreshRate = limitedRefreshRate
 
+        val forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
         if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val maxRefreshRate = display?.supportedModes?.maxBy { it.refreshRate }?.refreshRate
-            if (maxRefreshRate != null) {
-                window.attributes.preferredRefreshRate = maxRefreshRate
+            var chosenRefreshRate = display.supportedModes?.maxByOrNull { it.refreshRate }?.refreshRate
+            if (chosenRefreshRate != null) {
+                window.attributes.preferredRefreshRate = chosenRefreshRate
             }
+
+            mChosenDisplayRate = chosenRefreshRate
         }
 
         if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
