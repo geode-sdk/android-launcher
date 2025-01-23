@@ -108,7 +108,7 @@ class ReleaseManager private constructor(
 
     private fun getBestReleaseForGameVersion(gameVersion: Long): String? = when {
         gameVersion >= 40L -> mapSelectedReleaseToTag()
-        gameVersion == 39L -> "v3.9.2"
+        gameVersion == 39L -> "v3.9.3"
         gameVersion == 38L -> "v2.0.0-beta.27"
         gameVersion == 37L -> "v2.0.0-beta.4"
         else -> null
