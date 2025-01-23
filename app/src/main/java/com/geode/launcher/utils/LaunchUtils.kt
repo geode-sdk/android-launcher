@@ -47,7 +47,7 @@ object LaunchUtils {
     /**
      * Returns the directory that Geode/the game should base itself off of.
      */
-    fun getBaseDirectory(context: Context): File {
+    fun getBaseDirectory(context: Context, ignoreProfile: Boolean = false): File {
         // deprecated, but seems to be the best choice of directory (i forced mat to test it)
         // also, is getting the first item the correct choice here?? what do they mean
         @Suppress("DEPRECATION")
@@ -57,6 +57,14 @@ object LaunchUtils {
         // accessing this file every time the directory is read may be a little wasteful...
         val noMediaPath = File(dir, ".nomedia")
         noMediaPath.createNewFile()
+
+        val currentProfile = ProfileManager.get(context).getCurrentProfile()
+        if (currentProfile != null && !ignoreProfile) {
+            val profile = File(dir, "profiles/$currentProfile/")
+            profile.mkdirs()
+
+            return profile
+        }
 
         return dir
     }

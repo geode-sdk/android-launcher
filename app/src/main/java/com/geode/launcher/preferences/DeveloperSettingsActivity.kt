@@ -174,6 +174,11 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         preferenceKey = PreferenceUtils.Key.ENABLE_REDESIGN,
                     )
                 }
+
+                OptionsGroup(title = stringResource(R.string.preference_profiles)) {
+                    ProfileCreateCard()
+                    ProfileSelectCard()
+                }
             }
         }
     }

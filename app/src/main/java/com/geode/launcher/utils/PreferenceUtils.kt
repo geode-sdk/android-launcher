@@ -20,8 +20,6 @@ import com.geode.launcher.BuildConfig
  */
 class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
     companion object {
-        private const val FILE_KEY = "GeodeLauncherPreferencesFileKey"
-
         @Composable
         fun useBooleanPreference(preferenceKey: Key, lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current): MutableState<Boolean> {
             return usePreference(
@@ -70,7 +68,9 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             preferenceSet: (PreferenceUtils, Key, T) -> Unit
         ): MutableState<T> {
             val context = LocalContext.current
-            val sharedPreferences = context.getSharedPreferences(FILE_KEY, Context.MODE_PRIVATE)
+
+            val currentProfile = remember { ProfileManager.get(context).getCurrentFileKey() }
+            val sharedPreferences = context.getSharedPreferences(currentProfile, Context.MODE_PRIVATE)
 
             val preferences = get(sharedPreferences)
 
@@ -114,7 +114,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         }
 
         fun get(context: Context): PreferenceUtils {
-            val sharedPreferences = context.getSharedPreferences(FILE_KEY, Context.MODE_PRIVATE)
+            val currentFileKey = ProfileManager.get(context).getCurrentFileKey()
+            val sharedPreferences = context.getSharedPreferences(currentFileKey, Context.MODE_PRIVATE)
             return get(sharedPreferences)
         }
 

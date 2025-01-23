@@ -40,7 +40,7 @@ class UserDirectoryProvider : DocumentsProvider() {
 
     override fun onCreate(): Boolean {
         val context = context ?: return false
-        rootDir = LaunchUtils.getBaseDirectory(context)
+        rootDir = LaunchUtils.getBaseDirectory(context, true)
 
         return true
     }

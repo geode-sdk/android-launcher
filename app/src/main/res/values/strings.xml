@@ -219,6 +219,19 @@
 
     <string name="preference_open_developer_options">Open developer options</string>
 
+    <string name="preference_profiles">Profiles</string>
+    <string name="preference_profiles_create">Create profile</string>
+    <string name="preference_profiles_name">Change profile</string>
+    <string name="preference_profiles_select">Select profile</string>
+    <string name="preference_profiles_create_name">Profile name</string>
+    <string name="preference_profiles_create_action">Create</string>
+    <string name="preference_profiles_select_value">%1$s</string>
+    <string name="preference_profiles_current">Current profile: %1$s</string>
+    <string name="preference_profiles_create_info">This profile will be created at %1$s.</string>
+    <string name="preference_profiles_create_duplicate">A profile with this name already exists.</string>
+    <string name="preference_profiles_delete_alt">Delete</string>
+    <string name="preference_profiles_delete_undo_alt">Undo</string>
+
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
     <string name="application_logs_no_logs">No logs available.</string>

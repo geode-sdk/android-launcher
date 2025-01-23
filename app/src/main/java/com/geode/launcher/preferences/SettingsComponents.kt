@@ -1,6 +1,8 @@
 package com.geode.launcher.preferences
 
 import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -32,9 +35,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,10 +60,13 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.LabelledText
 import com.geode.launcher.utils.PreferenceUtils
+import com.geode.launcher.utils.Profile
+import com.geode.launcher.utils.ProfileManager
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.system.exitProcess
 
 
 fun toggleSetting(context: Context, preferenceKey: PreferenceUtils.Key): Boolean {
@@ -556,9 +564,11 @@ internal val LocalSelectValue = compositionLocalOf<Any> { 0 }
 internal val LocalSelectSetValue = staticCompositionLocalOf<(Any) -> Unit> { {} }
 
 @Composable
-fun <T> SelectOption(name: String, value: T) {
+fun <T> SelectOption(name: String, value: T, enabled: Boolean = true, leadingContent: @Composable (Boolean) -> Unit = {}) {
     val currentValue = LocalSelectValue.current
     val setValue = LocalSelectSetValue.current
+
+    val isSelected = currentValue.equals(value)
 
     // do not give the row or column padding!! it messes up the selection effect
     Row(
@@ -567,15 +577,221 @@ fun <T> SelectOption(name: String, value: T) {
             .fillMaxWidth()
             .clickable(
                 onClick = { setValue(value as Any) },
-                role = Role.RadioButton
+                role = Role.RadioButton,
+                enabled = enabled
             )
             .padding(horizontal = 12.dp)
     ) {
-        RadioButton(
-            selected = currentValue.equals(value),
-            onClick = { setValue(value as Any) }
-        )
-        Text(name, style = Typography.bodyMedium)
+        Row(modifier = Modifier.weight(1.0f, true), verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(
+                selected = isSelected,
+                onClick = { setValue(value as Any) },
+                enabled = enabled
+            )
+            Text(name, style = Typography.bodyMedium)
+        }
+
+        leadingContent(isSelected)
+    }
+}
+
+@Composable
+fun ProfileCreateDialog(onDismissRequest: () -> Unit) {
+    var enteredValue by remember { mutableStateOf("") }
+
+    val filename = enteredValue.take(16)
+        .lowercase()
+        .map {
+            if ("qwertyuiopasdfghjklzxcvbnm1234567890-_.".contains(it))
+                it else '_'
+        }
+        .joinToString("")
+
+
+    val context = LocalContext.current
+
+    val minimumReached = enteredValue.isEmpty() || filename.isEmpty()
+
+    val profileManager = ProfileManager.get(context)
+    val currentProfiles = remember {
+        profileManager.getProfiles().map { it.path }.toSet()
+    }
+
+    val isDuplicate = currentProfiles.contains(filename)
+
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = {
+            Text(stringResource(R.string.preference_profiles_create))
+        },
+        text = {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1.0f, false)
+                ) {
+                    OutlinedTextField(
+                        value = enteredValue,
+                        onValueChange = {
+                            enteredValue = it
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                        ),
+                        label = {
+                            Text(stringResource(R.string.preference_profiles_create_name))
+                        },
+                        isError = isDuplicate
+                    )
+                }
+
+                if (isDuplicate) {
+                    Spacer(Modifier.size(8.dp))
+
+                    Text(stringResource(R.string.preference_profiles_create_duplicate))
+                } else if (!minimumReached) {
+                    Spacer(Modifier.size(8.dp))
+
+                    Text(stringResource(R.string.preference_profiles_create_info, filename))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    ProfileManager.get(context).storeProfile(Profile(filename, enteredValue))
+                    onDismissRequest()
+                },
+                enabled = !minimumReached && !isDuplicate
+            ) {
+                Text(stringResource(R.string.preference_profiles_create_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+fun ProfileCreateCard() {
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsButton(
+        title = stringResource(R.string.preference_profiles_create),
+        icon = {
+            Icon(painterResource(R.drawable.icon_person_add), contentDescription = null)
+        }
+    ) {
+        showDialog = true
+    }
+
+    if (showDialog) {
+        ProfileCreateDialog(onDismissRequest = {
+            showDialog = false
+        })
+    }
+}
+
+@Composable
+fun ProfileSelectCard() {
+    val context = LocalContext.current
+    val profileManager = ProfileManager.get(context)
+
+    val currentProfileId = remember {
+        profileManager.getCurrentProfile()
+    }
+
+    var currentProfileName = remember {
+        val savedProfile = currentProfileId
+        if (savedProfile == null) {
+            "Default"
+        } else {
+            profileManager.getProfile(savedProfile)
+                ?.name ?: savedProfile
+        }
+    }
+
+    val clearedProfiles = remember { mutableStateListOf<String>() }
+
+    val profileList by profileManager.storedProfiles.collectAsState()
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsButton(
+        title = stringResource(R.string.preference_profiles_select),
+        description = stringResource(R.string.preference_profiles_current, currentProfileName)
+    ) {
+        showDialog = true
+    }
+
+    val activity = LocalActivity.current
+    if (showDialog) {
+        SelectDialog(
+            title = stringResource(R.string.preference_profiles_select),
+            onDismissRequest = {
+                showDialog = false
+            },
+            onSelect = {
+                showDialog = false
+
+                val selectedProfileId = it.takeIf { it.isNotEmpty() }
+
+                if (clearedProfiles.isNotEmpty()) {
+                    profileManager.deleteProfiles(clearedProfiles)
+                }
+
+                if (currentProfileId != selectedProfileId) {
+                    profileManager
+                        .setCurrentProfile(selectedProfileId)
+
+                    activity?.run {
+                        packageManager.getLaunchIntentForPackage(packageName)?.also {
+                            val mainIntent = Intent.makeRestartActivityTask(it.component)
+                            startActivity(mainIntent)
+                            exitProcess(0)
+                        }
+                    }
+                }
+            },
+            initialValue = currentProfileId ?: "",
+        ) {
+            SelectOption("Default", "")
+
+            profileList.forEach { profile ->
+                val path = profile.path
+
+                SelectOption(
+                    stringResource(R.string.preference_profiles_select_value, profile.name, path),
+                    path,
+                    enabled = !clearedProfiles.contains(path),
+                    leadingContent = { selected ->
+                        IconButton(onClick = {
+                            if (clearedProfiles.contains(path)) {
+                                clearedProfiles.remove(path)
+                            } else {
+                                clearedProfiles.add(path)
+                            }
+                        }, enabled = !selected) {
+                            if (clearedProfiles.contains(path)) {
+                                Icon(
+                                    painterResource(R.drawable.icon_undo),
+                                    contentDescription = stringResource(R.string.preference_profiles_delete_undo_alt)
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.preference_profiles_delete_alt)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 

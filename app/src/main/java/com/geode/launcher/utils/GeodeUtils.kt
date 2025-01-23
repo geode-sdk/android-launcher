@@ -524,7 +524,7 @@ object GeodeUtils {
             return false
         }
 
-        return capabilityListener.get()?.onCapabilityAdded(capability) ?: false
+        return capabilityListener.get()?.onCapabilityAdded(capability) == true
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
