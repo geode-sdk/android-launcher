@@ -89,6 +89,8 @@ std::uint32_t elfhash(const char *_name) {
     return h;
 }
 
+std::array<std::uint8_t, 3> SYMBOL_PATCH_VALUE{":3"};
+
 bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_table, const char* orig_name) {
     auto hash = elfhash(orig_name);
 
@@ -105,7 +107,6 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
             // there's probably no point to checking this, honestly
             if (ELF_ST_BIND(sym->st_info) == STB_GLOBAL && ELF_ST_TYPE(sym->st_info) == STT_FUNC) {
                 // we found it! now go rename the symbol
-                std::array<std::uint8_t, 3> new_symbol{":3"};
 
 #ifdef USE_TULIPHOOK
                 auto res = tulip::hook::writeMemory(sym_name, new_symbol.data(), new_symbol.size());
@@ -114,7 +115,7 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
                         return false;
                 }
 #else
-                DobbyCodePatch(reinterpret_cast<void*>(sym_name), new_symbol.data(), new_symbol.size());
+                DobbyCodePatch(reinterpret_cast<void*>(sym_name), SYMBOL_PATCH_VALUE.data(), SYMBOL_PATCH_VALUE.size());
 #endif
 
                 return true;
@@ -264,7 +265,7 @@ JNIEXPORT int JNICALL Java_com_geode_launcher_LauncherFix_performExceptionsRenam
     return dl_iterate_phdr(on_dl_iterate, nullptr);
 }
 
-std::string redirect_path(const char* pathname) {
+std::optional<std::string> redirect_path(const char* pathname) {
     auto& data_path = DataPaths::get_instance().data_path;
     auto& original_data_path = DataPaths::get_instance().original_data_path;
 
@@ -277,22 +278,26 @@ std::string redirect_path(const char* pathname) {
         }
     }
 
-    return pathname;
+    return std::nullopt;
 }
 
 FILE* (*fopen_original)(const char *pathname, const char *mode);
 FILE* fopen_hook(const char* pathname, const char* mode) {
     auto path_str = redirect_path(pathname);
+    auto redirect = path_str.has_value() ? path_str->c_str() : pathname;
 
-    return fopen_original(path_str.c_str(), mode);
+    return fopen_original(redirect, mode);
 }
 
 int (*rename_original)(const char* old_path, const char* new_path);
 int rename_hook(const char* old_path, const char* new_path) {
     auto old_path_str = redirect_path(old_path);
-    auto new_path_str = redirect_path(new_path);
+    auto old_redirect = old_path_str ? old_path_str->c_str() : old_path;
 
-    return rename_original(old_path_str.c_str(), new_path_str.c_str());
+    auto new_path_str = redirect_path(new_path);
+    auto new_redirect = new_path_str ? new_path_str->c_str() : new_path;
+
+    return rename_original(old_redirect, new_redirect);
 }
 
 bool hook_function(void* addr, auto* hook, auto** orig) {
