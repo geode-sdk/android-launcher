@@ -387,8 +387,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         if (mScreenZoomFit && mScreenZoom != 1.0f) {
-            frameLayout.scaleX = 1/mScreenZoom
-            frameLayout.scaleY = 1/mScreenZoom
+            frameLayout.fitZoom = true
         }
 
         if (mScreenZoom != 1.0f) {
