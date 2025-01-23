@@ -162,7 +162,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return cancelLaunch(true)
         }
 
-        if (!readyTimerPassed) {
+        if (!readyTimerPassed && !hasManuallyStarted) {
             return _uiState.emit(LaunchUIState.Working)
         }
 

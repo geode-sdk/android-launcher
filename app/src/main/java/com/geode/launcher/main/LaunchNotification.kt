@@ -56,9 +56,10 @@ fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
     }
 
     val releaseManager = ReleaseManager.get(context)
+    val loadAutomatically = PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
 
     val availableUpdate = releaseManager.availableLauncherUpdate.value
-    if (availableUpdate != null) {
+    if (loadAutomatically && availableUpdate != null) {
         cards.add(LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE)
     }
 
