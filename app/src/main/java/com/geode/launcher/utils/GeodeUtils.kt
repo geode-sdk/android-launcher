@@ -376,11 +376,6 @@ object GeodeUtils {
         return activity.filesDir.canonicalPath
     }
 
-    private val gameVersionMap = mapOf(
-        37L to "2.200",
-        38L to "2.205"
-    )
-
     @JvmStatic
     fun getGameVersion(): String {
         // these versions should be aligned to windows releases, not what android says
@@ -389,6 +384,11 @@ object GeodeUtils {
         }
 
         return ""
+    }
+
+    @JvmStatic
+    fun getLauncherVersion(): Int {
+        return BuildConfig.VERSION_CODE
     }
 
     fun isGeodeUri(uri: Uri): Boolean {
