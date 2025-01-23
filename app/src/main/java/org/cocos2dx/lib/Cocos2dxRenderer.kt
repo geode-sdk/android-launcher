@@ -86,6 +86,8 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         if (chosenRefreshRate != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             handler.updateRefreshRate(chosenRefreshRate)
         }
+
+        println("renderer surfaceChanged: ${width}x${height}@${handler.display.refreshRate}fps")
     }
 
     override fun onDrawFrame(gl: GL10?) {
