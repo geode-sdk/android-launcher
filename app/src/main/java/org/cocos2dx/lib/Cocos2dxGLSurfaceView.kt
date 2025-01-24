@@ -1,5 +1,6 @@
 package org.cocos2dx.lib
 
+import android.app.Activity
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Build
@@ -120,7 +121,19 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
     @RequiresApi(Build.VERSION_CODES.R)
     fun updateRefreshRate(refreshRate: Float) {
-        holder.surface.setFrameRate(refreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
+        var chosenRefreshRate = refreshRate
+
+        val chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
+        if (chosenDisplay != null && chosenDisplay.refreshRate > refreshRate) {
+            println("updateRefreshRate found a higher refresh rate (${chosenDisplay.modeId}: ${chosenDisplay.refreshRate} > $refreshRate)")
+            chosenRefreshRate = chosenDisplay.refreshRate
+        }
+
+        holder.surface.setFrameRate(chosenRefreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
+
+        if (isAttachedToWindow) {
+            (context as Activity).window.attributes.preferredRefreshRate = chosenRefreshRate
+        }
     }
 
     override fun onPause() {
