@@ -120,17 +120,18 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
-    fun updateRefreshRate(refreshRate: Float) {
-        var chosenRefreshRate = refreshRate
-
+    fun updateRefreshRate() {
         val chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
-        if (chosenDisplay != null && chosenDisplay.refreshRate > refreshRate) {
-            println("updateRefreshRate found a higher refresh rate (${chosenDisplay.modeId}: ${chosenDisplay.refreshRate} > $refreshRate)")
-            chosenRefreshRate = chosenDisplay.refreshRate
+        if (chosenDisplay == null) {
+            println("updateRefreshRate failed to find a display to maximize refresh rate...")
+            return
         }
 
-        holder.surface.setFrameRate(chosenRefreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
+        val chosenRefreshRate = chosenDisplay.refreshRate
 
+        println("updateRefreshRate: selecting refresh rate of ${chosenDisplay.refreshRate} (display ${chosenDisplay.modeId})")
+
+        holder.surface.setFrameRate(chosenRefreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
         if (isAttachedToWindow) {
             (context as Activity).window.attributes.preferredRefreshRate = chosenRefreshRate
         }

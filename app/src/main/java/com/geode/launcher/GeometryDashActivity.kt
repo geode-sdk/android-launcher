@@ -70,7 +70,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mHasWindowFocus = false
 
     private var displayMode = DisplayMode.DEFAULT
-    private var mChosenDisplayRate: Float? = null
+    private var mForceRefreshRate = false
     private var mLimitedRefreshRate: Int? = null
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
@@ -428,7 +428,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val renderer = Cocos2dxRenderer(glSurfaceView)
         glSurfaceView.setCocos2dxRenderer(renderer)
 
-        renderer.setFrameRate = mChosenDisplayRate
+        renderer.setFrameRate = mForceRefreshRate
 
         val frameRate = mLimitedRefreshRate
         if (frameRate != null) {
@@ -457,15 +457,16 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val limitedRefreshRate = preferenceUtils.getInt(PreferenceUtils.Key.LIMIT_FRAME_RATE).takeIf { it != 0 }
         mLimitedRefreshRate = limitedRefreshRate
 
-        val forceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
-        if (forceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        mForceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
+        if (mForceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
             if (chosenDisplay != null) {
                 var chosenRefreshRate = chosenDisplay.refreshRate
-                println("Forcing a refresh rate of $chosenRefreshRate (display ${chosenDisplay.modeId})")
+                println("setupUIState: Forcing a refresh rate of $chosenRefreshRate (display ${chosenDisplay.modeId})")
 
                 window.attributes.preferredRefreshRate = chosenRefreshRate
-                mChosenDisplayRate = chosenRefreshRate
+            } else {
+                println("setupUIState could not find a display to select refresh rate of...")
             }
         }
 

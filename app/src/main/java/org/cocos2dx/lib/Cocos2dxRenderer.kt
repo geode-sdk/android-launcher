@@ -64,7 +64,7 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
     private var screenWidth = 0
     private var screenHeight = 0
     var sendResizeEvents = false
-    var setFrameRate: Float? = null
+    var setFrameRate = false
     private var mAnimationInterval: Long? = null
 
     fun limitFrameRate(rate: Int) {
@@ -82,9 +82,8 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
     }
 
     override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {
-        val chosenRefreshRate = setFrameRate
-        if (chosenRefreshRate != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            handler.updateRefreshRate(chosenRefreshRate)
+        if (setFrameRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            handler.updateRefreshRate()
         }
 
         println("renderer surfaceChanged: ${width}x${height}@${handler.display.refreshRate}fps")
