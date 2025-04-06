@@ -109,7 +109,7 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
                 // we found it! now go rename the symbol
 
 #ifdef USE_TULIPHOOK
-                auto res = tulip::hook::writeMemory(sym_name, new_symbol.data(), new_symbol.size());
+                auto res = tulip::hook::writeMemory(sym_name, SYMBOL_PATCH_VALUE.data(), SYMBOL_PATCH_VALUE.size());
                 if (!res) {
                         __android_log_print(ANDROID_LOG_WARN, "GeodeLauncher-fix", "failed to patch symbol: %s", res.unwrapErr().c_str());
                         return false;
