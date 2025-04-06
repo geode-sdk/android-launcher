@@ -39,6 +39,8 @@ import kotlin.system.exitProcess
 @Suppress("unused", "KotlinJniMissingFunction")
 object GeodeUtils {
     private lateinit var activity: WeakReference<AppCompatActivity>
+    var handleSafeArea: Boolean = false
+
     private lateinit var openFileResultLauncher: ActivityResultLauncher<GeodeOpenFileActivityResult.OpenFileParams>
     private lateinit var openDirectoryResultLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openFilesResultLauncher: ActivityResultLauncher<GeodeOpenFilesActivityResult.OpenFileParams>
@@ -479,6 +481,19 @@ object GeodeUtils {
         } else {
             @Suppress("DEPRECATION")
             getVibrator()?.vibrate(pattern, repeat)
+        }
+    }
+
+    @JvmStatic
+    fun getScreenInsets(): IntArray? {
+        if (!handleSafeArea || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return null
+        }
+
+        return activity.get()?.run {
+            val displayCutout = window.decorView.rootWindowInsets?.displayCutout ?: return null
+
+            intArrayOf(displayCutout.safeInsetLeft, displayCutout.safeInsetBottom, displayCutout.safeInsetRight, displayCutout.safeInsetTop)
         }
     }
 
