@@ -108,6 +108,7 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
     implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.30.0")
     implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.30.0")
+    implementation("androidx.browser:browser:1.8.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.4")
 }
