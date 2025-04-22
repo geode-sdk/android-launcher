@@ -21,7 +21,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
@@ -525,6 +527,15 @@ object GeodeUtils {
         }
 
         return capabilityListener.get()?.onCapabilityAdded(capability) == true
+    }
+
+    @JvmStatic
+    fun openWebview(url: String) {
+        val activity = activity.get() ?: return
+        CustomTabsIntent.Builder()
+            .setShowTitle(true)
+            .build()
+            .launchUrl(activity, url.toUri())
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
