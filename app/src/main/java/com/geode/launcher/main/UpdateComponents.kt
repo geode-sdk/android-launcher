@@ -58,9 +58,9 @@ import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.mikepenz.markdown.compose.LocalBulletListHandler
 import com.mikepenz.markdown.m3.Markdown
-import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import kotlinx.datetime.toJavaInstant
+import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
@@ -191,17 +191,17 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                             style = Typography.titleLarge
                         )
 
-                        CompositionLocalProvider(LocalBulletListHandler provides { _, _, _ -> "•  " }) {
+                        // every new release of the markdown library adds another arg to it
+                        CompositionLocalProvider(LocalBulletListHandler provides { _, _, _, _, _ -> "•  " }) {
                             Markdown(
                                 content = nextRelease.release.body.replace("\r", ""),
-                                colors = markdownColor(
-                                    linkText = MaterialTheme.colorScheme.primary
-                                ),
                                 typography = markdownTypography(
                                     link = MaterialTheme.typography.bodyLarge.copy(
-                                        textDecoration = TextDecoration.Underline
-                                    )
+                                        textDecoration = TextDecoration.Underline,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    ),
                                 ),
+                                flavour = GFMFlavourDescriptor(),
                             )
                         }
                     }

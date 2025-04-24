@@ -20,8 +20,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 35
-        versionCode = 20
-        versionName = "1.5.0"
+        versionCode = 21
+        versionName = "1.6.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -30,7 +30,7 @@ android {
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
-                arguments("-DUSE_TULIPHOOK:BOOL=OFF", "-DANDROID_STL=c++_shared")
+                arguments("-DUSE_TULIPHOOK:BOOL=OFF", "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES:BOOL=OFF")
             }
         }
 
@@ -82,33 +82,34 @@ android {
     }
     externalNativeBuild {
         cmake {
+            version = "3.25.0+"
             path = file("src/main/cpp/CMakeLists.txt")
         }
     }
     namespace = "com.geode.launcher"
-    ndkVersion = "27.2.12479018"
+    ndkVersion = "28.1.13356709"
 }
 
 dependencies {
     implementation (platform("androidx.compose:compose-bom:$composeBOM"))
-    implementation ("androidx.core:core-ktx:1.15.0")
+    implementation ("androidx.core:core-ktx:1.16.0")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation ("androidx.activity:activity-compose:1.10.0")
-    implementation ("androidx.activity:activity-ktx:1.10.0")
+    implementation ("androidx.activity:activity-compose:1.10.1")
+    implementation ("androidx.activity:activity-ktx:1.10.1")
     implementation ("androidx.appcompat:appcompat:1.7.0")
     implementation ("androidx.documentfile:documentfile:1.0.1")
-    implementation ("com.squareup.okio:okio:3.10.2")
+    implementation ("com.squareup.okio:okio:3.11.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.8.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.30.0")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.30.0")
-    implementation("androidx.browser:browser:1.8.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.8.1")
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.33.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.33.0")
+    implementation ("androidx.browser:browser:1.8.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
-    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.4")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
 }

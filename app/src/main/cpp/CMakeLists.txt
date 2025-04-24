@@ -24,8 +24,9 @@ if (USE_TULIPHOOK)
     target_link_libraries(launcherfix PRIVATE TulipHook TulipHookInclude)
 else()
     FetchContent_Declare(dobby
+        # this is the last version that builds on android at all
         GIT_REPOSITORY https://github.com/jmpews/Dobby
-        GIT_TAG 6a80a61ea062424d1595613058a174c64454fa57
+        GIT_TAG 0932d69c320e786672361ab53825ba8f4245e9d3
     )
 
     FetchContent_GetProperties(dobby)
