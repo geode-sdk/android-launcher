@@ -55,6 +55,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         }
 
     var sendTimestampEvents = false
+    var manualBackEvents = false
 
     var cocos2dxEditText: Cocos2dxEditText? = null
         set(value) {
@@ -249,13 +250,29 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private fun legacyKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
         return when (keyCode) {
             KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
-                if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
+                if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton || manualBackEvents) {
                     return true
                 }
                 queueEvent { cocos2dxRenderer.handleKeyDown(keyCode) }
                 true
             }
             else -> super.onKeyDown(keyCode, keyEvent)
+        }
+    }
+
+    fun sendKeyBack() {
+        if (BaseRobTopActivity.blockBackButton) {
+            return
+        }
+
+        if (useKeyboardEvents) {
+            queueEvent {
+                cocos2dxRenderer.handleKeyDown(KeyEvent.KEYCODE_BACK)
+            }
+        } else {
+            queueEvent {
+                GeodeUtils.nativeKeyDown(KeyEvent.KEYCODE_BACK, 0, false)
+            }
         }
     }
 
@@ -270,7 +287,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 super.onKeyDown(keyCode, event)
             }
             else -> {
-                if (BaseRobTopActivity.blockBackButton) {
+                if (BaseRobTopActivity.blockBackButton || manualBackEvents) {
                     return true
                 }
 

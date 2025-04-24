@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.window.OnBackInvokedDispatcher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
@@ -120,6 +121,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             )
 
             return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
+                mGLSurfaceView?.sendKeyBack()
+            }
+            mGLSurfaceView?.manualBackEvents = true
         }
     }
 
