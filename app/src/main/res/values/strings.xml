@@ -84,6 +84,7 @@
     <string name="release_fetch_in_progress">Checking for new releases…</string>
     <string name="release_fetch_success">Geode updated!</string>
     <string name="release_fetch_downloading">Downloading update… (%1$s/%2$s)</string>
+    <string name="release_fetch_downloading_indeterminate">Downloading update… (%1$s)</string>
     <string name="release_fetch_cancelling">Cancelling update…</string>
     <string name="release_fetch_no_internet">No internet found.</string>
     <string name="release_fetch_cancelled">Update cancelled.</string>

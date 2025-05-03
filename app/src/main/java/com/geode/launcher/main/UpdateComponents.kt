@@ -370,10 +370,13 @@ fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier
             }
 
             UpdateProgressIndicator(
-                stringResource(
-                    R.string.release_fetch_downloading,
+                if (outOf != null) stringResource(
+                        R.string.release_fetch_downloading,
+                        downloaded,
+                        outOf
+                ) else stringResource(
+                    R.string.release_fetch_downloading_indeterminate,
                     downloaded,
-                    outOf ?: "…"
                 ),
                 modifier = modifier,
                 releaseViewModel = releaseViewModel,
