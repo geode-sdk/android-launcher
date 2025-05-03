@@ -390,6 +390,9 @@ object GeodeUtils {
         return ""
     }
 
+    /**
+     * Returns the current version code of the launcher.
+     */
     @JvmStatic
     fun getLauncherVersion(): Int {
         return BuildConfig.VERSION_CODE
@@ -461,9 +464,16 @@ object GeodeUtils {
     }
 
     // vibration
+
+    /**
+     * If vibration is supported on the device.
+     */
     @JvmStatic
     fun vibrateSupported(): Boolean = getVibrator()?.hasVibrator() == true
 
+    /**
+     * Vibrates for the given amount of time.
+     */
     @JvmStatic
     fun vibrate(ms: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -474,6 +484,10 @@ object GeodeUtils {
         }
     }
 
+    /**
+     * Vibrates with the given pattern.
+     * @see android.os.VibrationEffect.createWaveform
+     */
     @JvmStatic
     fun vibratePattern(pattern: LongArray, repeat: Int) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -535,6 +549,10 @@ object GeodeUtils {
         capabilityListener = WeakReference(listener)
     }
 
+    /**
+     * Reports that the game client supports a feature.
+     * These features typically require callbacks into the game, so ensure that the required methods are registered first.
+     */
     @JvmStatic
     fun reportPlatformCapability(capability: String?): Boolean {
         if (capability.isNullOrEmpty()) {
@@ -558,6 +576,10 @@ object GeodeUtils {
     external fun nativeActionScroll(scrollX: Float, scrollY: Float)
     external fun resizeSurface(width: Int, height: Int)
 
-    // represents the timestamp of the next input callback, in nanoseconds (most events don't send it, but it's there)
+    /**
+     * Gives the timestamp of the next input callback, in nanoseconds.
+     * Enable this by sending the "timestamp_inputs" platform capability.
+     * @see reportPlatformCapability
+     */
     external fun setNextInputTimestamp(timestamp: Long)
 }
