@@ -338,7 +338,7 @@ fun SettingsScreen(
                             put(1, stringResource(R.string.preference_display_mode_legacy))
 
                             // necessary api doesn't exist on older versions of android
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 put(2, stringResource(R.string.preference_display_mode_fullscreen))
                             }
                         }
