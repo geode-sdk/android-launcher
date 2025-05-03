@@ -250,7 +250,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private fun legacyKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
         return when (keyCode) {
             KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
-                if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton || manualBackEvents) {
+                if (keyEvent.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
                     return true
                 }
                 queueEvent { cocos2dxRenderer.handleKeyDown(keyCode) }
@@ -287,7 +287,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 super.onKeyDown(keyCode, event)
             }
             else -> {
-                if (BaseRobTopActivity.blockBackButton || manualBackEvents) {
+                if (BaseRobTopActivity.blockBackButton) {
                     return true
                 }
 
