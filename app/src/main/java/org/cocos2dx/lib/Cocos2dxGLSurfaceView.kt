@@ -270,7 +270,11 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 cocos2dxRenderer.handleKeyDown(KeyEvent.KEYCODE_BACK)
             }
         } else {
+            val currentTime = System.nanoTime()
             queueEvent {
+                if (sendTimestampEvents)
+                    GeodeUtils.setNextInputTimestamp(currentTime)
+
                 GeodeUtils.nativeKeyDown(KeyEvent.KEYCODE_BACK, 0, false)
             }
         }
