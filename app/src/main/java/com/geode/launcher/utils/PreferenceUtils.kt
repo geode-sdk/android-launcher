@@ -155,6 +155,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
             Key.DEVELOPER_MODE -> BuildConfig.DEBUG
+            Key.USE_INDEX_API -> true
             else -> false
         }
     }
