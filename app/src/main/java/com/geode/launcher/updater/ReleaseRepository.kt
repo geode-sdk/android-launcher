@@ -165,10 +165,10 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    suspend fun getLatestIndexRelease(gd: String, prerelease: Boolean = false): DownloadableLoaderRelease? {
+    suspend fun getLatestIndexRelease(gd: Long, prerelease: Boolean = false): DownloadableLoaderRelease? {
         val url = "$GEODE_API_BASE/loader/versions/latest".toHttpUrlOrNull()!!
             .newBuilder()
-            .addQueryParameter("gd", gd)
+            .addQueryParameter("gd", gd.toString())
             .addQueryParameter("platform", "android")
             .addQueryParameter("prerelease", prerelease.toString())
             .build()

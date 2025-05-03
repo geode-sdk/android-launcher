@@ -146,6 +146,11 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
+                    SettingsCard(
+                        title = stringResource(R.string.preference_use_index_update_api),
+                        preferenceKey = PreferenceUtils.Key.USE_INDEX_API
+                    )
+
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_release_channel_tag_name),
                         dialogTitle = stringResource(R.string.preference_release_channel_select),

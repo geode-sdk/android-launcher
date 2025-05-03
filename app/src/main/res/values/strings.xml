@@ -254,4 +254,5 @@
 
     <string name="preference_override_exceptions_name">Custom exceptions fix symbols</string>
     <string name="preference_override_exceptions_description">Uses exception_symbols.txt to patch</string>
+    <string name="preference_use_index_update_api">Use index release API</string>
 </resources>

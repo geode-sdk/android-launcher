@@ -147,7 +147,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         CUSTOM_ASPECT_RATIO,
         SCREEN_ZOOM,
         SCREEN_ZOOM_FIT,
-        LIMIT_FRAME_RATE
+        LIMIT_FRAME_RATE,
+        USE_INDEX_API,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -195,6 +196,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.SCREEN_ZOOM -> "PreferenceScreenZoom"
             Key.SCREEN_ZOOM_FIT -> "PreferenceScreenZoomFit"
             Key.LIMIT_FRAME_RATE -> "PreferenceLimitFrameRate"
+            Key.USE_INDEX_API -> "PreferenceUseIndexApi"
         }
     }
 

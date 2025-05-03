@@ -14,12 +14,12 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.geode.launcher"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 21
         versionName = "1.6.0"
 
