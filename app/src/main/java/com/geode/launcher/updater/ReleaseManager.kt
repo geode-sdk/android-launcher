@@ -22,7 +22,6 @@ import okio.buffer
 import okio.source
 import java.io.File
 import java.io.InterruptedIOException
-import kotlin.io.path.deleteIfExists
 
 private const val TAG_LATEST = "latest"
 private const val TAG_BETA = "prerelease"
