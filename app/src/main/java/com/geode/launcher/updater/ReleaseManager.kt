@@ -22,6 +22,7 @@ import okio.buffer
 import okio.source
 import java.io.File
 import java.io.InterruptedIOException
+import kotlin.io.path.deleteIfExists
 
 private const val TAG_LATEST = "latest"
 private const val TAG_BETA = "prerelease"
@@ -181,6 +182,10 @@ class ReleaseManager private constructor(
         // set an initial download size
         _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size)
 
+        val outputFile = getTempFile()
+        // clone the file instance as renameTo may move the original file
+        val tempFilePath = outputFile.path
+
         try {
             val fileStream = DownloadUtils.downloadStream(
                 httpClient,
@@ -189,23 +194,30 @@ class ReleaseManager private constructor(
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
             }
 
+            outputFile.parentFile?.mkdirs()
+
             val geodeFile = getGeodeOutputPath()
+
+            DownloadUtils.extractFileFromZipStream(
+                fileStream,
+                outputFile.outputStream(),
+                geodeFile.name
+            )
 
             // work around a permission issue from adb push
             if (geodeFile.exists()) {
                 geodeFile.delete()
             }
 
-            geodeFile.parentFile?.mkdirs()
-
-            DownloadUtils.extractFileFromZipStream(
-                fileStream,
-                geodeFile.outputStream(),
-                geodeFile.name
-            )
+            outputFile.renameTo(geodeFile)
         } catch (e: Exception) {
             sendError(e)
             return
+        } finally {
+            val tempFileClone = File(tempFilePath)
+            try {
+                if (tempFileClone.exists()) tempFileClone.delete()
+            } catch (_: Exception) { }
         }
 
         downloadLauncherUpdateIfNecessary()
@@ -323,6 +335,15 @@ class ReleaseManager private constructor(
         val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
 
         return File(geodeDirectory, geodeName)
+    }
+
+    private fun getTempFile(): File {
+        val geodeName = LaunchUtils.geodeFilename
+        val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
+
+        val tempFile = File.createTempFile(geodeName, null, geodeDirectory)
+
+        return tempFile
     }
 
     /**
