@@ -620,6 +620,7 @@ object GeodeUtils {
             val device = InputDevice.getDevice(gamepad.mDeviceID) ?: return
             val manager = device.lightsManager
             val request = LightsRequest.Builder()
+
             for (light in manager.lights) {
                 request.addLight(
                     light,

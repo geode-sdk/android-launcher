@@ -714,7 +714,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
     }
 
-    fun getGamepadCount(): Int { return mGamepads.size }
     fun getGamepad(id: Int): Gamepad? {  return mGamepads.getOrNull(id)  }
 
     class Gamepad {
