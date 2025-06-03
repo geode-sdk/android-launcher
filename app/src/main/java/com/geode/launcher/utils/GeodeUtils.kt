@@ -7,6 +7,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.lights.LightState
+import android.hardware.lights.LightsRequest
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -16,6 +18,7 @@ import android.os.VibratorManager
 import android.provider.DocumentsContract
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
+import android.view.InputDevice
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -574,11 +577,59 @@ object GeodeUtils {
 
     // is this the right place to put this
     @JvmStatic
-    fun getControllerState(): GeometryDashActivity.Gamepad? {
+    fun getControllerState(id: Int): GeometryDashActivity.Gamepad? {
         val act = activity.get()
         return if (act is GeometryDashActivity) {
-            act.getGamepad()
+            act.getGamepad(id)
         } else null
+    }
+
+    // supports vibration or lighting
+    @JvmStatic
+    fun supportsControllerExtendedFeatures(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    @JvmStatic
+    fun setControllerVibration(id: Int, duration: Long, left: Int, right: Int) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+        val act = activity.get()
+        if (act is GeometryDashActivity) {
+            val gamepad = act.getGamepad(id) ?: return
+            val device = InputDevice.getDevice(gamepad.mDeviceID) ?: return
+            val manager = device.vibratorManager
+            val ids = manager.vibratorIds
+
+            if (ids.size == 1) {
+                manager.getVibrator(ids[0]).vibrate(VibrationEffect.createOneShot(duration, (left + right) / 2))
+            }
+
+            if (ids.size == 2) {
+                manager.getVibrator(ids[0]).vibrate(VibrationEffect.createOneShot(duration, left))
+                manager.getVibrator(ids[1]).vibrate(VibrationEffect.createOneShot(duration, right))
+            }
+        }
+    }
+
+    @JvmStatic
+    fun setControllerColor(id: Int, color: Int) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+        val act = activity.get()
+        if (act is GeometryDashActivity) {
+            val gamepad = act.getGamepad(id) ?: return
+            val device = InputDevice.getDevice(gamepad.mDeviceID) ?: return
+            val manager = device.lightsManager
+            val request = LightsRequest.Builder()
+            for (light in manager.lights) {
+                request.addLight(
+                    light,
+                    LightState.Builder()
+                        .setColor(color)
+                        .build()
+                )
+            }
+            manager.openSession().requestLights(request.build())
+        }
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)

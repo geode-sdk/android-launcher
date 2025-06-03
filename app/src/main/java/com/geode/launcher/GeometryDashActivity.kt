@@ -11,12 +11,14 @@ import android.os.Bundle
 import android.os.Environment
 import android.text.InputType
 import android.util.Log
+import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.window.OnBackInvokedDispatcher
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
@@ -79,7 +81,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
 
-    private var mGamepad = Gamepad()
+    private var mGamepads = mutableListOf<Gamepad>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -132,6 +134,19 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 mGLSurfaceView?.sendKeyBack()
             }
             mGLSurfaceView?.manualBackEvents = true
+        }
+
+        // basically taken from documentation
+        val deviceIDs = InputDevice.getDeviceIds()
+        for (id in deviceIDs) {
+            val device = InputDevice.getDevice(id) ?: continue
+
+            if (device.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+                || device.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
+                val gamepad = Gamepad()
+                gamepad.mDeviceID = device.id
+                mGamepads.add(gamepad)
+            }
         }
     }
 
@@ -630,33 +645,33 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
     override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
         // what should we do here do we just call orig with null??
-        if (event == null) {
-            return super.dispatchGenericMotionEvent(null)
-        }
+        event ?: return super.dispatchGenericMotionEvent(null)
 
         fun processJoystick(event: MotionEvent, index: Int) {
+            val gamepad = mGamepads.firstOrNull { it.mDeviceID == event.deviceId } ?: return
+
             if (index < 0) {
-                mGamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
-                mGamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
-                mGamepad.mJoyRightX = event.getAxisValue(MotionEvent.AXIS_Z) // wtf is axis z and rz
-                mGamepad.mJoyRightY = -event.getAxisValue(MotionEvent.AXIS_RZ)
-                mGamepad.mTriggerZL = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)
-                mGamepad.mTriggerZR = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)
-                mGamepad.mButtonUp = event.getAxisValue(MotionEvent.AXIS_HAT_Y) < 0.0f
-                mGamepad.mButtonDown = event.getAxisValue(MotionEvent.AXIS_HAT_Y) > 0.0f
-                mGamepad.mButtonLeft = event.getAxisValue(MotionEvent.AXIS_HAT_X) < 0.0f
-                mGamepad.mButtonRight = event.getAxisValue(MotionEvent.AXIS_HAT_X) > 0.0f
+                gamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
+                gamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
+                gamepad.mJoyRightX = event.getAxisValue(MotionEvent.AXIS_Z) // wtf is axis z and rz
+                gamepad.mJoyRightY = -event.getAxisValue(MotionEvent.AXIS_RZ)
+                gamepad.mTriggerZL = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)
+                gamepad.mTriggerZR = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)
+                gamepad.mButtonUp = event.getAxisValue(MotionEvent.AXIS_HAT_Y) < 0.0f
+                gamepad.mButtonDown = event.getAxisValue(MotionEvent.AXIS_HAT_Y) > 0.0f
+                gamepad.mButtonLeft = event.getAxisValue(MotionEvent.AXIS_HAT_X) < 0.0f
+                gamepad.mButtonRight = event.getAxisValue(MotionEvent.AXIS_HAT_X) > 0.0f
             } else {
-                mGamepad.mJoyLeftX = event.getHistoricalAxisValue(MotionEvent.AXIS_X, index)
-                mGamepad.mJoyLeftY = -event.getHistoricalAxisValue(MotionEvent.AXIS_Y, index)
-                mGamepad.mJoyRightX = event.getHistoricalAxisValue(MotionEvent.AXIS_Z, index)
-                mGamepad.mJoyRightY = -event.getHistoricalAxisValue(MotionEvent.AXIS_RZ, index)
-                mGamepad.mTriggerZL = event.getHistoricalAxisValue(MotionEvent.AXIS_LTRIGGER, index)
-                mGamepad.mTriggerZR = event.getHistoricalAxisValue(MotionEvent.AXIS_RTRIGGER, index)
-                mGamepad.mButtonUp = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) < 0.0f
-                mGamepad.mButtonDown = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) > 0.0f
-                mGamepad.mButtonLeft = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) < 0.0f
-                mGamepad.mButtonRight = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) > 0.0f
+                gamepad.mJoyLeftX = event.getHistoricalAxisValue(MotionEvent.AXIS_X, index)
+                gamepad.mJoyLeftY = -event.getHistoricalAxisValue(MotionEvent.AXIS_Y, index)
+                gamepad.mJoyRightX = event.getHistoricalAxisValue(MotionEvent.AXIS_Z, index)
+                gamepad.mJoyRightY = -event.getHistoricalAxisValue(MotionEvent.AXIS_RZ, index)
+                gamepad.mTriggerZL = event.getHistoricalAxisValue(MotionEvent.AXIS_LTRIGGER, index)
+                gamepad.mTriggerZR = event.getHistoricalAxisValue(MotionEvent.AXIS_RTRIGGER, index)
+                gamepad.mButtonUp = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) < 0.0f
+                gamepad.mButtonDown = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) > 0.0f
+                gamepad.mButtonLeft = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) < 0.0f
+                gamepad.mButtonRight = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) > 0.0f
             }
         }
 
@@ -676,29 +691,32 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val gamepad = mGamepads.firstOrNull { it.mDeviceID == event.deviceId } ?: return super.dispatchKeyEvent(event)
+
         return when (event.keyCode) {
-            KeyEvent.KEYCODE_BUTTON_A -> { mGamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_B -> { mGamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_X -> { mGamepad.mButtonX = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_Y -> { mGamepad.mButtonY = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_START -> { mGamepad.mButtonStart = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_SELECT -> { mGamepad.mButtonSelect = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_L1 -> { mGamepad.mButtonL = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_R1 -> { mGamepad.mButtonR = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_A -> { gamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_B -> { gamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_X -> { gamepad.mButtonX = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_Y -> { gamepad.mButtonY = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_START -> { gamepad.mButtonStart = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_SELECT -> { gamepad.mButtonSelect = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_L1 -> { gamepad.mButtonL = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_R1 -> { gamepad.mButtonR = event.action == KeyEvent.ACTION_DOWN; true }
             // zl/zr/d-pad don't actually function as a button on my controllers but android documentation says to keep it in for compatibility
-            KeyEvent.KEYCODE_BUTTON_L2 -> { mGamepad.mTriggerZL = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
-            KeyEvent.KEYCODE_BUTTON_R2 -> { mGamepad.mTriggerZR = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
-            KeyEvent.KEYCODE_DPAD_UP -> { mGamepad.mButtonUp = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_DPAD_DOWN -> { mGamepad.mButtonDown = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_DPAD_LEFT -> { mGamepad.mButtonLeft = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> { mGamepad.mButtonRight = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_THUMBL -> { mGamepad.mButtonJoyLeft = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_THUMBR -> { mGamepad.mButtonJoyRight = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_L2 -> { gamepad.mTriggerZL = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
+            KeyEvent.KEYCODE_BUTTON_R2 -> { gamepad.mTriggerZR = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
+            KeyEvent.KEYCODE_DPAD_UP -> { gamepad.mButtonUp = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_DOWN -> { gamepad.mButtonDown = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_LEFT -> { gamepad.mButtonLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> { gamepad.mButtonRight = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> { gamepad.mButtonJoyLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> { gamepad.mButtonJoyRight = event.action == KeyEvent.ACTION_DOWN; true }
             else -> super.dispatchKeyEvent(event)
         }
     }
 
-    fun getGamepad(): Gamepad {  return mGamepad  }
+    fun getGamepadCount(): Int { return mGamepads.size }
+    fun getGamepad(id: Int): Gamepad? {  return mGamepads.getOrNull(id)  }
 
     class Gamepad {
         var mButtonA = false
@@ -717,10 +735,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         var mButtonRight = false
         var mButtonJoyLeft = false
         var mButtonJoyRight = false
+
         var mJoyLeftX = 0.0f
         var mJoyLeftY = 0.0f
         var mJoyRightX = 0.0f
         var mJoyRightY = 0.0f
+
+        var mDeviceID = 0
     }
 
     class EGLConfigChooser : GLSurfaceView.EGLConfigChooser {
