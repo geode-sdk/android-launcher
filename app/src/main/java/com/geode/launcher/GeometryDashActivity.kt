@@ -67,10 +67,6 @@ fun ratioForPreference(value: String) = when (value) {
     else -> 1.77f
 }
 
-// TODO: https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/controller-input
-// our activity shit
-// dispatchGenericMotionEvent and dispatchKeyEvent
-
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private var mIsRunning = false
