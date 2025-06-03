@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.text.InputType
 import android.util.Log
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -64,6 +67,10 @@ fun ratioForPreference(value: String) = when (value) {
     else -> 1.77f
 }
 
+// TODO: https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/controller-input
+// our activity shit
+// dispatchGenericMotionEvent and dispatchKeyEvent
+
 class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private var mIsRunning = false
@@ -76,6 +83,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
+
+    private var mGamepad = Gamepad()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -622,6 +631,96 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 println("Copied internal mod $fileName")
             }
         }
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
+        // what should we do here do we just call orig with null??
+        if (event == null) {
+            return super.dispatchGenericMotionEvent(null)
+        }
+
+        if (event.source != InputDevice.SOURCE_JOYSTICK || event.action != MotionEvent.ACTION_MOVE) {
+            return super.dispatchGenericMotionEvent(event)
+        }
+
+        fun processJoystick(event: MotionEvent, index: Int) {
+            if (index < 0) {
+                mGamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
+                mGamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
+                mGamepad.mJoyRightX = event.getAxisValue(MotionEvent.AXIS_Z) // wtf is axis z and rz
+                mGamepad.mJoyRightY = -event.getAxisValue(MotionEvent.AXIS_RZ)
+            } else {
+                mGamepad.mJoyLeftX = event.getHistoricalAxisValue(MotionEvent.AXIS_X, index)
+                mGamepad.mJoyLeftY = -event.getHistoricalAxisValue(MotionEvent.AXIS_Y, index)
+                mGamepad.mJoyRightX = event.getHistoricalAxisValue(MotionEvent.AXIS_Z, index)
+                mGamepad.mJoyRightY = -event.getHistoricalAxisValue(MotionEvent.AXIS_RZ, index)
+            }
+        }
+
+        // taken from documentation - android batches joystick events for efficiency
+
+        // Process the movements starting from the
+        // earliest historical position in the batch
+        (0 until event.historySize).forEach { i ->
+            // Process the event at historical position i
+            processJoystick(event, i)
+        }
+
+        // Process the current movement sample in the batch (position -1)
+        processJoystick(event, -1)
+
+        return super.dispatchGenericMotionEvent(event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.source != InputDevice.SOURCE_GAMEPAD) {
+            return super.dispatchKeyEvent(event)
+        }
+
+        return when (event.keyCode) {
+            KeyEvent.KEYCODE_BUTTON_A -> { mGamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_B -> { mGamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_X -> { mGamepad.mButtonX = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_Y -> { mGamepad.mButtonY = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_START -> { mGamepad.mButtonStart = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_SELECT -> { mGamepad.mButtonSelect = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_L1 -> { mGamepad.mButtonL = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_R1 -> { mGamepad.mButtonR = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_L2 -> { mGamepad.mButtonZL = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_R2 -> { mGamepad.mButtonZR = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_UP -> { mGamepad.mButtonUp = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_DOWN -> { mGamepad.mButtonDown = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_LEFT -> { mGamepad.mButtonLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> { mGamepad.mButtonRight = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> { mGamepad.mButtonJoyLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> { mGamepad.mButtonJoyRight = event.action == KeyEvent.ACTION_DOWN; true }
+            else -> super.dispatchKeyEvent(event)
+        }
+    }
+
+    fun getGamepad(): Gamepad {  return mGamepad  }
+
+    class Gamepad {
+        var mButtonA = false
+        var mButtonB = false
+        var mButtonX = false
+        var mButtonY = false
+        var mButtonStart = false
+        var mButtonSelect = false
+        var mButtonL = false
+        var mButtonR = false
+        var mButtonZL = false
+        var mButtonZR = false
+        var mButtonUp = false
+        var mButtonDown = false
+        var mButtonLeft = false
+        var mButtonRight = false
+        var mButtonJoyLeft = false
+        var mButtonJoyRight = false
+        var mJoyLeftX = 0.0f
+        var mJoyLeftY = 0.0f
+        var mJoyRightX = 0.0f
+        var mJoyRightY = 0.0f
     }
 
     class EGLConfigChooser : GLSurfaceView.EGLConfigChooser {

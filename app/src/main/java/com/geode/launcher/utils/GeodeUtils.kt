@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.BuildConfig
+import com.geode.launcher.GeometryDashActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
@@ -569,6 +570,15 @@ object GeodeUtils {
             .setShowTitle(true)
             .build()
             .launchUrl(activity, url.toUri())
+    }
+
+    // is this the right place to put this
+    @JvmStatic
+    fun getControllerState(): GeometryDashActivity.Gamepad? {
+        val act = activity.get()
+        return if (act is GeometryDashActivity) {
+            act.getGamepad()
+        } else null
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
