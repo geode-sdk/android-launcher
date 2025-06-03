@@ -643,7 +643,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
-        // what should we do here do we just call orig with null??
         event ?: return super.dispatchGenericMotionEvent(null)
 
         fun processJoystick(event: MotionEvent, index: Int) {

@@ -575,7 +575,6 @@ object GeodeUtils {
             .launchUrl(activity, url.toUri())
     }
 
-    // is this the right place to put this
     @JvmStatic
     fun getControllerState(id: Int): GeometryDashActivity.Gamepad? {
         val act = activity.get()
@@ -584,7 +583,7 @@ object GeodeUtils {
         } else null
     }
 
-    // supports vibration or lighting
+    // whether this controller supports vibration or lighting
     @JvmStatic
     fun supportsControllerExtendedFeatures(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
