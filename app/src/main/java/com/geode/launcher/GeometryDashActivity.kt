@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.text.InputType
 import android.util.Log
-import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -635,21 +634,29 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return super.dispatchGenericMotionEvent(null)
         }
 
-        if (event.source != InputDevice.SOURCE_JOYSTICK || event.action != MotionEvent.ACTION_MOVE) {
-            return super.dispatchGenericMotionEvent(event)
-        }
-
         fun processJoystick(event: MotionEvent, index: Int) {
             if (index < 0) {
                 mGamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
                 mGamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
                 mGamepad.mJoyRightX = event.getAxisValue(MotionEvent.AXIS_Z) // wtf is axis z and rz
                 mGamepad.mJoyRightY = -event.getAxisValue(MotionEvent.AXIS_RZ)
+                mGamepad.mTriggerZL = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)
+                mGamepad.mTriggerZR = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)
+                mGamepad.mButtonUp = event.getAxisValue(MotionEvent.AXIS_HAT_Y) < 0.0f
+                mGamepad.mButtonDown = event.getAxisValue(MotionEvent.AXIS_HAT_Y) > 0.0f
+                mGamepad.mButtonLeft = event.getAxisValue(MotionEvent.AXIS_HAT_X) < 0.0f
+                mGamepad.mButtonRight = event.getAxisValue(MotionEvent.AXIS_HAT_X) > 0.0f
             } else {
                 mGamepad.mJoyLeftX = event.getHistoricalAxisValue(MotionEvent.AXIS_X, index)
                 mGamepad.mJoyLeftY = -event.getHistoricalAxisValue(MotionEvent.AXIS_Y, index)
                 mGamepad.mJoyRightX = event.getHistoricalAxisValue(MotionEvent.AXIS_Z, index)
                 mGamepad.mJoyRightY = -event.getHistoricalAxisValue(MotionEvent.AXIS_RZ, index)
+                mGamepad.mTriggerZL = event.getHistoricalAxisValue(MotionEvent.AXIS_LTRIGGER, index)
+                mGamepad.mTriggerZR = event.getHistoricalAxisValue(MotionEvent.AXIS_RTRIGGER, index)
+                mGamepad.mButtonUp = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) < 0.0f
+                mGamepad.mButtonDown = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) > 0.0f
+                mGamepad.mButtonLeft = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) < 0.0f
+                mGamepad.mButtonRight = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) > 0.0f
             }
         }
 
@@ -665,14 +672,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // Process the current movement sample in the batch (position -1)
         processJoystick(event, -1)
 
-        return super.dispatchGenericMotionEvent(event)
+        return true;
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.source != InputDevice.SOURCE_GAMEPAD) {
-            return super.dispatchKeyEvent(event)
-        }
-
         return when (event.keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> { mGamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_B -> { mGamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
@@ -682,8 +685,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             KeyEvent.KEYCODE_BUTTON_SELECT -> { mGamepad.mButtonSelect = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_L1 -> { mGamepad.mButtonL = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_R1 -> { mGamepad.mButtonR = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_L2 -> { mGamepad.mButtonZL = event.action == KeyEvent.ACTION_DOWN; true }
-            KeyEvent.KEYCODE_BUTTON_R2 -> { mGamepad.mButtonZR = event.action == KeyEvent.ACTION_DOWN; true }
+            // zl/zr/d-pad don't actually function as a button on my controllers but android documentation says to keep it in for compatibility
+            KeyEvent.KEYCODE_BUTTON_L2 -> { mGamepad.mTriggerZL = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
+            KeyEvent.KEYCODE_BUTTON_R2 -> { mGamepad.mTriggerZR = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
             KeyEvent.KEYCODE_DPAD_UP -> { mGamepad.mButtonUp = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_DPAD_DOWN -> { mGamepad.mButtonDown = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_DPAD_LEFT -> { mGamepad.mButtonLeft = event.action == KeyEvent.ACTION_DOWN; true }
@@ -705,8 +709,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         var mButtonSelect = false
         var mButtonL = false
         var mButtonR = false
-        var mButtonZL = false
-        var mButtonZR = false
+        var mTriggerZL = 0.0f
+        var mTriggerZR = 0.0f
         var mButtonUp = false
         var mButtonDown = false
         var mButtonLeft = false
