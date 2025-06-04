@@ -577,12 +577,19 @@ object GeodeUtils {
             .launchUrl(activity, url.toUri())
     }
 
+    /**
+     * Enables calling of the controller callbacks - they **must** be defined in native functions before this is called
+     * @see setControllerState
+     * @see setControllerConnected
+     */
     @JvmStatic
     fun enableControllerCallbacks() = run {  mControllerCallbacksEnabled = true  }
     @JvmStatic
     fun controllerCallbacksEnabled() = mControllerCallbacksEnabled
 
-    // whether this controller supports vibration or lighting
+    /**
+     * Whether the **device** supports vibration or lighting effects - not necessarily if the controller can or not.
+     */
     @JvmStatic
     fun supportsControllerExtendedFeatures(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
@@ -648,4 +655,5 @@ object GeodeUtils {
      * @see enableControllerCallbacks
      */
     external fun setControllerState(index: Int, gamepad: GeometryDashActivity.Gamepad)
+    external fun setControllerConnected(index: Int, connected: Boolean)
 }

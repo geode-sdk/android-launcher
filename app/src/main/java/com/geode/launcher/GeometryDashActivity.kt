@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.hardware.input.InputManager
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
@@ -68,7 +69,7 @@ fun ratioForPreference(value: String) = when (value) {
     else -> 1.77f
 }
 
-class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
+class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener, InputManager.InputDeviceListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private var mIsRunning = false
     private var mIsOnPause = false
@@ -82,6 +83,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mScreenZoomFit = false
 
     private var mGamepads = mutableListOf<Gamepad>()
+    private lateinit var mInputManager: InputManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -136,18 +138,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             mGLSurfaceView?.manualBackEvents = true
         }
 
-        // basically taken from documentation
-        val deviceIDs = InputDevice.getDeviceIds()
-        for (id in deviceIDs) {
-            val device = InputDevice.getDevice(id) ?: continue
-
-            if (device.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
-                || device.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
-                mGamepads.add(Gamepad().apply {
-                    mDeviceID = device.id
-                })
-            }
-        }
+        mInputManager = getSystemService(INPUT_SERVICE) as InputManager
+        mInputManager.registerInputDeviceListener(this, null)
+        updateControllerDeviceIDs()
     }
 
     private fun createVersionFile() {
@@ -642,6 +635,41 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
         }
     }
+
+    private fun updateControllerDeviceIDs() {
+        mGamepads.clear()
+
+        // basically taken from documentation
+        val deviceIDs = InputDevice.getDeviceIds()
+        for (id in deviceIDs) {
+            val device = InputDevice.getDevice(id) ?: continue
+
+            if (device.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+                || device.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
+                mGamepads.add(Gamepad().apply {
+                    mDeviceID = device.id
+                })
+            }
+        }
+    }
+
+    override fun onInputDeviceAdded(deviceID: Int) {
+        updateControllerDeviceIDs()
+        if (GeodeUtils.controllerCallbacksEnabled()) {
+            val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
+            GeodeUtils.setControllerConnected(index, true)
+        }
+    }
+
+    override fun onInputDeviceRemoved(deviceID: Int) {
+        if (GeodeUtils.controllerCallbacksEnabled()) {
+            val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
+            GeodeUtils.setControllerConnected(index, false)
+        }
+        updateControllerDeviceIDs()
+    }
+
+    override fun onInputDeviceChanged(deviceID: Int) {}
 
     override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
         event ?: return super.dispatchGenericMotionEvent(null)
