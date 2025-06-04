@@ -523,6 +523,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onDestroy() {
         super.onDestroy()
         FMOD.close()
+        mInputManager.unregisterInputDeviceListener(this)
     }
 
     private fun resumeGame() {
