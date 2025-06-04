@@ -9,6 +9,7 @@ import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
 import android.text.InputType
 import android.util.Log
 import android.view.InputDevice
@@ -645,9 +646,11 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
         event ?: return super.dispatchGenericMotionEvent(null)
 
-        fun processJoystick(event: MotionEvent, index: Int) {
-            val gamepad = mGamepads.firstOrNull { it.mDeviceID == event.deviceId } ?: return
+        val index = mGamepads.indexOfFirst { it.mDeviceID == event.deviceId }
+        if (index == -1) return super.dispatchGenericMotionEvent(null)
+        val gamepad = mGamepads[index]
 
+        fun processJoystick(event: MotionEvent, index: Int) {
             if (index < 0) {
                 gamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
                 gamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
@@ -685,13 +688,20 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // Process the current movement sample in the batch (position -1)
         processJoystick(event, -1)
 
+        // call callback in main thread
+        Handler(mainLooper).post {
+            if (GeodeUtils.controllerCallbacksEnabled()) GeodeUtils.setControllerState(index, gamepad)
+        }
+
         return true;
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val gamepad = mGamepads.firstOrNull { it.mDeviceID == event.deviceId } ?: return super.dispatchKeyEvent(event)
+        val index = mGamepads.indexOfFirst { it.mDeviceID == event.deviceId }
+        if (index == -1) return super.dispatchKeyEvent(event)
+        val gamepad = mGamepads[index]
 
-        return when (event.keyCode) {
+        val changed = when (event.keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> { gamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_B -> { gamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_X -> { gamepad.mButtonX = event.action == KeyEvent.ACTION_DOWN; true }
@@ -709,11 +719,22 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             KeyEvent.KEYCODE_DPAD_RIGHT -> { gamepad.mButtonRight = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_THUMBL -> { gamepad.mButtonJoyLeft = event.action == KeyEvent.ACTION_DOWN; true }
             KeyEvent.KEYCODE_BUTTON_THUMBR -> { gamepad.mButtonJoyRight = event.action == KeyEvent.ACTION_DOWN; true }
-            else -> super.dispatchKeyEvent(event)
+            else -> false
         }
+
+        // call callback in main thread
+        if (changed) {
+            Handler(mainLooper).post {
+                if (GeodeUtils.controllerCallbacksEnabled()) GeodeUtils.setControllerState(index, gamepad)
+            }
+
+            return true
+        }
+
+        return super.dispatchKeyEvent(event)
     }
 
-    fun getGamepad(id: Int): Gamepad? {  return mGamepads.getOrNull(id)  }
+    fun getDeviceIDForGamepad(id: Int) = mGamepads.getOrNull(id)?.mDeviceID
 
     data class Gamepad(
         var mButtonA: Boolean = false,

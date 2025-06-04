@@ -56,6 +56,8 @@ object GeodeUtils {
     private var afterRequestPermissions: (() -> Unit)? = null
     private var afterRequestPermissionsFailure: (() -> Unit)? = null
 
+    private var mControllerCallbacksEnabled: Boolean = false
+
     fun setContext(activity: AppCompatActivity) {
         this.activity = WeakReference(activity)
         openFileResultLauncher = activity.registerForActivityResult(GeodeOpenFileActivityResult()) { uri ->
@@ -576,12 +578,9 @@ object GeodeUtils {
     }
 
     @JvmStatic
-    fun getControllerState(id: Int): GeometryDashActivity.Gamepad? {
-        val act = activity.get()
-        return if (act is GeometryDashActivity) {
-            act.getGamepad(id)
-        } else null
-    }
+    fun enableControllerCallbacks() = run {  mControllerCallbacksEnabled = true  }
+    @JvmStatic
+    fun controllerCallbacksEnabled() = mControllerCallbacksEnabled
 
     // whether this controller supports vibration or lighting
     @JvmStatic
@@ -593,8 +592,8 @@ object GeodeUtils {
 
         val act = activity.get()
         if (act is GeometryDashActivity) {
-            val gamepad = act.getGamepad(id) ?: return
-            val device = InputDevice.getDevice(gamepad.mDeviceID) ?: return
+            val gamepad = act.getDeviceIDForGamepad(id) ?: return
+            val device = InputDevice.getDevice(gamepad) ?: return
             val manager = device.vibratorManager
             val ids = manager.vibratorIds
 
@@ -615,8 +614,8 @@ object GeodeUtils {
 
         val act = activity.get()
         if (act is GeometryDashActivity) {
-            val gamepad = act.getGamepad(id) ?: return
-            val device = InputDevice.getDevice(gamepad.mDeviceID) ?: return
+            val gamepad = act.getDeviceIDForGamepad(id) ?: return
+            val device = InputDevice.getDevice(gamepad) ?: return
             val manager = device.lightsManager
             val request = LightsRequest.Builder()
 
@@ -643,4 +642,10 @@ object GeodeUtils {
      * @see reportPlatformCapability
      */
     external fun setNextInputTimestamp(timestamp: Long)
+
+    /**
+     * Gives the state of the current controller at the index, whenever it updates.
+     * @see enableControllerCallbacks
+     */
+    external fun setControllerState(index: Int, gamepad: GeometryDashActivity.Gamepad)
 }
