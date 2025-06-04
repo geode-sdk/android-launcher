@@ -577,13 +577,19 @@ object GeodeUtils {
             .launchUrl(activity, url.toUri())
     }
 
+    @JvmStatic
+    fun getControllerCount(): Int {
+        val act = activity.get()
+        return if (act is GeometryDashActivity) act.getGamepadCount() else 0
+    }
+
     /**
      * Enables calling of the controller callbacks - they **must** be defined in native functions before this is called
      * @see setControllerState
      * @see setControllerConnected
      */
     @JvmStatic
-    fun enableControllerCallbacks() = run {  mControllerCallbacksEnabled = true  }
+    fun enableControllerCallbacks() {  mControllerCallbacksEnabled = true  }
     @JvmStatic
     fun controllerCallbacksEnabled() = mControllerCallbacksEnabled
 
