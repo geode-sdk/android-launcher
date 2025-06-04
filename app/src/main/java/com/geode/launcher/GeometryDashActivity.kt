@@ -657,14 +657,14 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         updateControllerDeviceIDs()
         if (GeodeUtils.controllerCallbacksEnabled()) {
             val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
-            GeodeUtils.setControllerConnected(index, true)
+            Handler(mainLooper).post { GeodeUtils.setControllerConnected(index, true) }
         }
     }
 
     override fun onInputDeviceRemoved(deviceID: Int) {
         if (GeodeUtils.controllerCallbacksEnabled()) {
             val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
-            GeodeUtils.setControllerConnected(index, false)
+            Handler(mainLooper).post { GeodeUtils.setControllerConnected(index, false) }
         }
         updateControllerDeviceIDs()
     }
