@@ -589,7 +589,7 @@ object GeodeUtils {
      * @see setControllerConnected
      */
     @JvmStatic
-    fun enableControllerCallbacks() {  mControllerCallbacksEnabled = true  }
+    fun enableControllerCallbacks() { mControllerCallbacksEnabled = true }
     @JvmStatic
     fun controllerCallbacksEnabled() = mControllerCallbacksEnabled
 
