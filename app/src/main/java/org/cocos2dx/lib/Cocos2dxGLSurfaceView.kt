@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.Surface
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
+import androidx.appcompat.widget.AppCompatEditText
 import com.customRobTop.BaseRobTopActivity
 import com.geode.launcher.utils.GeodeUtils
 
@@ -57,12 +58,11 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     var sendTimestampEvents = false
     var manualBackEvents = false
 
-    var cocos2dxEditText: Cocos2dxEditText? = null
+    var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
             field = value
 
             field?.setOnEditorActionListener(cocos2dxTextInputWrapper)
-            field?.cocos2dxGLSurfaceView = this
             requestFocus()
         }
 
@@ -261,6 +261,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     fun sendKeyBack() {
+        if (cocos2dxEditText?.isFocused == true) {
+            requestFocus()
+        }
+
         if (BaseRobTopActivity.blockBackButton) {
             return
         }
