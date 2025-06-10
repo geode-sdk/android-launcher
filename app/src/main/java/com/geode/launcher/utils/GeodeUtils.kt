@@ -601,12 +601,49 @@ object GeodeUtils {
 
     @JvmStatic
     fun setControllerVibration(id: Int, duration: Long, left: Int, right: Int) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-
         val act = activity.get()
         if (act is GeometryDashActivity) {
-            val gamepad = act.getDeviceIDForGamepad(id) ?: return
-            val device = InputDevice.getDevice(gamepad) ?: return
+            act.getGamepad(id)?.setVibration(duration, left, right)
+        }
+    }
+
+    @JvmStatic
+    fun setControllerColor(id: Int, color: Int) {
+        val act = activity.get()
+        if (act is GeometryDashActivity) {
+            act.getGamepad(id)?.setColor(color)
+        }
+    }
+
+    class Gamepad(deviceID: Int) {
+        var mButtonA: Boolean = false
+        var mButtonB: Boolean = false
+        var mButtonX: Boolean = false
+        var mButtonY: Boolean = false
+        var mButtonStart: Boolean = false
+        var mButtonSelect: Boolean = false
+        var mButtonL: Boolean = false
+        var mButtonR: Boolean = false
+        var mTriggerZL: Float = 0.0f
+        var mTriggerZR: Float = 0.0f
+        var mButtonUp: Boolean = false
+        var mButtonDown: Boolean = false
+        var mButtonLeft: Boolean = false
+        var mButtonRight: Boolean = false
+        var mButtonJoyLeft: Boolean = false
+        var mButtonJoyRight: Boolean = false
+
+        var mJoyLeftX: Float = 0.0f
+        var mJoyLeftY: Float = 0.0f
+        var mJoyRightX: Float = 0.0f
+        var mJoyRightY: Float = 0.0f
+
+        var mDeviceID: Int = deviceID
+
+        fun setVibration(duration: Long, left: Int, right: Int) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+            val device = InputDevice.getDevice(mDeviceID) ?: return
             val manager = device.vibratorManager
             val ids = manager.vibratorIds
 
@@ -619,16 +656,11 @@ object GeodeUtils {
                 manager.getVibrator(ids[1]).vibrate(VibrationEffect.createOneShot(duration, right))
             }
         }
-    }
 
-    @JvmStatic
-    fun setControllerColor(id: Int, color: Int) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        fun setColor(color: Int) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
 
-        val act = activity.get()
-        if (act is GeometryDashActivity) {
-            val gamepad = act.getDeviceIDForGamepad(id) ?: return
-            val device = InputDevice.getDevice(gamepad) ?: return
+            val device = InputDevice.getDevice(mDeviceID) ?: return
             val manager = device.lightsManager
             val request = LightsRequest.Builder()
 
@@ -640,6 +672,7 @@ object GeodeUtils {
                         .build()
                 )
             }
+
             manager.openSession().requestLights(request.build())
         }
     }
@@ -660,6 +693,6 @@ object GeodeUtils {
      * Gives the state of the current controller at the index, whenever it updates.
      * @see enableControllerCallbacks
      */
-    external fun setControllerState(index: Int, gamepad: GeometryDashActivity.Gamepad)
+    external fun setControllerState(index: Int, gamepad: Gamepad)
     external fun setControllerConnected(index: Int, connected: Boolean)
 }

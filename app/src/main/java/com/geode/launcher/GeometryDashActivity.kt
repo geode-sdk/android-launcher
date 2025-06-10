@@ -82,7 +82,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
 
-    private var mGamepads = mutableListOf<Gamepad>()
+    private var mGamepads = mutableListOf<GeodeUtils.Gamepad>()
     private lateinit var mInputManager: InputManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -647,9 +647,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
             if (device.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
                 || device.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
-                mGamepads.add(Gamepad().apply {
-                    mDeviceID = device.id
-                })
+                mGamepads.add(GeodeUtils.Gamepad(device.id))
             }
         }
     }
@@ -763,34 +761,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         return super.dispatchKeyEvent(event)
     }
 
-    fun getDeviceIDForGamepad(id: Int) = mGamepads.getOrNull(id)?.mDeviceID
+    fun getGamepad(id: Int) = mGamepads.getOrNull(id)
     fun getGamepadCount() = mGamepads.size
-
-    data class Gamepad(
-        var mButtonA: Boolean = false,
-        var mButtonB: Boolean = false,
-        var mButtonX: Boolean = false,
-        var mButtonY: Boolean = false,
-        var mButtonStart: Boolean = false,
-        var mButtonSelect: Boolean = false,
-        var mButtonL: Boolean = false,
-        var mButtonR: Boolean = false,
-        var mTriggerZL: Float = 0.0f,
-        var mTriggerZR: Float = 0.0f,
-        var mButtonUp: Boolean = false,
-        var mButtonDown: Boolean = false,
-        var mButtonLeft: Boolean = false,
-        var mButtonRight: Boolean = false,
-        var mButtonJoyLeft: Boolean = false,
-        var mButtonJoyRight: Boolean = false,
-
-        var mJoyLeftX: Float = 0.0f,
-        var mJoyLeftY: Float = 0.0f,
-        var mJoyRightX: Float = 0.0f,
-        var mJoyRightY: Float = 0.0f,
-
-        var mDeviceID: Int = 0
-    )
 
     class EGLConfigChooser : GLSurfaceView.EGLConfigChooser {
         // this comes from EGL14, but is unavailable on EGL10
