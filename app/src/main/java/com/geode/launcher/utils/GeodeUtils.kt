@@ -542,6 +542,7 @@ object GeodeUtils {
 
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
     const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
+    const val CAPABILITY_INTERNAL_CALLBACKS = "internal_callbacks_v1"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 
@@ -582,4 +583,5 @@ object GeodeUtils {
      * @see reportPlatformCapability
      */
     external fun setNextInputTimestamp(timestamp: Long)
+    external fun setNextInputTimestampInternal(timestamp: Long)
 }

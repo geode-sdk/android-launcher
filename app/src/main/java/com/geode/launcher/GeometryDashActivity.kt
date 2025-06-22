@@ -588,6 +588,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 mGLSurfaceView?.sendTimestampEvents = true
                 true
             }
+            GeodeUtils.CAPABILITY_INTERNAL_CALLBACKS -> {
+                mGLSurfaceView?.sendInternalTimestampEvents = true
+                true
+            }
             else -> false
         }
     }
