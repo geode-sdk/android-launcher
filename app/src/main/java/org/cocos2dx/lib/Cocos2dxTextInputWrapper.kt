@@ -52,12 +52,10 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
                 cocos2dxGLSurfaceView.deleteBackward()
             }
             var text = textView.text.toString()
-            if (text.compareTo("") == 0) {
-                text = "\n"
+            if (!text.endsWith('\n')) {
+                text += '\n'
             }
-            if (10 != text[text.length - 1].code) {
-                text += 10.toChar()
-            }
+
             cocos2dxGLSurfaceView.insertText(text)
         }
         if (actionID != 6) {

@@ -19,9 +19,10 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -37,7 +38,6 @@ import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import org.cocos2dx.lib.Cocos2dxEditText
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
 import org.cocos2dx.lib.Cocos2dxRenderer
@@ -131,13 +131,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
                 mGLSurfaceView?.sendKeyBack()
             }
-            mGLSurfaceView?.manualBackEvents = true
-        }
-
+        })
+        mGLSurfaceView?.manualBackEvents = true
+      
         mInputManager = getSystemService(INPUT_SERVICE) as InputManager
         mInputManager.registerInputDeviceListener(this, null)
         updateControllerDeviceIDs()
@@ -418,7 +418,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        val editText = Cocos2dxEditText(this)
+        val editText = AppCompatEditText(this)
         editText.layoutParams = editTextLayoutParams
         frameLayout.addView(editText)
 
@@ -455,7 +455,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             renderer.limitFrameRate(frameRate)
         }
 
-        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         glSurfaceView.cocos2dxEditText = editText
 
         return frameLayout
@@ -599,6 +599,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
             GeodeUtils.CAPABILITY_TIMESTAMP_INPUT -> {
                 mGLSurfaceView?.sendTimestampEvents = true
+                true
+            }
+            GeodeUtils.CAPABILITY_INTERNAL_CALLBACKS -> {
+                mGLSurfaceView?.sendInternalTimestampEvents = true
                 true
             }
             else -> false

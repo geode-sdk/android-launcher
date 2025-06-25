@@ -548,6 +548,7 @@ object GeodeUtils {
 
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
     const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
+    const val CAPABILITY_INTERNAL_CALLBACKS = "internal_callbacks_v1"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 
@@ -688,11 +689,13 @@ object GeodeUtils {
      * @see reportPlatformCapability
      */
     external fun setNextInputTimestamp(timestamp: Long)
-
+    
     /**
      * Gives the state of the current controller at the index, whenever it updates.
      * @see enableControllerCallbacks
      */
     external fun setControllerState(index: Int, gamepad: Gamepad)
     external fun setControllerConnected(index: Int, connected: Boolean)
+    
+    external fun setNextInputTimestampInternal(timestamp: Long)
 }
