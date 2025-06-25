@@ -138,6 +138,11 @@
     <string name="preference_black_background_name">Black background in dark theme</string>
     <string name="preference_force_hrr">Force maximum refresh rate</string>
     <string name="preference_enable_redesign">✨ Enable UI refresh</string>
+    <string name="preference_icon_name">Icon</string>
+    <string name="preference_icon_select">Select icon</string>
+    <string name="preference_icon_default">Default</string>
+    <string name="preference_icon_pride">Pride</string>
+    <string name="preference_icon_trans">Trans</string>
 
     <string name="preference_display_mode_name">Display mode</string>
     <string name="preference_display_mode_select">Select display mode</string>
