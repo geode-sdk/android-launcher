@@ -4,8 +4,10 @@ import android.app.UiModeManager
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -320,6 +322,32 @@ fun SettingsScreen(
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         onClick = { onOpenFileManager(context) }
+                    )
+                    SettingsSelectCard(
+                        title = stringResource(R.string.preference_icon_name),
+                        dialogTitle = stringResource(R.string.preference_icon_select),
+                        preferenceKey = PreferenceUtils.Key.ICON,
+                        options = linkedMapOf(
+                            0 to stringResource(R.string.preference_icon_default),
+                            1 to stringResource(R.string.preference_icon_pride),
+                            2 to stringResource(R.string.preference_icon_trans),
+                        ),
+                        extraSelectBehavior = {
+                            val pm = context.packageManager
+                            val components = mapOf(
+                                0 to ComponentName(context, "${context.packageName}.MainActivity"),
+                                1 to ComponentName(context, "${context.packageName}.PrideIconAlias"),
+                                2 to ComponentName(context, "${context.packageName}.TransIconAlias")
+                            )
+
+                            components.forEach { (key, component) ->
+                                pm.setComponentEnabledSetting(
+                                    component,
+                                    if (it == key) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                    PackageManager.DONT_KILL_APP
+                                )
+                            }
+                        }
                     )
                 }
 
