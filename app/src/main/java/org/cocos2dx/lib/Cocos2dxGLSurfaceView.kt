@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -19,6 +20,8 @@ import com.geode.launcher.utils.GeodeUtils
 
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
+private const val HANDLER_ARG_MULTILINE = 1
+private const val HANDLER_ARG_SINGLELINE = 0
 private const val MS_TO_NS = 1_000_000
 
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
@@ -27,11 +30,22 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         private lateinit var handler: Handler
         private lateinit var cocos2dxTextInputWrapper: Cocos2dxTextInputWrapper
 
+        fun openMultilineIMEKeyboard() {
+            val msg = Message().apply {
+                what = HANDLER_OPEN_IME_KEYBOARD
+                obj = cocos2dxGLSurfaceView.getContentText()
+                arg1 = HANDLER_ARG_MULTILINE
+            }
+            handler.sendMessage(msg)
+        }
+
         @JvmStatic
         fun openIMEKeyboard() {
-            val msg = Message()
-            msg.what = HANDLER_OPEN_IME_KEYBOARD
-            msg.obj = cocos2dxGLSurfaceView.getContentText()
+            val msg = Message().apply {
+                what = HANDLER_OPEN_IME_KEYBOARD
+                obj = cocos2dxGLSurfaceView.getContentText()
+                arg1 = HANDLER_ARG_SINGLELINE
+            }
             handler.sendMessage(msg)
         }
 
@@ -67,6 +81,18 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             requestFocus()
         }
 
+    fun setKeyboardMultiline() {
+        val editText = cocos2dxEditText ?: return
+        editText.inputType = editText.inputType or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        editText.maxLines = Int.MAX_VALUE
+    }
+
+    fun setKeyboardSingleLine() {
+        val editText = cocos2dxEditText ?: return
+        editText.inputType = editText.inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE.inv()
+        editText.maxLines = 1
+    }
+
     fun initView() {
         setEGLContextClientVersion(2)
         isFocusableInTouchMode = true
@@ -78,6 +104,12 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 when (msg.what) {
                     HANDLER_OPEN_IME_KEYBOARD -> {
                         if (cocos2dxEditText?.requestFocus() == true) {
+                            if (msg.arg1 == HANDLER_ARG_MULTILINE) {
+                                setKeyboardMultiline()
+                            } else {
+                                setKeyboardSingleLine()
+                            }
+
                             cocos2dxEditText?.apply {
                                 removeTextChangedListener(
                                     cocos2dxTextInputWrapper

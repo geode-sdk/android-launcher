@@ -5,6 +5,7 @@ import android.text.TextWatcher
 import android.widget.TextView.OnEditorActionListener
 import android.text.Editable
 import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 
@@ -47,6 +48,10 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
 
     override fun onTextChanged(pCharSequence: CharSequence, start: Int, before: Int, count: Int) {}
     override fun onEditorAction(textView: TextView, actionID: Int, keyEvent: KeyEvent?): Boolean {
+        if (actionID != EditorInfo.IME_ACTION_DONE) {
+            return false
+        }
+
         if (cocos2dxGLSurfaceView.cocos2dxEditText == textView && isFullScreenEdit) {
             for (i in originText!!.length downTo 1) {
                 cocos2dxGLSurfaceView.deleteBackward()
@@ -58,9 +63,7 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
 
             cocos2dxGLSurfaceView.insertText(text)
         }
-        if (actionID != 6) {
-            return false
-        }
+
         cocos2dxGLSurfaceView.requestFocus()
         Cocos2dxGLSurfaceView.closeIMEKeyboard()
         return false

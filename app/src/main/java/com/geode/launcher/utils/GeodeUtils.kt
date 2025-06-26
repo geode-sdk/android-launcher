@@ -31,6 +31,7 @@ import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
 import com.geode.launcher.activityresult.GeodeSaveFileActivityResult
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import java.io.File
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
@@ -570,6 +571,11 @@ object GeodeUtils {
             .setShowTitle(true)
             .build()
             .launchUrl(activity, url.toUri())
+    }
+
+    @JvmStatic
+    fun openMultilineIMEKeyboard() {
+        Cocos2dxGLSurfaceView.openMultilineIMEKeyboard()
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
