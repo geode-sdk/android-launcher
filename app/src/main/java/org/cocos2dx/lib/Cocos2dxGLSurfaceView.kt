@@ -177,34 +177,34 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val idDown = motionEvent.getPointerId(0)
                 val xDown = xs[0]
                 val f = ys[0]
-                queueEvent {
+              //  queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionDown(idDown, xDown, f)
-                }
+              //  }
                 true
             }
             MotionEvent.ACTION_UP -> {
                 val idUp = motionEvent.getPointerId(0)
                 val f2 = xs[0]
                 val f3 = ys[0]
-                queueEvent {
+               // queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionUp(idUp, f2, f3)
-                }
+               // }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
-                queueEvent {
+               // queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionMove(ids, xs, ys)
-                }
+               // }
                 true
             }
             MotionEvent.ACTION_CANCEL -> {
-                queueEvent {
+               // queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionCancel(ids, xs, ys)
-                }
+               // }
                 true
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
@@ -212,10 +212,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val idPointerDown = motionEvent.getPointerId(indexPointerDown)
                 val xPointerDown = motionEvent.getX(indexPointerDown)
                 val y = motionEvent.getY(indexPointerDown)
-                queueEvent {
+               // queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
-                }
+               // }
                 true
             }
             MotionEvent.ACTION_POINTER_UP -> {
@@ -223,10 +223,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val idPointerUp = motionEvent.getPointerId(indexPointUp)
                 val xPointerUp = motionEvent.getX(indexPointUp)
                 val y2 = motionEvent.getY(indexPointUp)
-                queueEvent {
+               // queueEvent {
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
-                }
+               // }
                 true
             }
             else -> true
