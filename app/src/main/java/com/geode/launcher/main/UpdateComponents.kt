@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -59,13 +60,14 @@ import com.geode.launcher.utils.PreferenceUtils
 import com.mikepenz.markdown.compose.LocalBulletListHandler
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
-import kotlinx.datetime.toJavaInstant
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import java.io.File
 import java.net.ConnectException
 import java.net.UnknownHostException
 import java.text.DateFormat
 import java.util.Date
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
 
 fun clearDownloadedApks(context: Context) {
     // technically we should be using the activity results but it was too inconsistent for my liking
@@ -135,7 +137,7 @@ fun installLauncherUpdate(context: Context) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun LauncherUpdateInformation(onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -196,9 +198,11 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                             Markdown(
                                 content = nextRelease.release.body.replace("\r", ""),
                                 typography = markdownTypography(
-                                    link = MaterialTheme.typography.bodyLarge.copy(
-                                        textDecoration = TextDecoration.Underline,
-                                        color = MaterialTheme.colorScheme.primary,
+                                    textLink = TextLinkStyles(
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            textDecoration = TextDecoration.Underline,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        ).toSpanStyle()
                                     ),
                                 ),
                                 flavour = GFMFlavourDescriptor(),

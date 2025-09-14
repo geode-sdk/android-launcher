@@ -1,9 +1,9 @@
 package com.geode.launcher.updater
 
 import com.geode.launcher.utils.DownloadUtils.executeCoroutine
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.until
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 import java.net.URL
+import kotlin.time.ExperimentalTime
 
 class ReleaseRepository(private val httpClient: OkHttpClient) {
     companion object {
@@ -49,7 +50,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         return getReleaseByUrl(url)?.let(::DownloadableGitHubLoaderRelease)
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
+    @OptIn(ExperimentalSerializationApi::class, ExperimentalTime::class)
     suspend fun getLatestGeodePreRelease(): DownloadableGitHubLoaderRelease? {
         val releasesUrl = "$GITHUB_API_BASE/repos/geode-sdk/geode/releases?per_page=2"
         val url = URL(releasesUrl)
@@ -104,6 +105,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun generateRateLimitMessage(resetTime: Instant): String {
         val currentTime = Clock.System.now()
         val resetDelay = currentTime.until(resetTime, DateTimeUnit.SECOND)
@@ -113,7 +115,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         return "api ratelimit reached, try again in ${formattedWait}"
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
+    @OptIn(ExperimentalSerializationApi::class, ExperimentalTime::class)
     private suspend fun getReleaseByUrl(url: URL): Release? {
         val request = Request.Builder()
             .url(url)

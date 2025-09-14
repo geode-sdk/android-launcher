@@ -1,11 +1,12 @@
 package com.geode.launcher.updater
 
 import com.geode.launcher.utils.LaunchUtils
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
 
 @Serializable
-data class Asset(
+data class Asset @OptIn(ExperimentalTime::class) constructor(
     val url: String,
     val id: Int,
     val name: String,
@@ -16,7 +17,7 @@ data class Asset(
 )
 
 @Serializable
-data class Release(
+data class Release @OptIn(ExperimentalTime::class) constructor(
     val url: String,
     val id: Int,
     val targetCommitish: String,
@@ -30,7 +31,7 @@ data class Release(
 )
 
 @Serializable
-data class LoaderVersion(
+data class LoaderVersion @OptIn(ExperimentalTime::class) constructor(
     val tag: String,
     val version: String,
     val createdAt: Instant,
@@ -66,6 +67,7 @@ class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadab
         return release.tagName
     }
 
+    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return release.createdAt.epochSeconds
     }
@@ -95,6 +97,7 @@ class DownloadableLauncherRelease(val release: Release) : Downloadable() {
         return release.tagName
     }
 
+    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return release.createdAt.epochSeconds
     }
@@ -132,6 +135,7 @@ class DownloadableLoaderRelease(private val version: LoaderVersion) : Downloadab
         return version.tag
     }
 
+    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return version.createdAt.epochSeconds
     }

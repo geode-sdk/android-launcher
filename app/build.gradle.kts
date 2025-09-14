@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 val composeBOM: String by rootProject.extra
 
 kotlin {
@@ -68,8 +70,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_1_8
+        }
     }
     buildFeatures {
         compose = true
@@ -92,24 +96,24 @@ android {
 
 dependencies {
     implementation (platform("androidx.compose:compose-bom:$composeBOM"))
-    implementation ("androidx.core:core-ktx:1.16.0")
+    implementation ("androidx.core:core-ktx:1.17.0")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation ("androidx.activity:activity-compose:1.10.1")
-    implementation ("androidx.activity:activity-ktx:1.10.1")
-    implementation ("androidx.appcompat:appcompat:1.7.0")
-    implementation ("androidx.documentfile:documentfile:1.0.1")
-    implementation ("com.squareup.okio:okio:3.11.0")
-    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.8.1")
-    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.33.0")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.33.0")
-    implementation ("androidx.browser:browser:1.8.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
+    implementation ("androidx.activity:activity-compose:1.11.0")
+    implementation ("androidx.activity:activity-ktx:1.11.0")
+    implementation ("androidx.appcompat:appcompat:1.7.1")
+    implementation ("androidx.documentfile:documentfile:1.1.0")
+    implementation ("com.squareup.okio:okio:3.16.0")
+    implementation ("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.9.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.37.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.37.0")
+    implementation ("androidx.browser:browser:1.9.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
 }

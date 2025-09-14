@@ -13,7 +13,7 @@ option(USE_TULIPHOOK "enables choice of hooking library" OFF)
 if (USE_TULIPHOOK)
     FetchContent_Declare(TulipHook
         GIT_REPOSITORY https://github.com/geode-sdk/TulipHook.git
-        GIT_TAG 9aa1f95091ebac18c657d57b755f59d00fe6f1f8
+        GIT_TAG v3.1.4
     )
 
     set(TULIP_LINK_SOURCE ON CACHE INTERNAL "")
