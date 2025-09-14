@@ -236,16 +236,16 @@
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application Logs</string>
     <string name="application_logs_no_logs">No logs available.</string>
-    <string name="application_logs_delete">Clear All</string>
+    <string name="application_logs_delete">Clear all</string>
     <string name="application_logs_share">Share</string>
     <string name="application_log_copy_label">Log Message</string>
     <string name="application_logs_more">More</string>
-    <string name="application_logs_export">Save To</string>
-    <string name="application_logs_level">Set Log Level</string>
+    <string name="application_logs_export">Save to</string>
+    <string name="application_logs_level">Set log level</string>
     <string name="application_logs_level_dialog_name">Set minimum log level</string>
     <string name="application_logs_export_completed">Log export complete.</string>
     <string name="application_logs_default_filename" translatable="false">launcher_logcat.txt</string>
-    <string name="application_logs_crash_only">Show Crash Buffer</string>
+    <string name="application_logs_crash_only">Show crash buffer</string>
     <string name="application_logs_crash_only_enabled_alt">Enabled</string>
 
     <string name="title_activity_developer_settings">Developer Settings</string>

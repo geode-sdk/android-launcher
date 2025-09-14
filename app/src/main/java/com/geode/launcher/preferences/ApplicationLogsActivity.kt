@@ -242,21 +242,12 @@ fun ApplicationLogsScreen(
                     actions = {
                         IconButton(onClick = {
                             coroutineScope.launch {
-                                val data = logViewModel.getLogData()
-
-                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                    putExtra(Intent.EXTRA_TEXT, data)
-                                    type = "text/plain"
-                                }
-
-                                val shareIntent = Intent.createChooser(sendIntent, null)
-
-                                context.startActivity(shareIntent)
+                                saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
                             }
                         }, enabled = !logLines.isEmpty()) {
                             Icon(
-                                Icons.Filled.Share,
-                                contentDescription = stringResource(R.string.application_logs_share)
+                                painterResource(R.drawable.icon_save),
+                                contentDescription = stringResource(R.string.application_logs_export),
                             )
                         }
                         IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
@@ -307,23 +298,6 @@ fun ApplicationLogsScreen(
                                     showLogLevelSelect = true
                                     showMoreOptions = false
                                 }
-                            )
-
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        painterResource(R.drawable.icon_save),
-                                        contentDescription = null,
-                                    )
-                                },
-                                text = {
-                                    Text(stringResource(R.string.application_logs_export))
-                                },
-                                onClick = {
-                                    saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
-                                    showMoreOptions = false
-                                },
-                                enabled = !logLines.isEmpty()
                             )
 
                             DropdownMenuItem(
