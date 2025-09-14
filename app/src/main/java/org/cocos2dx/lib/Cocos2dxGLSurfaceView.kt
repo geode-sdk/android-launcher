@@ -2,12 +2,14 @@ package org.cocos2dx.lib
 
 import android.app.Activity
 import android.content.Context
+import android.hardware.input.InputManager
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
+import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.Surface
@@ -16,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatEditText
 import com.customRobTop.BaseRobTopActivity
 import com.geode.launcher.utils.GeodeUtils
+import kotlin.math.abs
 
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
@@ -58,6 +61,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     var sendTimestampEvents = false
     var sendInternalTimestampEvents = false
     var manualBackEvents = false
+    var controllerEventsEnabled = false
+        private set
 
     var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
@@ -159,6 +164,16 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             GeodeUtils.setNextInputTimestampInternal(timestamp)
     }
 
+    private fun sendNextEventDetails(event: KeyEvent) {
+        if (controllerEventsEnabled)
+            GeodeUtils.setNextInputDevice(event.deviceId, event.source)
+    }
+
+    private fun sendNextEventDetails(event: MotionEvent) {
+        if (controllerEventsEnabled)
+            GeodeUtils.setNextInputDevice(event.deviceId, event.source)
+    }
+
     override fun onTouchEvent(motionEvent: MotionEvent): Boolean {
         val pointerNumber = motionEvent.pointerCount
         val ids = IntArray(pointerNumber)
@@ -178,6 +193,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xDown = xs[0]
                 val f = ys[0]
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionDown(idDown, xDown, f)
                 }
@@ -188,6 +204,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val f2 = xs[0]
                 val f3 = ys[0]
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionUp(idUp, f2, f3)
                 }
@@ -195,6 +212,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             }
             MotionEvent.ACTION_MOVE -> {
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionMove(ids, xs, ys)
                 }
@@ -202,6 +220,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             }
             MotionEvent.ACTION_CANCEL -> {
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionCancel(ids, xs, ys)
                 }
@@ -213,6 +232,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerDown = motionEvent.getX(indexPointerDown)
                 val y = motionEvent.getY(indexPointerDown)
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
                 }
@@ -224,6 +244,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerUp = motionEvent.getX(indexPointUp)
                 val y2 = motionEvent.getY(indexPointUp)
                 queueEvent {
+                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
                     cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
                 }
@@ -273,6 +294,9 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         } else {
             val currentTime = System.nanoTime()
             queueEvent {
+                if (controllerEventsEnabled)
+                    GeodeUtils.setNextInputDevice(-1, InputDevice.SOURCE_ANY)
+
                 sendNextEventTimestamp(currentTime)
                 GeodeUtils.nativeKeyDown(KeyEvent.KEYCODE_BACK, 0, false)
             }
@@ -295,6 +319,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
+                    sendNextEventDetails(event)
                     sendNextEventTimestamp(event.eventTime * MS_TO_NS)
                     GeodeUtils.nativeKeyDown(keyCode, event.modifiers, event.repeatCount != 0)
                 }
@@ -318,6 +343,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
+                    sendNextEventDetails(event)
                     sendNextEventTimestamp(event.eventTime * MS_TO_NS)
                     GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
                 }
@@ -325,6 +351,65 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 true
             }
         }
+    }
+
+    // i'm lazy.
+    // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/controller-input
+    private fun getCenteredAxis(
+        event: MotionEvent,
+        device: InputDevice,
+        axis: Int,
+        historyPos: Int
+    ): Float {
+        device.getMotionRange(axis, event.source)?.apply {
+            val value: Float = if (historyPos < 0) {
+                event.getAxisValue(axis)
+            } else {
+                event.getHistoricalAxisValue(axis, historyPos)
+            }
+
+            if (abs(value) > flat) {
+                return value
+            }
+        }
+        return 0.0f
+    }
+
+    private fun getJoystickMotion(event: MotionEvent, axisHorizontal: Int, axisVertical: Int): Pair<FloatArray, FloatArray> {
+        val positionChangesX = ArrayList<Float>()
+        val positionChangesY = ArrayList<Float>()
+
+        val inputDevice = event.device
+
+        (0 until event.historySize).forEach { i ->
+            val x = getCenteredAxis(event, inputDevice, axisHorizontal, i)
+            val y = getCenteredAxis(event, inputDevice, axisVertical, i)
+            positionChangesX.add(x)
+            positionChangesY.add(y)
+        }
+
+        val x = getCenteredAxis(event, inputDevice, axisHorizontal, -1)
+        val y = getCenteredAxis(event, inputDevice, axisVertical, -1)
+        positionChangesX.add(x)
+        positionChangesY.add(y)
+
+        return Pair(positionChangesX.toFloatArray(), positionChangesY.toFloatArray())
+    }
+
+    private fun getJoystickMotion(event: MotionEvent, axis: Int): FloatArray {
+        val positionChanges = ArrayList<Float>()
+
+        val inputDevice = event.device
+
+        (0 until event.historySize).forEach { i ->
+            val x = getCenteredAxis(event, inputDevice, axis, i)
+            positionChanges.add(x)
+        }
+
+        val x = getCenteredAxis(event, inputDevice, axis, -1)
+        positionChanges.add(x)
+
+        return positionChanges.toFloatArray()
     }
 
     override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
@@ -339,8 +424,36 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 event.eventTimeNanos else event.eventTime * MS_TO_NS
 
             queueEvent {
+                sendNextEventDetails(event)
                 sendNextEventTimestamp(timestamp)
                 GeodeUtils.nativeActionScroll(scrollX, scrollY)
+            }
+
+            return true
+        }
+
+        if (controllerEventsEnabled && event?.action == MotionEvent.ACTION_MOVE && event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
+            val (motionLeftX, motionLeftY) = getJoystickMotion(event, MotionEvent.AXIS_X, MotionEvent.AXIS_Y)
+            val (motionRightX, motionRightY) = getJoystickMotion(event, MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ)
+            val (motionDPadX, motionDPadY) = getJoystickMotion(event, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y)
+
+            val motionLTrigger = getJoystickMotion(event, MotionEvent.AXIS_LTRIGGER)
+            val motionRTrigger = getJoystickMotion(event, MotionEvent.AXIS_RTRIGGER)
+
+            // i'm sure this is great for performance
+            val timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                event.eventTimeNanos else event.eventTime * MS_TO_NS
+
+            queueEvent {
+                sendNextEventDetails(event)
+                sendNextEventTimestamp(timestamp)
+
+                GeodeUtils.onJoystickEvent(
+                    motionLeftX, motionLeftY,
+                    motionRightX, motionRightY,
+                    motionDPadX, motionDPadY,
+                    motionLTrigger, motionRTrigger
+                )
             }
 
             return true
@@ -364,5 +477,41 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
     fun deleteBackward() {
         queueEvent { cocos2dxRenderer.handleDeleteBackward() }
+    }
+
+    fun enableControllerEvents() {
+        if (controllerEventsEnabled) {
+            return
+        }
+
+        controllerEventsEnabled = true
+
+        val inputManager = context.getSystemService(Context.INPUT_SERVICE) as InputManager
+        inputManager.registerInputDeviceListener(InputListener, null)
+    }
+
+    fun disableControllerEvents() {
+        if (!controllerEventsEnabled) {
+            return
+        }
+
+        controllerEventsEnabled = true
+
+        val inputManager = context.getSystemService(Context.INPUT_SERVICE) as InputManager
+        inputManager.unregisterInputDeviceListener(InputListener)
+    }
+
+    object InputListener : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) {
+            GeodeUtils.inputDeviceAdded(deviceId)
+        }
+
+        override fun onInputDeviceChanged(deviceId: Int) {
+            GeodeUtils.inputDeviceChanged(deviceId)
+        }
+
+        override fun onInputDeviceRemoved(deviceId: Int) {
+            GeodeUtils.inputDeviceRemoved(deviceId)
+        }
     }
 }

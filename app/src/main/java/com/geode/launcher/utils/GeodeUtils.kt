@@ -7,6 +7,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.lights.Light
+import android.hardware.lights.LightState
+import android.hardware.lights.LightsRequest
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -16,6 +19,7 @@ import android.os.VibratorManager
 import android.provider.DocumentsContract
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
+import android.view.InputDevice
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -547,6 +551,7 @@ object GeodeUtils {
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
     const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
     const val CAPABILITY_INTERNAL_CALLBACKS = "internal_callbacks_v1"
+    const val CAPABILITY_CONTROLLER_DATA = "controller_data"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 
@@ -576,6 +581,188 @@ object GeodeUtils {
             .launchUrl(activity, url.toUri())
     }
 
+    /**
+     * Determines if any gamepad or joystick input devices are connected.
+     * This is useful during start, but tracking inputDeviceAdded events is better during runtime.
+     */
+    @JvmStatic
+    fun controllersConnected(): Int {
+        val deviceIds = InputDevice.getDeviceIds()
+        return deviceIds.count {
+            InputDevice.getDevice(it)?.run {
+                sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD || sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
+            } ?: false
+        }
+    }
+
+    @JvmStatic
+    fun getConnectedDevices(): IntArray = InputDevice.getDeviceIds()
+
+    @JvmStatic
+    fun getDevice(deviceId: Int): InputDevice? = InputDevice.getDevice(deviceId)
+
+    @JvmStatic
+    fun getDeviceBatteryCapacity(deviceId: Int): Float {
+        val device = InputDevice.getDevice(deviceId) ?: return 0.0f
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            device.batteryState.capacity
+        } else {
+            0.0f
+        }
+    }
+
+    @JvmStatic
+    fun deviceHasBattery(deviceId: Int): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return false
+        }
+
+        val device = InputDevice.getDevice(deviceId) ?: return false
+        return device.batteryState.isPresent
+    }
+
+    @JvmStatic
+    fun getDeviceBatteryStatus(deviceId: Int): Int {
+        val device = InputDevice.getDevice(deviceId) ?: return 0
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            device.batteryState.status
+        } else {
+            0
+        }
+    }
+
+    @JvmStatic
+    fun getDeviceLightsCount(deviceId: Int): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return 0
+        }
+
+        val device = InputDevice.getDevice(deviceId) ?: return 0
+        val lightsManager = device.lightsManager
+
+        return lightsManager.lights.size
+    }
+
+    // this is based on paddleboat's api
+    @JvmStatic
+    fun getLightType(deviceId: Int): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return 0
+        }
+
+        val device = InputDevice.getDevice(deviceId) ?: return 0
+        val lightsManager = device.lightsManager
+
+        var flags = 0
+        lightsManager.lights.forEach { light ->
+            if (light.type == Light.LIGHT_TYPE_PLAYER_ID) {
+                flags = flags or 1
+            } else if (light.hasRgbControl()) {
+                flags = flags or 2
+            }
+        }
+
+        return flags
+    }
+
+    /**
+     * Sets the color for a device.
+     * @return false if the given device does not exist or setting lights was otherwise unsuccessful
+     */
+    @JvmStatic
+    fun setDeviceLightColor(deviceId: Int, color: Int, type: Int): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return false
+        }
+
+        val device = InputDevice.getDevice(deviceId) ?: return false
+        val lightsManager = device.lightsManager
+
+        val lights = lightsManager.lights
+        if (lights.isEmpty()) {
+            return false
+        }
+
+        val actedLights = lights.count { light ->
+            val state = LightState.Builder()
+
+            if (light.type == Light.LIGHT_TYPE_PLAYER_ID && (type and 1 == 1)) {
+                state.setPlayerId(color)
+            } else if (light.hasRgbControl() && (type and 2 == 2)) {
+                state.setColor(color)
+            } else {
+                return@count false
+            }
+
+            val request = LightsRequest.Builder()
+                    .addLight(light, state.build())
+                    .build()
+
+            lightsManager.openSession()
+                .requestLights(request)
+
+            true
+        }
+
+        return actedLights > 0
+    }
+
+    @JvmStatic
+    fun getDeviceHapticsCount(deviceId: Int): Int {
+        val device = InputDevice.getDevice(deviceId) ?: return 0
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return if (device.vibrator.hasVibrator()) 1 else 0
+        }
+
+        val vibratorManager = device.vibratorManager
+        val vibratorIds = vibratorManager.vibratorIds
+        return vibratorIds.size
+    }
+
+    private fun performVibration(vibrator: Vibrator?, durationMs: Long, intensity: Int) {
+        vibrator?.apply {
+            if (intensity == 0) {
+                cancel()
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val vibrationEffect = VibrationEffect.createOneShot(durationMs, intensity)
+                    vibrate(vibrationEffect)
+                } else {
+                    vibrate(durationMs)
+                }
+            }
+        }
+    }
+
+    /**
+     * Vibrates a given device. Set motorIdx == -1 to vibrate all available motors on a device.
+     */
+    @JvmStatic
+    fun vibrateDevice(deviceId: Int, durationMs: Long, intensity: Int, motorIdx: Int): Boolean {
+        val device = InputDevice.getDevice(deviceId) ?: return false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = device.vibratorManager
+            val vibratorIds = vibratorManager.vibratorIds
+
+            if (motorIdx == -1) {
+                vibratorIds.forEach {
+                    val vibrator = vibratorManager.getVibrator(it)
+                    performVibration(vibrator, durationMs, intensity)
+                }
+            } else {
+                val deviceId = vibratorIds.getOrNull(motorIdx) ?: return false
+                val vibrator = vibratorManager.getVibrator(deviceId)
+                performVibration(vibrator, durationMs, intensity)
+            }
+        } else {
+            val vibrator = device.vibrator
+            performVibration(vibrator, durationMs, intensity)
+        }
+
+        return true
+    }
+
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
     external fun nativeKeyDown(keyCode: Int, modifiers: Int, isRepeating: Boolean)
     external fun nativeActionScroll(scrollX: Float, scrollY: Float)
@@ -588,4 +775,15 @@ object GeodeUtils {
      */
     external fun setNextInputTimestamp(timestamp: Long)
     external fun setNextInputTimestampInternal(timestamp: Long)
+
+    external fun setNextInputDevice(deviceId: Int, eventSource: Int)
+    external fun inputDeviceAdded(deviceId: Int)
+    external fun inputDeviceChanged(deviceId: Int)
+    external fun inputDeviceRemoved(deviceId: Int)
+
+    /**
+     * Sends all batched joystick events. The final position in each array represents the current position of that axis.
+     * Have fun!
+     */
+    external fun onJoystickEvent(leftX: FloatArray, leftY: FloatArray, rightX: FloatArray, rightY: FloatArray, hatX: FloatArray, hatY: FloatArray, leftTrigger: FloatArray, rightTrigger: FloatArray)
 }
