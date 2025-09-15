@@ -25,23 +25,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -236,6 +236,31 @@ fun onOpenDeveloperOptions(context: Context) {
     context.startActivity(launchIntent)
 }
 
+@Composable
+fun DeveloperModeDialog(onDismiss: () -> Unit, onEnable: () -> Unit) {
+    AlertDialog(
+        icon = {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+            )
+        },
+        title = { Text(stringResource(R.string.preference_developer_options_dialog_title)) },
+        text = { Text(stringResource(R.string.preference_developer_mode_about)) },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onEnable) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        onDismissRequest = onDismiss
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -426,6 +451,8 @@ fun SettingsScreen(
                     }
                 }
 
+                val developerModeEnabled by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
+
                 OptionsGroup(stringResource(R.string.preference_category_developer)) {
                     OptionsButton(
                         title = stringResource(R.string.preferences_view_logs),
@@ -434,13 +461,17 @@ fun SettingsScreen(
                         },
                         onClick = { onOpenLogs(context) }
                     )
-                    OptionsButton(
-                        title = stringResource(R.string.preference_open_developer_options),
-                        icon = {
-                            Icon(painterResource(R.drawable.icon_data_object), contentDescription = null)
-                        },
-                        onClick = { onOpenDeveloperOptions(context) }
-                    )
+
+                    if (developerModeEnabled) {
+                        OptionsButton(
+                            title = stringResource(R.string.preference_open_developer_options),
+                            icon = {
+                                Icon(painterResource(R.drawable.icon_data_object), contentDescription = null)
+                            },
+                            onClick = { onOpenDeveloperOptions(context) }
+                        )
+                    }
+
                     OptionsButton(
                         title = context.getString(R.string.preferences_copy_external_button),
                         description = LaunchUtils.getBaseDirectory(context).path,
@@ -449,29 +480,40 @@ fun SettingsScreen(
                 }
 
                 OptionsGroup(stringResource(R.string.preference_category_about)) {
-                    val clipboard = LocalClipboardManager.current
+                    var launcherButtonTapped by remember { mutableIntStateOf(0) }
+                    var showDeveloperDialog by remember { mutableStateOf(false) }
 
                     OptionsButton(
                         stringResource(R.string.preference_launcher_version_name),
                         stringResource(R.string.preference_launcher_version_description, BuildConfig.VERSION_NAME),
                         displayInline = true
                     ) {
-                        clipboard.setText(AnnotatedString(context.getString(
-                            R.string.preference_launcher_version,
-                            BuildConfig.VERSION_NAME
-                        )))
+                        launcherButtonTapped += 1
+
+                        if (launcherButtonTapped >= 7 && !developerModeEnabled) {
+                            showDeveloperDialog = true
+                            launcherButtonTapped = 0
+                        }
                     }
 
-                    OptionsButton(
+                    val context = LocalContext.current
+                    if (showDeveloperDialog) {
+                        DeveloperModeDialog(
+                            onDismiss = {
+                                showDeveloperDialog = false
+                            },
+                            onEnable = {
+                                PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.DEVELOPER_MODE, true)
+                                showDeveloperDialog = false
+                            }
+                        )
+                    }
+
+                    OptionsLabel(
                         stringResource(R.string.preference_loader_version_name),
                         stringResource(R.string.preference_loader_version_description, currentRelease ?: "unknown"),
                         displayInline = true
-                    ) {
-                        clipboard.setText(AnnotatedString(context.getString(
-                            R.string.preference_loader_version,
-                            currentRelease ?: "unknown"
-                        )))
-                    }
+                    )
 
                     val gameInstalled = remember {
                         GamePackageUtils.isGameInstalled(context.packageManager)
@@ -490,29 +532,17 @@ fun SettingsScreen(
                             })
                         }
 
-                        OptionsButton(
+                        OptionsLabel(
                             stringResource(R.string.preference_game_version_name),
                             stringResource(R.string.preference_game_version_description, gameVersion, gameSource),
                             displayInline = true
-                        ) {
-                            clipboard.setText(AnnotatedString(context.getString(
-                                R.string.preference_game_version,
-                                gameVersion,
-                                gameSource
-                            )))
-                        }
+                        )
 
-                        OptionsButton(
+                        OptionsLabel(
                             stringResource(R.string.preference_architecture_name),
                             stringResource(R.string.preference_architecture_description, Build.MODEL, LaunchUtils.applicationArchitecture),
                             displayInline = true
-                        ) {
-                            clipboard.setText(AnnotatedString(context.getString(
-                                R.string.preference_architecture,
-                                Build.MODEL,
-                                LaunchUtils.applicationArchitecture
-                            )))
-                        }
+                        )
                     }
                 }
             }

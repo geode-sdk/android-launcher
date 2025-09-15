@@ -52,7 +52,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -878,6 +877,24 @@ fun OptionsButton(title: String, description: String? = null, icon: (@Composable
         },
         modifier = Modifier
             .clickable(onClick = onClick, role = Role.Button),
+        wrapContent = true
+    ) {
+        if (displayInline && description != null) {
+            Text(description, textAlign = TextAlign.End)
+        }
+    }
+}
+
+@Composable
+fun OptionsLabel(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, displayInline: Boolean = false) {
+    OptionsCard(
+        title = {
+            OptionsTitle(
+                title = title,
+                description = description.takeIf { !displayInline },
+                icon = icon
+            )
+        },
         wrapContent = true
     ) {
         if (displayInline && description != null) {

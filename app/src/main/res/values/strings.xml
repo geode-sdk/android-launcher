@@ -219,6 +219,7 @@
     <string name="preference_text_clear">Clear</string>
 
     <string name="preference_open_developer_options">Open developer options</string>
+    <string name="preference_developer_options_dialog_title">Enable developer options?</string>
 
     <string name="preference_profiles">Profiles</string>
     <string name="preference_profiles_create">Create profile</string>
