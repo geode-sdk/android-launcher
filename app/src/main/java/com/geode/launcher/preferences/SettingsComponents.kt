@@ -3,6 +3,7 @@ package com.geode.launcher.preferences
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,10 +47,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,9 +90,15 @@ fun OptionsGroup(title: String, content: @Composable () -> Unit) {
         Text(
             title,
             style = Typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
         )
-        content()
+
+        Column(modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .clip(RoundedCornerShape(16.dp))
+        ) {
+            content()
+        }
     }
 }
 
@@ -932,6 +941,9 @@ fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, tit
     Row(
         modifier
             .fillMaxWidth()
+            .padding(vertical = 1.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .defaultMinSize(minHeight = 64.dp)
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,

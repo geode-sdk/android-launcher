@@ -161,16 +161,6 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                             2 to stringResource(R.string.preference_release_channel_nightly),
                         )
                     )
-
-                    ElevatedCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                        LabelledText(
-                            label = stringResource(R.string.preference_developer_update_notice),
-                            icon = {
-                                Icon(Icons.Filled.Info, null)
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_testing)) {
