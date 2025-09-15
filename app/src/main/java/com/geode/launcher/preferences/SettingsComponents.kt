@@ -85,13 +85,15 @@ fun getSetting(context: Context, preferenceKey: PreferenceUtils.Key): Boolean {
 }
 
 @Composable
-fun OptionsGroup(title: String, content: @Composable () -> Unit) {
+fun OptionsGroup(title: String? = null, content: @Composable () -> Unit) {
     Column {
-        Text(
-            title,
-            style = Typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
-        )
+        if (title != null) {
+            Text(
+                title,
+                style = Typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
+        }
 
         Column(modifier = Modifier
             .padding(horizontal = 12.dp)
@@ -939,11 +941,12 @@ fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: Stri
 @Composable
 fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, title: @Composable () -> Unit, content: @Composable () -> Unit) {
     Row(
-        modifier
+        Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp)
             .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .then(modifier)
+            .background(MaterialTheme.colorScheme.background)
             .defaultMinSize(minHeight = 64.dp)
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,

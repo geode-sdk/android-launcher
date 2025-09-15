@@ -74,6 +74,7 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             Column {
                 TopAppBar(
@@ -93,6 +94,7 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         )
                     },
                     scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
                 )
             }
         }
@@ -107,16 +109,12 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
 
             val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
 
-            SettingsCard(
-                title = stringResource(R.string.preference_developer_mode),
-                preferenceKey = PreferenceUtils.Key.DEVELOPER_MODE,
-            )
-
-            InlineText(
-                stringResource(R.string.preference_developer_mode_about)
-            )
-            
-            HorizontalDivider()
+            OptionsGroup {
+                SettingsCard(
+                    title = stringResource(R.string.preference_developer_mode),
+                    preferenceKey = PreferenceUtils.Key.DEVELOPER_MODE,
+                )
+            }
 
             if (developerMode) {
                 OptionsGroup(title = stringResource(R.string.preference_category_gameplay)) {

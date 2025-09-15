@@ -261,7 +261,7 @@ fun SettingsScreen(
 
     // fix theme transition by giving it the exact same animation as the top bar
     val containerColor by animateColorAsState(
-        targetValue = MaterialTheme.colorScheme.background,
+        targetValue = MaterialTheme.colorScheme.surfaceContainerLow,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "background color"
     )
@@ -291,6 +291,7 @@ fun SettingsScreen(
                     )
                 },
                 scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.surfaceContainerLow),
             )
         },
         content = { innerPadding ->
