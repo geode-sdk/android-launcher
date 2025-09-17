@@ -345,6 +345,12 @@ fun SettingsScreen(
                     )
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.icon_folder),
+                                contentDescription = null
+                            )
+                        },
                         onClick = { onOpenFileManager(context) }
                     )
                 }
