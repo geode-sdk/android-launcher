@@ -57,13 +57,15 @@
             android:label="@string/title_activity_application_logs"
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
+            android:name=".preferences.CrashLogsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_crash_logs"
+            android:theme="@style/Theme.GeodeLauncher" />
+        <activity
             android:name=".preferences.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings"
             android:theme="@style/Theme.GeodeLauncher">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
         </activity>
         <activity
             android:name=".GeometryDashActivity"
