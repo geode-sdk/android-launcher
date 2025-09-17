@@ -51,8 +51,10 @@ import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
+import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import java.net.ConnectException
@@ -327,12 +329,21 @@ fun SettingsScreen(
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val currentIcon by PreferenceUtils.useStringPreference(PreferenceUtils.Key.SELECTED_ICON)
+                        val iconName = remember(currentIcon) {
+                            IconUtils.getIconDetails(
+                                ApplicationIcon.fromId(currentIcon ?: "default")
+                            ).nameId
+                        }
+
                         OptionsButton(
                             title = stringResource(R.string.preference_set_application_icon),
                             onClick = {
                                 val launchIntent = Intent(context, ApplicationIconActivity::class.java)
                                 context.startActivity(launchIntent)
-                            }
+                            },
+                            description = stringResource(iconName),
+                            displayInline = true,
                         )
                     }
 
