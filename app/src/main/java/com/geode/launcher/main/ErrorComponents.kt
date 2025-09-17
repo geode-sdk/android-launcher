@@ -248,13 +248,18 @@ fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.launcher_error_export_crash))
             }
 
-            FilledTonalButton(onClick = { onShowLogs(context) }) {
-                Icon(
-                    painterResource(R.drawable.icon_description),
-                    contentDescription = null
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.launcher_error_view_logs))
+            val developerSettingsEnabled = remember {
+                PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.DEVELOPER_MODE)
+            }
+            if (developerSettingsEnabled) {
+                FilledTonalButton(onClick = { onShowLogs(context) }) {
+                    Icon(
+                        painterResource(R.drawable.icon_description),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.launcher_error_view_logs))
+                }
             }
         }
     }
