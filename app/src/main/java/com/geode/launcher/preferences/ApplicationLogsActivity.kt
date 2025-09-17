@@ -70,6 +70,7 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.launch
 
@@ -167,12 +168,12 @@ fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
             "[${logLine.priority.toChar()}] ${logLine.formattedTime}",
             style = Typography.labelSmall,
             color = getLogColor(logLine.priority),
-            fontFamily = FontFamily.Monospace
+            fontFamily = robotoMonoFamily
         )
 
         Text(
             "[${logLine.tag}]: ${logLine.messageTrimmed}",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = robotoMonoFamily,
             style = Typography.bodyMedium
         )
     }

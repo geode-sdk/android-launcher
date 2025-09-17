@@ -34,6 +34,7 @@ import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.ui.theme.launcherTitleStyle
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -164,7 +165,7 @@ fun MainScreen(
             )
             Text(
                 context.getString(R.string.launcher_title),
-                fontSize = 32.sp,
+                style = launcherTitleStyle,
                 modifier = Modifier.padding(12.dp)
             )
 

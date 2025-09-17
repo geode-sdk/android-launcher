@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -68,6 +70,7 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import java.io.File
@@ -130,15 +133,25 @@ fun shareCrash(context: Context, filename: String) {
 @OptIn(ExperimentalTime::class)
 @Composable
 fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Modifier = Modifier) {
-    Row(modifier = Modifier
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 1.dp, horizontal = 8.dp)
+        .height(64.dp)
         .then(modifier)
         .background(MaterialTheme.colorScheme.surfaceContainerLow)
         .padding(vertical = 8.dp, horizontal = 8.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.offset(x = 4.dp)) {
-            Text(crashDump.filename, fontFamily = FontFamily.Monospace)
+        Column(
+            verticalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxHeight().offset(x = 12.dp).weight(0.7f)
+        ) {
+            Text(
+                crashDump.filename,
+                fontFamily = robotoMonoFamily,
+                style = MaterialTheme.typography.titleSmall,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
 
             val formattedLastModified = remember {
                 DateFormat.getDateTimeInstance()
@@ -150,9 +163,7 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
             Text(formattedLastModified, style = MaterialTheme.typography.labelMedium)
         }
 
-        Spacer(Modifier.weight(1.0f))
-
-        Row {
+        Row(modifier = Modifier.weight(0.3f), horizontalArrangement = Arrangement.End) {
             val context = LocalContext.current
             IconButton(onClick = {
                 shareCrash(context, crashDump.filename)

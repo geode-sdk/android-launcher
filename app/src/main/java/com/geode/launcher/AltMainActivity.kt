@@ -53,11 +53,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.main.*
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.ui.theme.launcherTitleStyle
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
@@ -415,7 +417,8 @@ fun GeodeLogo(modifier: Modifier = Modifier) {
         )
         Text(
             stringResource(R.string.launcher_title),
-            style = MaterialTheme.typography.displayMedium,
+            style = launcherTitleStyle,
+            fontSize = 52.sp,
             modifier = Modifier.padding(12.dp)
         )
     }
