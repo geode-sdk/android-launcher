@@ -148,14 +148,13 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         SCREEN_ZOOM,
         SCREEN_ZOOM_FIT,
         LIMIT_FRAME_RATE,
-        USE_INDEX_API,
+        DISABLE_USER_THEME
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
             Key.DEVELOPER_MODE -> BuildConfig.DEBUG
-            Key.USE_INDEX_API -> true
             else -> false
         }
     }
@@ -197,7 +196,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.SCREEN_ZOOM -> "PreferenceScreenZoom"
             Key.SCREEN_ZOOM_FIT -> "PreferenceScreenZoomFit"
             Key.LIMIT_FRAME_RATE -> "PreferenceLimitFrameRate"
-            Key.USE_INDEX_API -> "PreferenceUseIndexApi"
+            Key.DISABLE_USER_THEME -> "PreferenceDisableUserTheme"
         }
     }
 

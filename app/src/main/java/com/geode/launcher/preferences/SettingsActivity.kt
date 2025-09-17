@@ -69,9 +69,10 @@ class SettingsActivity : ComponentActivity() {
             val theme = Theme.fromInt(themeOption)
 
             val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
+            val dynamicColorOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DISABLE_USER_THEME)
 
             CompositionLocalProvider(LocalTheme provides theme) {
-                GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
+                GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption, dynamicColor = !dynamicColorOption) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
@@ -317,6 +318,14 @@ fun SettingsScreen(
                         title = stringResource(R.string.preference_black_background_name),
                         preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
                     )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        SettingsCard(
+                            title = stringResource(R.string.preference_disable_styles),
+                            preferenceKey = PreferenceUtils.Key.DISABLE_USER_THEME
+                        )
+                    }
+
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         icon = {
