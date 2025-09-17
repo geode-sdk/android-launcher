@@ -326,6 +326,16 @@ fun SettingsScreen(
                         )
                     }
 
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        OptionsButton(
+                            title = stringResource(R.string.preference_set_application_icon),
+                            onClick = {
+                                val launchIntent = Intent(context, ApplicationIconActivity::class.java)
+                                context.startActivity(launchIntent)
+                            }
+                        )
+                    }
+
                     OptionsButton(
                         title = stringResource(R.string.preferences_open_file_manager),
                         icon = {

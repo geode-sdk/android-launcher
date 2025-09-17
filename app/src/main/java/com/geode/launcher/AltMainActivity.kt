@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -410,16 +411,18 @@ fun GeodeLogo(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.geode_logo),
+        Icon(
+            painter = painterResource(id = R.drawable.geode_monochrome),
             contentDescription = null,
-            modifier = Modifier.size(76.dp, 76.dp)
+            modifier = Modifier
+                .size(64.dp, 64.dp),
         )
         Text(
             stringResource(R.string.launcher_title),
             style = launcherTitleStyle,
-            fontSize = 52.sp,
-            modifier = Modifier.padding(12.dp)
+            fontSize = 64.sp,
+            modifier = Modifier
+                .padding(12.dp)
         )
     }
 }

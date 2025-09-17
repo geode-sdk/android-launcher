@@ -138,6 +138,7 @@
     <string name="preference_theme_dark">Dark</string>
     <string name="preference_black_background_name">Black background in dark theme</string>
     <string name="preference_disable_styles">Disable custom styling</string>
+    <string name="preference_set_application_icon">Change application icon</string>
     <string name="preference_force_hrr">Force maximum refresh rate</string>
     <string name="preference_enable_redesign">✨ Enable UI refresh</string>
 
@@ -265,4 +266,14 @@
     <string name="title_activity_crash_logs">Crash dumps</string>
     <string name="application_crashes_no_dumps">No crash dumps available.</string>
     <string name="application_crashes_delete_one">Delete</string>
+
+    <!-- ApplicationIconActivity strings -->
+    <string name="title_activity_application_icon">Application icons</string>
+    <string name="application_icon_set_failed">Failed to change icon.</string>
+    <string name="application_icon_default">Default</string>
+    <string name="application_icon_geode">Geode</string>
+    <string name="application_icon_pride">Pride</string>
+    <string name="application_icon_trans">Transgender</string>
+
+
 </resources>

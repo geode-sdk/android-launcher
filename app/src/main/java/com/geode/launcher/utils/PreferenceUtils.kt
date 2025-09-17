@@ -148,7 +148,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         SCREEN_ZOOM,
         SCREEN_ZOOM_FIT,
         LIMIT_FRAME_RATE,
-        DISABLE_USER_THEME
+        DISABLE_USER_THEME,
+        SELECTED_ICON
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -168,6 +169,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForStringKey(key: Key) = when (key) {
         Key.CUSTOM_ASPECT_RATIO -> "16_9"
+        Key.SELECTED_ICON -> "default"
         else -> null
     }
 
@@ -197,6 +199,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.SCREEN_ZOOM_FIT -> "PreferenceScreenZoomFit"
             Key.LIMIT_FRAME_RATE -> "PreferenceLimitFrameRate"
             Key.DISABLE_USER_THEME -> "PreferenceDisableUserTheme"
+            Key.SELECTED_ICON -> "PreferenceSelectedIcon"
         }
     }
 
