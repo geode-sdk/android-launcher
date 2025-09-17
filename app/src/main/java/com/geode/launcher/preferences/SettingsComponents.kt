@@ -963,7 +963,7 @@ fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, tit
             .padding(vertical = 1.dp)
             .clip(RoundedCornerShape(4.dp))
             .then(modifier)
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .defaultMinSize(minHeight = 64.dp)
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,
