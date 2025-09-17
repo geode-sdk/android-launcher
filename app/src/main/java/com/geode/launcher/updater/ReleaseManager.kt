@@ -122,22 +122,12 @@ class ReleaseManager private constructor(
         val gameVersion = GamePackageUtils.getGameVersionCode(applicationContext.packageManager)
         val preferences = PreferenceUtils.get(applicationContext)
 
-        if (preferences.getBoolean(PreferenceUtils.Key.USE_INDEX_API)) {
-            val targetTag = preferences.getInt(PreferenceUtils.Key.RELEASE_CHANNEL_TAG)
+        val targetTag = preferences.getInt(PreferenceUtils.Key.RELEASE_CHANNEL_TAG)
 
-            return when (targetTag) {
-                2 -> releaseRepository.getReleaseByTag("nightly")
-                1 -> releaseRepository.getLatestIndexRelease(gameVersion, true)
-                else -> releaseRepository.getLatestIndexRelease(gameVersion, false)
-            }
-        } else {
-            val targetTag = getBestReleaseForGameVersion(gameVersion) ?: return null
-
-            return when (targetTag) {
-                TAG_LATEST -> releaseRepository.getLatestGeodeRelease()
-                TAG_BETA -> releaseRepository.getLatestGeodePreRelease()
-                else -> releaseRepository.getReleaseByTag(targetTag)
-            }
+        return when (targetTag) {
+            2 -> releaseRepository.getReleaseByTag("nightly")
+            1 -> releaseRepository.getLatestIndexRelease(gameVersion, true)
+            else -> releaseRepository.getLatestIndexRelease(gameVersion, false)
         }
     }
 
