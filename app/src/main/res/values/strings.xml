@@ -12,7 +12,7 @@
     <string name="launcher_logo_alt">geode logo</string>
     <string name="launcher_launch_icon_alt">play icon</string>
     <string name="launcher_download_icon_alt">download icon</string>
-    <string name="launcher_download_game">Download Game</string>
+    <string name="launcher_download_game">Download game</string>
     <string name="launcher_download_32bit">Download the 32-bit version of launcher.</string>
     <string name="launcher_download_universal">Download the non 32-bit version of launcher.</string>
     <string name="launcher_settings_icon_alt">settings icon</string>
@@ -120,7 +120,7 @@
     <string name="title_activity_settings">Settings</string>
     <string name="back_icon_alt">back</string>
 
-    <string name="export_folder_tag">Launcher External Folder</string>
+    <string name="export_folder_tag">Launcher external folder</string>
     <string name="text_copied">Copied to clipboard.</string>
 
     <string name="preference_category_testing">General</string>
@@ -237,11 +237,11 @@
     <string name="preference_profiles_delete_undo_alt">Undo</string>
 
     <!-- ApplicationLogsActivity strings -->
-    <string name="title_activity_application_logs">Application Logs</string>
+    <string name="title_activity_application_logs">Application logs</string>
     <string name="application_logs_no_logs">No logs available.</string>
     <string name="application_logs_delete">Clear all</string>
     <string name="application_logs_share">Share</string>
-    <string name="application_log_copy_label">Log Message</string>
+    <string name="application_log_copy_label">Log message</string>
     <string name="application_logs_more">More</string>
     <string name="application_logs_export">Save to</string>
     <string name="application_logs_level">Set log level</string>
@@ -252,9 +252,9 @@
     <string name="application_logs_crash_only_enabled_alt">Enabled</string>
 
     <!-- DeveloperSettingsActivity strings -->
-    <string name="title_activity_developer_settings">Developer Settings</string>
+    <string name="title_activity_developer_settings">Developer options</string>
     <string name="preference_developer_mode">Enable developer options</string>
-    <string name="preference_developer_mode_about">Developer mode enables some options that may make the game unstable. Please do not modify them unless you know what you\'re doing!\nThese options may change behavior, or be removed entirely in future updates.</string>
+    <string name="preference_developer_mode_about">Developer mode allows changing options that may make the game unstable. Please do not modify them unless you know what you\'re doing!\nThese options may change behavior, or be removed entirely in future updates.</string>
     <string name="preference_developer_update_notice">Enabling developer mode automatically disallows the updater from overwriting custom loader builds.</string>
 
     <string name="preference_override_exceptions_name">Custom exceptions fix symbols</string>
@@ -262,7 +262,7 @@
     <string name="preference_use_index_update_api">Use index release API</string>
 
     <!-- CrashLogsActivity strings -->
-    <string name="title_activity_crash_logs">Crash Dumps</string>
+    <string name="title_activity_crash_logs">Crash dumps</string>
     <string name="application_crashes_no_dumps">No crash dumps available.</string>
     <string name="application_crashes_delete_one">Delete</string>
 </resources>
