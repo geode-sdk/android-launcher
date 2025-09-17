@@ -129,6 +129,7 @@
     <string name="preferences_copy_external_button">Copy external files directory</string>
     <string name="preferences_open_file_manager">Open file manager</string>
     <string name="preferences_view_logs">View application logs</string>
+    <string name="preferences_view_crashes">View crash dumps</string>
 
     <string name="preference_theme_name">Theme</string>
     <string name="preference_theme_select">Select theme</string>
@@ -250,6 +251,7 @@
     <string name="application_logs_crash_only">Show crash buffer</string>
     <string name="application_logs_crash_only_enabled_alt">Enabled</string>
 
+    <!-- DeveloperSettingsActivity strings -->
     <string name="title_activity_developer_settings">Developer Settings</string>
     <string name="preference_developer_mode">Enable developer options</string>
     <string name="preference_developer_mode_about">Developer mode enables some options that may make the game unstable. Please do not modify them unless you know what you\'re doing!\nThese options may change behavior, or be removed entirely in future updates.</string>
@@ -258,4 +260,9 @@
     <string name="preference_override_exceptions_name">Custom exceptions fix symbols</string>
     <string name="preference_override_exceptions_description">Uses exception_symbols.txt to patch</string>
     <string name="preference_use_index_update_api">Use index release API</string>
+
+    <!-- CrashLogsActivity strings -->
+    <string name="title_activity_crash_logs">Crash Dumps</string>
+    <string name="application_crashes_no_dumps">No crash dumps available.</string>
+    <string name="application_crashes_delete_one">Delete</string>
 </resources>

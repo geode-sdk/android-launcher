@@ -443,18 +443,32 @@ fun SettingsScreen(
                 val developerModeEnabled by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
 
                 OptionsGroup(stringResource(R.string.preference_category_developer)) {
-                        if (developerModeEnabled) {
-                            OptionsButton(
-                                title = stringResource(R.string.preference_open_developer_options),
-                                icon = {
-                                    Icon(
-                                        painterResource(R.drawable.icon_data_object),
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = { onOpenDeveloperOptions(context) }
+                    if (developerModeEnabled) {
+                        OptionsButton(
+                            title = stringResource(R.string.preference_open_developer_options),
+                            icon = {
+                                Icon(
+                                    painterResource(R.drawable.icon_data_object),
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = { onOpenDeveloperOptions(context) }
+                        )
+                    }
+
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_crashes),
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.icon_bug_report),
+                                contentDescription = null
                             )
+                        },
+                        onClick = {
+                            val launchIntent = Intent(context, CrashLogsActivity::class.java)
+                            context.startActivity(launchIntent)
                         }
+                    )
                 }
 
                 OptionsGroup(stringResource(R.string.preference_category_about)) {
@@ -523,6 +537,8 @@ fun SettingsScreen(
                         )
                     }
                 }
+
+                Spacer(Modifier.height(4.dp))
             }
         }
     )

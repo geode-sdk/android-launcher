@@ -73,9 +73,9 @@ object LaunchUtils {
         return File(getBaseDirectory(context), "save")
     }
 
-    private const val CRASH_INDICATOR_NAME = "lastSessionDidCrash"
+    const val CRASH_INDICATOR_NAME = "lastSessionDidCrash"
 
-    private fun getCrashDirectory(context: Context): File {
+    fun getCrashDirectory(context: Context): File {
         val base = getBaseDirectory(context)
         return File(base, "game/geode/crashlogs/")
     }
