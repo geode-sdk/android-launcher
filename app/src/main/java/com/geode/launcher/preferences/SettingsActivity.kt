@@ -2,8 +2,6 @@ package com.geode.launcher.preferences
 
 import android.app.UiModeManager
 import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -85,25 +83,6 @@ class SettingsActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-fun onOpenFolder(context: Context) {
-    val file = LaunchUtils.getBaseDirectory(context)
-    val clipboardManager =
-        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboardManager.setPrimaryClip(
-        ClipData.newPlainText(
-            context.getString(R.string.export_folder_tag),
-            file.path
-        )
-    )
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-        Toast.makeText(
-            context,
-            context.getString(R.string.text_copied),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 }
 
@@ -224,11 +203,6 @@ fun updateTheme(context: Context, theme: Int) {
             }
         )
     }
-}
-
-fun onOpenLogs(context: Context) {
-    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
-    context.startActivity(launchIntent)
 }
 
 fun onOpenDeveloperOptions(context: Context) {
@@ -460,29 +434,18 @@ fun SettingsScreen(
                 val developerModeEnabled by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
 
                 OptionsGroup(stringResource(R.string.preference_category_developer)) {
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_view_logs),
-                        icon = {
-                            Icon(painterResource(R.drawable.icon_description), contentDescription = null)
-                        },
-                        onClick = { onOpenLogs(context) }
-                    )
-
-                    if (developerModeEnabled) {
-                        OptionsButton(
-                            title = stringResource(R.string.preference_open_developer_options),
-                            icon = {
-                                Icon(painterResource(R.drawable.icon_data_object), contentDescription = null)
-                            },
-                            onClick = { onOpenDeveloperOptions(context) }
-                        )
-                    }
-
-                    OptionsButton(
-                        title = context.getString(R.string.preferences_copy_external_button),
-                        description = LaunchUtils.getBaseDirectory(context).path,
-                        onClick = { onOpenFolder(context) }
-                    )
+                        if (developerModeEnabled) {
+                            OptionsButton(
+                                title = stringResource(R.string.preference_open_developer_options),
+                                icon = {
+                                    Icon(
+                                        painterResource(R.drawable.icon_data_object),
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = { onOpenDeveloperOptions(context) }
+                            )
+                        }
                 }
 
                 OptionsGroup(stringResource(R.string.preference_category_about)) {

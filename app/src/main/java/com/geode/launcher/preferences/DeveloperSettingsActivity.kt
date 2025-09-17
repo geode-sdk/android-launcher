@@ -1,7 +1,12 @@
 package com.geode.launcher.preferences
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
@@ -32,6 +37,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,6 +47,7 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.utils.LabelledText
+import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 
 class DeveloperSettingsActivity : ComponentActivity() {
@@ -65,6 +73,30 @@ class DeveloperSettingsActivity : ComponentActivity() {
             }
         }
     }
+}
+
+fun onOpenFolder(context: Context) {
+    val file = LaunchUtils.getBaseDirectory(context)
+    val clipboardManager =
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboardManager.setPrimaryClip(
+        ClipData.newPlainText(
+            context.getString(R.string.export_folder_tag),
+            file.path
+        )
+    )
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.text_copied),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
+
+fun onOpenLogs(context: Context) {
+    val launchIntent = Intent(context, ApplicationLogsActivity::class.java)
+    context.startActivity(launchIntent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +173,26 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         preferenceKey = PreferenceUtils.Key.CUSTOM_SYMBOL_LIST
                     )
                     */
+                }
+
+                OptionsGroup(stringResource(R.string.preference_category_developer)) {
+                    val context = LocalContext.current
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_logs),
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.icon_description),
+                                contentDescription = null
+                            )
+                        },
+                        onClick = { onOpenLogs(context) }
+                    )
+
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_copy_external_button),
+                        description = LaunchUtils.getBaseDirectory(context).path,
+                        onClick = { onOpenFolder(context) }
+                    )
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
