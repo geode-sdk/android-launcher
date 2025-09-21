@@ -465,8 +465,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val limitedRefreshRate = preferenceUtils.getInt(PreferenceUtils.Key.LIMIT_FRAME_RATE).takeIf { it != 0 }
         mLimitedRefreshRate = limitedRefreshRate
 
-        mForceRefreshRate = preferenceUtils.getBoolean(PreferenceUtils.Key.FORCE_HRR)
-        if (mForceRefreshRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        mForceRefreshRate = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
             if (chosenDisplay != null) {
                 var chosenRefreshRate = chosenDisplay.refreshRate

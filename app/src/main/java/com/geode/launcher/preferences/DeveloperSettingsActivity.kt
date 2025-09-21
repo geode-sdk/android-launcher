@@ -161,13 +161,14 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         }}
                     )
 
+                    /*
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         SettingsCard(
                             title = stringResource(R.string.preference_force_hrr),
                             preferenceKey = PreferenceUtils.Key.FORCE_HRR,
                         )
                     }
-                    /*
+
                     SettingsCard(
                         title = stringResource(R.string.preference_override_exceptions_name),
                         description = stringResource(R.string.preference_override_exceptions_description),
