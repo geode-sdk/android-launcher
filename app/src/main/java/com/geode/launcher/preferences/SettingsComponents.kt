@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -23,8 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -248,33 +249,39 @@ fun StringDialog(
 ) {
     var enteredValue by remember { mutableStateOf(initialValue) }
 
-    AlertDialog(
+    BaseDialog(
         onDismissRequest = { onDismissRequest() },
-        title = {
-            Text(title)
-        },
-        text = {
-            OutlinedTextField(
-                value = enteredValue,
-                onValueChange = {
-                    enteredValue = filterInput?.invoke(it) ?: it
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Ascii,
-                    autoCorrectEnabled = false
-                ),
-                trailingIcon = {
-                    if (enteredValue.isNotEmpty()) {
-                        IconButton(onClick = { enteredValue = "" }) {
-                            Icon(
-                                Icons.Filled.Clear,
-                                contentDescription = stringResource(R.string.preference_text_clear)
-                            )
+        title = title,
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = enteredValue,
+                    onValueChange = {
+                        enteredValue = filterInput?.invoke(it) ?: it
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Ascii,
+                        autoCorrectEnabled = false
+                    ),
+                    trailingIcon = {
+                        if (enteredValue.isNotEmpty()) {
+                            IconButton(onClick = { enteredValue = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = stringResource(R.string.preference_text_clear)
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
+
         },
         confirmButton = {
             TextButton(onClick = { onSelect(enteredValue) }) {
@@ -305,34 +312,29 @@ fun RangeDialog(
         mutableFloatStateOf(initialValue / scale.toFloat())
     }
 
-    AlertDialog(
+    BaseDialog(
         onDismissRequest = { onDismissRequest() },
-        title = {
-            Text(title)
-        },
-        text = {
-            Column {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1.0f, false)
-                ) {
-                    val precision = log10(scale.toFloat()).roundToInt()
+        title = title,
+        content = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                val precision = log10(scale.toFloat()).roundToInt()
 
-                    Slider(
-                        value = enteredValue,
-                        onValueChange = { enteredValue = it },
-                        valueRange = (range.first.toFloat()/scale)..(range.last.toFloat()/scale),
-                        steps = ((range.last - range.first) - 1) / step,
-                        modifier = Modifier.weight(1.0f)
-                    )
+                Slider(
+                    value = enteredValue,
+                    onValueChange = { enteredValue = it },
+                    valueRange = (range.first.toFloat()/scale)..(range.last.toFloat()/scale),
+                    steps = ((range.last - range.first) - 1) / step,
+                    modifier = Modifier.weight(1.0f)
+                )
 
-                    Text("%.${precision}f$labelSuffix".format(enteredValue))
-                }
-
-                children()
-
+                Text("%.${precision}f$labelSuffix".format(enteredValue))
             }
+
+            children()
         },
         confirmButton = {
             TextButton(onClick = { onSelect((enteredValue * scale).roundToInt()) }) {
@@ -367,16 +369,16 @@ fun FrameRateDialog(
     val maximumReached = currentValue != null && currentValue > maxFrameRate
     val minimumReached = currentValue != null && currentValue < minFrameRate
 
-    AlertDialog(
+    BaseDialog(
         onDismissRequest = { onDismissRequest() },
-        title = {
-            Text(title)
-        },
-        text = {
-            Column {
+        title = title,
+        content = {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1.0f, false)
                 ) {
                     IconButton(onClick = {
                         val prevValue = max((currentValue ?: 0) - 5, minFrameRate)
@@ -629,32 +631,30 @@ fun ProfileCreateDialog(onDismissRequest: () -> Unit) {
 
     val isDuplicate = currentProfiles.contains(filename)
 
-    AlertDialog(
+    BaseDialog(
         onDismissRequest = { onDismissRequest() },
-        title = {
-            Text(stringResource(R.string.preference_profiles_create))
-        },
-        text = {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1.0f, false)
-                ) {
-                    OutlinedTextField(
-                        value = enteredValue,
-                        onValueChange = {
-                            enteredValue = it
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                        ),
-                        label = {
-                            Text(stringResource(R.string.preference_profiles_create_name))
-                        },
-                        isError = isDuplicate
-                    )
-                }
+        title = stringResource(R.string.preference_profiles_create),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+            ) {
+                OutlinedTextField(
+                    value = enteredValue,
+                    onValueChange = {
+                        enteredValue = it
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                    ),
+                    label = {
+                        Text(stringResource(R.string.preference_profiles_create_name))
+                    },
+                    isError = isDuplicate,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
 
                 if (isDuplicate) {
                     Spacer(Modifier.size(8.dp))
@@ -806,18 +806,19 @@ fun ProfileSelectCard() {
 }
 
 @Composable
-fun <T> SelectDialog(
+fun BaseDialog(
     title: String,
     onDismissRequest: () -> Unit,
-    onSelect: (T) -> Unit,
-    initialValue: T,
-    options: @Composable () -> Unit,
+    dismissButton: @Composable () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    content: @Composable (ColumnScope.() -> Unit),
 ) {
-    val (selectedValue, setSelectedValue) = remember { mutableStateOf(initialValue) }
-
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            )
         ) {
             // styling a dialog is actually a little hard if you're doing what i'm doing
             // maybe there's a better way to make these padding values...
@@ -832,15 +833,7 @@ fun <T> SelectDialog(
                     )
                 )
 
-                CompositionLocalProvider(
-                    LocalSelectValue provides (selectedValue as Any),
-                    LocalSelectSetValue provides ({
-                        @Suppress("UNCHECKED_CAST")
-                        setSelectedValue(it as T)
-                    })
-                ) {
-                    options()
-                }
+                content()
 
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -852,15 +845,46 @@ fun <T> SelectDialog(
                             top = 4.dp
                         )
                 ) {
-                    TextButton(onClick = onDismissRequest) {
-                        Text(stringResource(R.string.message_box_cancel))
-                    }
-
-                    TextButton(onClick = { onSelect(selectedValue) }) {
-                        Text(stringResource(R.string.message_box_accept))
-                    }
+                    dismissButton()
+                    confirmButton()
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun <T> SelectDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onSelect: (T) -> Unit,
+    initialValue: T,
+    options: @Composable () -> Unit,
+) {
+    val (selectedValue, setSelectedValue) = remember { mutableStateOf(initialValue) }
+
+    BaseDialog(
+        title = title,
+        onDismissRequest = onDismissRequest,
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSelect(selectedValue) }) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        }
+    ) {
+        CompositionLocalProvider(
+            LocalSelectValue provides (selectedValue as Any),
+            LocalSelectSetValue provides ({
+                @Suppress("UNCHECKED_CAST")
+                setSelectedValue(it as T)
+            })
+        ) {
+            options()
         }
     }
 }
