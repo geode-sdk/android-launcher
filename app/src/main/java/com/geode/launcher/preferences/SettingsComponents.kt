@@ -49,6 +49,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -942,17 +943,18 @@ fun SettingsCard(title: String, description: String? = null, icon: (@Composable 
                 icon = icon
             )
         },
-        modifier = if (asCard) Modifier.toggleable(
+        modifier = Modifier.toggleable(
             value = settingEnabled.value,
             onValueChange = { settingEnabled.value = toggleSetting(context, preferenceKey) },
             role = Role.Switch,
-        ) else Modifier
+        ),
+        backgroundColor = if (asCard)
+            MaterialTheme.colorScheme.surfaceContainer
+        else MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Switch(
             checked = settingEnabled.value,
-            onCheckedChange = if (!asCard)
-                { _ -> settingEnabled.value = toggleSetting(context, preferenceKey) }
-            else null
+            onCheckedChange = null
         )
     }
 }
@@ -980,14 +982,20 @@ fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: Stri
 }
 
 @Composable
-fun OptionsCard(modifier: Modifier = Modifier, wrapContent: Boolean = false, title: @Composable () -> Unit, content: @Composable () -> Unit) {
+fun OptionsCard(
+    modifier: Modifier = Modifier,
+    wrapContent: Boolean = false,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    title: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+) {
     Row(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp)
             .clip(RoundedCornerShape(4.dp))
             .then(modifier)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(backgroundColor)
             .defaultMinSize(minHeight = 64.dp)
             .padding(horizontal = 16.dp),
         Arrangement.SpaceBetween,
