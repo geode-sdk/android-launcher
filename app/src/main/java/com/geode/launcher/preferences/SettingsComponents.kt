@@ -974,7 +974,7 @@ fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: Stri
                 Text(
                     description,
                     style = Typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
