@@ -476,6 +476,10 @@ object GeodeUtils {
      */
     @JvmStatic
     fun vibrate(ms: Long) {
+        if (ms == 0L) {
+            getVibrator()?.cancel()
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getVibrator()?.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
