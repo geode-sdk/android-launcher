@@ -7,6 +7,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.lights.LightState
+import android.hardware.lights.LightsRequest
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -16,6 +18,7 @@ import android.os.VibratorManager
 import android.provider.DocumentsContract
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
+import android.view.InputDevice
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.BuildConfig
+import com.geode.launcher.GeometryDashActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
@@ -51,6 +55,8 @@ object GeodeUtils {
 
     private var afterRequestPermissions: (() -> Unit)? = null
     private var afterRequestPermissionsFailure: (() -> Unit)? = null
+
+    private var mControllerCallbacksEnabled: Boolean = false
 
     fun setContext(activity: AppCompatActivity) {
         this.activity = WeakReference(activity)
@@ -576,6 +582,106 @@ object GeodeUtils {
             .launchUrl(activity, url.toUri())
     }
 
+    @JvmStatic
+    fun getControllerCount(): Int {
+        val act = activity.get()
+        return if (act is GeometryDashActivity) act.getGamepadCount() else 0
+    }
+
+    /**
+     * Enables calling of the controller callbacks - they **must** be defined in native functions before this is called
+     * @see setControllerState
+     * @see setControllerConnected
+     */
+    @JvmStatic
+    fun enableControllerCallbacks() { mControllerCallbacksEnabled = true }
+    @JvmStatic
+    fun controllerCallbacksEnabled() = mControllerCallbacksEnabled
+
+    /**
+     * Whether the **device** supports vibration or lighting effects - not necessarily if the controller can or not.
+     */
+    @JvmStatic
+    fun supportsControllerExtendedFeatures(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    @JvmStatic
+    fun setControllerVibration(id: Int, duration: Long, left: Int, right: Int) {
+        val act = activity.get()
+        if (act is GeometryDashActivity) {
+            act.getGamepad(id)?.setVibration(duration, left, right)
+        }
+    }
+
+    @JvmStatic
+    fun setControllerColor(id: Int, color: Int) {
+        val act = activity.get()
+        if (act is GeometryDashActivity) {
+            act.getGamepad(id)?.setColor(color)
+        }
+    }
+
+    class Gamepad(deviceID: Int) {
+        var mButtonA: Boolean = false
+        var mButtonB: Boolean = false
+        var mButtonX: Boolean = false
+        var mButtonY: Boolean = false
+        var mButtonStart: Boolean = false
+        var mButtonSelect: Boolean = false
+        var mButtonL: Boolean = false
+        var mButtonR: Boolean = false
+        var mTriggerZL: Float = 0.0f
+        var mTriggerZR: Float = 0.0f
+        var mButtonUp: Boolean = false
+        var mButtonDown: Boolean = false
+        var mButtonLeft: Boolean = false
+        var mButtonRight: Boolean = false
+        var mButtonJoyLeft: Boolean = false
+        var mButtonJoyRight: Boolean = false
+
+        var mJoyLeftX: Float = 0.0f
+        var mJoyLeftY: Float = 0.0f
+        var mJoyRightX: Float = 0.0f
+        var mJoyRightY: Float = 0.0f
+
+        var mDeviceID: Int = deviceID
+
+        fun setVibration(duration: Long, left: Int, right: Int) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+            val device = InputDevice.getDevice(mDeviceID) ?: return
+            val manager = device.vibratorManager
+            val ids = manager.vibratorIds
+
+            if (ids.size == 1) {
+                manager.getVibrator(ids[0]).vibrate(VibrationEffect.createOneShot(duration, (left + right) / 2))
+            }
+
+            if (ids.size == 2) {
+                manager.getVibrator(ids[0]).vibrate(VibrationEffect.createOneShot(duration, left))
+                manager.getVibrator(ids[1]).vibrate(VibrationEffect.createOneShot(duration, right))
+            }
+        }
+
+        fun setColor(color: Int) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+            val device = InputDevice.getDevice(mDeviceID) ?: return
+            val manager = device.lightsManager
+            val request = LightsRequest.Builder()
+
+            for (light in manager.lights) {
+                request.addLight(
+                    light,
+                    LightState.Builder()
+                        .setColor(color)
+                        .build()
+                )
+            }
+
+            manager.openSession().requestLights(request.build())
+        }
+    }
+
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
     external fun nativeKeyDown(keyCode: Int, modifiers: Int, isRepeating: Boolean)
     external fun nativeActionScroll(scrollX: Float, scrollY: Float)
@@ -587,5 +693,13 @@ object GeodeUtils {
      * @see reportPlatformCapability
      */
     external fun setNextInputTimestamp(timestamp: Long)
+    
+    /**
+     * Gives the state of the current controller at the index, whenever it updates.
+     * @see enableControllerCallbacks
+     */
+    external fun setControllerState(index: Int, gamepad: Gamepad)
+    external fun setControllerConnected(index: Int, connected: Boolean)
+    
     external fun setNextInputTimestampInternal(timestamp: Long)
 }

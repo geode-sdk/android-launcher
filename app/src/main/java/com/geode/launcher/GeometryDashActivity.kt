@@ -5,12 +5,17 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.hardware.input.InputManager
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
 import android.text.InputType
 import android.util.Log
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -64,7 +69,7 @@ fun ratioForPreference(value: String) = when (value) {
     else -> 1.77f
 }
 
-class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener {
+class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperListener, GeodeUtils.CapabilityListener, InputManager.InputDeviceListener {
     private var mGLSurfaceView: Cocos2dxGLSurfaceView? = null
     private var mIsRunning = false
     private var mIsOnPause = false
@@ -76,6 +81,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
+
+    private var mGamepads = mutableListOf<GeodeUtils.Gamepad>()
+    private lateinit var mInputManager: InputManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -129,6 +137,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
         })
         mGLSurfaceView?.manualBackEvents = true
+      
+        mInputManager = getSystemService(INPUT_SERVICE) as InputManager
+        mInputManager.registerInputDeviceListener(this, null)
+        updateControllerDeviceIDs()
     }
 
     private fun createVersionFile() {
@@ -511,6 +523,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onDestroy() {
         super.onDestroy()
         FMOD.close()
+        mInputManager.unregisterInputDeviceListener(this)
     }
 
     private fun resumeGame() {
@@ -627,6 +640,133 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
         }
     }
+
+    private fun updateControllerDeviceIDs() {
+        mGamepads.clear()
+
+        // basically taken from documentation
+        val deviceIDs = InputDevice.getDeviceIds()
+        for (id in deviceIDs) {
+            val device = InputDevice.getDevice(id) ?: continue
+
+            if (device.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+                || device.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
+                mGamepads.add(GeodeUtils.Gamepad(device.id))
+            }
+        }
+    }
+
+    override fun onInputDeviceAdded(deviceID: Int) {
+        updateControllerDeviceIDs()
+        if (GeodeUtils.controllerCallbacksEnabled()) {
+            val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
+            Handler(mainLooper).post { GeodeUtils.setControllerConnected(index, true) }
+        }
+    }
+
+    override fun onInputDeviceRemoved(deviceID: Int) {
+        if (GeodeUtils.controllerCallbacksEnabled()) {
+            val index = mGamepads.indexOfFirst { it.mDeviceID == deviceID }
+            Handler(mainLooper).post { GeodeUtils.setControllerConnected(index, false) }
+        }
+        updateControllerDeviceIDs()
+    }
+
+    override fun onInputDeviceChanged(deviceID: Int) {}
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
+        event ?: return super.dispatchGenericMotionEvent(null)
+
+        val index = mGamepads.indexOfFirst { it.mDeviceID == event.deviceId }
+        if (index == -1) return super.dispatchGenericMotionEvent(null)
+        val gamepad = mGamepads[index]
+
+        fun processJoystick(event: MotionEvent, index: Int) {
+            if (index < 0) {
+                gamepad.mJoyLeftX = event.getAxisValue(MotionEvent.AXIS_X)
+                gamepad.mJoyLeftY = -event.getAxisValue(MotionEvent.AXIS_Y)
+                gamepad.mJoyRightX = event.getAxisValue(MotionEvent.AXIS_Z) // wtf is axis z and rz
+                gamepad.mJoyRightY = -event.getAxisValue(MotionEvent.AXIS_RZ)
+                gamepad.mTriggerZL = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)
+                gamepad.mTriggerZR = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)
+                gamepad.mButtonUp = event.getAxisValue(MotionEvent.AXIS_HAT_Y) < 0.0f
+                gamepad.mButtonDown = event.getAxisValue(MotionEvent.AXIS_HAT_Y) > 0.0f
+                gamepad.mButtonLeft = event.getAxisValue(MotionEvent.AXIS_HAT_X) < 0.0f
+                gamepad.mButtonRight = event.getAxisValue(MotionEvent.AXIS_HAT_X) > 0.0f
+            } else {
+                gamepad.mJoyLeftX = event.getHistoricalAxisValue(MotionEvent.AXIS_X, index)
+                gamepad.mJoyLeftY = -event.getHistoricalAxisValue(MotionEvent.AXIS_Y, index)
+                gamepad.mJoyRightX = event.getHistoricalAxisValue(MotionEvent.AXIS_Z, index)
+                gamepad.mJoyRightY = -event.getHistoricalAxisValue(MotionEvent.AXIS_RZ, index)
+                gamepad.mTriggerZL = event.getHistoricalAxisValue(MotionEvent.AXIS_LTRIGGER, index)
+                gamepad.mTriggerZR = event.getHistoricalAxisValue(MotionEvent.AXIS_RTRIGGER, index)
+                gamepad.mButtonUp = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) < 0.0f
+                gamepad.mButtonDown = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_Y, index) > 0.0f
+                gamepad.mButtonLeft = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) < 0.0f
+                gamepad.mButtonRight = event.getHistoricalAxisValue(MotionEvent.AXIS_HAT_X, index) > 0.0f
+            }
+        }
+
+        // taken from documentation - android batches joystick events for efficiency
+
+        // Process the movements starting from the
+        // earliest historical position in the batch
+        (0 until event.historySize).forEach { i ->
+            // Process the event at historical position i
+            processJoystick(event, i)
+        }
+
+        // Process the current movement sample in the batch (position -1)
+        processJoystick(event, -1)
+
+        // call callback in main thread
+        Handler(mainLooper).post {
+            if (GeodeUtils.controllerCallbacksEnabled()) GeodeUtils.setControllerState(index, gamepad)
+        }
+
+        return true;
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val index = mGamepads.indexOfFirst { it.mDeviceID == event.deviceId }
+        if (index == -1) return super.dispatchKeyEvent(event)
+        val gamepad = mGamepads[index]
+
+        val changed = when (event.keyCode) {
+            KeyEvent.KEYCODE_BUTTON_A -> { gamepad.mButtonA = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_B -> { gamepad.mButtonB = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_X -> { gamepad.mButtonX = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_Y -> { gamepad.mButtonY = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_START -> { gamepad.mButtonStart = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_SELECT -> { gamepad.mButtonSelect = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_L1 -> { gamepad.mButtonL = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_R1 -> { gamepad.mButtonR = event.action == KeyEvent.ACTION_DOWN; true }
+            // zl/zr/d-pad don't actually function as a button on my controllers but android documentation says to keep it in for compatibility
+            KeyEvent.KEYCODE_BUTTON_L2 -> { gamepad.mTriggerZL = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
+            KeyEvent.KEYCODE_BUTTON_R2 -> { gamepad.mTriggerZR = if (event.action == KeyEvent.ACTION_DOWN) 1.0f else 0.0f; true }
+            KeyEvent.KEYCODE_DPAD_UP -> { gamepad.mButtonUp = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_DOWN -> { gamepad.mButtonDown = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_LEFT -> { gamepad.mButtonLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> { gamepad.mButtonRight = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> { gamepad.mButtonJoyLeft = event.action == KeyEvent.ACTION_DOWN; true }
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> { gamepad.mButtonJoyRight = event.action == KeyEvent.ACTION_DOWN; true }
+            else -> false
+        }
+
+        // call callback in main thread
+        if (changed) {
+            Handler(mainLooper).post {
+                if (GeodeUtils.controllerCallbacksEnabled()) GeodeUtils.setControllerState(index, gamepad)
+            }
+
+            return true
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
+    fun getGamepad(id: Int) = mGamepads.getOrNull(id)
+    fun getGamepadCount() = mGamepads.size
 
     class EGLConfigChooser : GLSurfaceView.EGLConfigChooser {
         // this comes from EGL14, but is unavailable on EGL10
