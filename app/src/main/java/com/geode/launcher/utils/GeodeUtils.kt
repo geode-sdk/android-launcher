@@ -550,8 +550,7 @@ object GeodeUtils {
 
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
     const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
-    const val CAPABILITY_INTERNAL_CALLBACKS = "internal_callbacks_v1"
-    const val CAPABILITY_CONTROLLER_DATA = "controller_data"
+    const val CAPABILITY_RICH_INPUT = "internal_callbacks_v2"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 
@@ -774,16 +773,18 @@ object GeodeUtils {
      * @see reportPlatformCapability
      */
     external fun setNextInputTimestamp(timestamp: Long)
-    external fun setNextInputTimestampInternal(timestamp: Long)
 
-    external fun setNextInputDevice(deviceId: Int, eventSource: Int)
+    const val TOUCH_TYPE_BEGIN = 0
+    const val TOUCH_TYPE_MOVE = 1
+    const val TOUCH_TYPE_END = 2
+    const val TOUCH_TYPE_CANCEL = 3
+
+    external fun internalKeyEvent(timestamp: Long, deviceId: Int, eventSource: Int, keyCode: Int, modifiers: Int, isDown: Boolean, repeatCount: Int)
+    external fun internalTouchEvent(timestamp: Long, deviceId: Int, eventSource: Int, eventType: Int, ids: IntArray, xs: FloatArray, ys: FloatArray)
+    external fun internalScrollEvent(timestamp: Long, deviceId: Int, eventSource: Int, scrollX: Float, scrollY: Float)
+    external fun internalJoystickEvent(timestamp: Long, deviceId: Int, eventSource: Int, leftX: FloatArray, leftY: FloatArray, rightX: FloatArray, rightY: FloatArray, hatX: FloatArray, hatY: FloatArray, leftTrigger: FloatArray, rightTrigger: FloatArray)
+
     external fun inputDeviceAdded(deviceId: Int)
     external fun inputDeviceChanged(deviceId: Int)
     external fun inputDeviceRemoved(deviceId: Int)
-
-    /**
-     * Sends all batched joystick events. The final position in each array represents the current position of that axis.
-     * Have fun!
-     */
-    external fun onJoystickEvent(leftX: FloatArray, leftY: FloatArray, rightX: FloatArray, rightY: FloatArray, hatX: FloatArray, hatY: FloatArray, leftTrigger: FloatArray, rightTrigger: FloatArray)
 }

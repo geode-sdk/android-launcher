@@ -59,7 +59,6 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         }
 
     var sendTimestampEvents = false
-    var sendInternalTimestampEvents = false
     var manualBackEvents = false
     var controllerEventsEnabled = false
         private set
@@ -159,19 +158,6 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private fun sendNextEventTimestamp(timestamp: Long) {
         if (sendTimestampEvents)
             GeodeUtils.setNextInputTimestamp(timestamp)
-
-        if (sendInternalTimestampEvents)
-            GeodeUtils.setNextInputTimestampInternal(timestamp)
-    }
-
-    private fun sendNextEventDetails(event: KeyEvent) {
-        if (controllerEventsEnabled)
-            GeodeUtils.setNextInputDevice(event.deviceId, event.source)
-    }
-
-    private fun sendNextEventDetails(event: MotionEvent) {
-        if (controllerEventsEnabled)
-            GeodeUtils.setNextInputDevice(event.deviceId, event.source)
     }
 
     override fun onTouchEvent(motionEvent: MotionEvent): Boolean {
@@ -193,9 +179,16 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xDown = xs[0]
                 val f = ys[0]
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionDown(idDown, xDown, f)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            // slice here to convert to single element array
+                            GeodeUtils.TOUCH_TYPE_BEGIN, ids.sliceArray(0..0), xs.sliceArray(0..0), ys.sliceArray(0..0)
+                        )
+                    else
+                        cocos2dxRenderer.handleActionDown(idDown, xDown, f)
                 }
                 true
             }
@@ -204,25 +197,43 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val f2 = xs[0]
                 val f3 = ys[0]
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionUp(idUp, f2, f3)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            GeodeUtils.TOUCH_TYPE_END, ids.sliceArray(0..0), xs.sliceArray(0..0), ys.sliceArray(0..0)
+                        )
+                    else
+                        cocos2dxRenderer.handleActionUp(idUp, f2, f3)
                 }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionMove(ids, xs, ys)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            GeodeUtils.TOUCH_TYPE_MOVE, ids, xs, ys
+                        )
+                    else
+                        cocos2dxRenderer.handleActionMove(ids, xs, ys)
                 }
                 true
             }
             MotionEvent.ACTION_CANCEL -> {
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionCancel(ids, xs, ys)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            GeodeUtils.TOUCH_TYPE_CANCEL, ids, xs, ys
+                        )
+                    else
+                        cocos2dxRenderer.handleActionCancel(ids, xs, ys)
                 }
                 true
             }
@@ -232,9 +243,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerDown = motionEvent.getX(indexPointerDown)
                 val y = motionEvent.getY(indexPointerDown)
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            GeodeUtils.TOUCH_TYPE_BEGIN, intArrayOf(idPointerDown), floatArrayOf(xPointerDown), floatArrayOf(y)
+                        )
+                    else
+                        cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
                 }
                 true
             }
@@ -244,9 +261,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 val xPointerUp = motionEvent.getX(indexPointUp)
                 val y2 = motionEvent.getY(indexPointUp)
                 queueEvent {
-                    sendNextEventDetails(motionEvent)
                     sendNextEventTimestamp(timestamp)
-                    cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
+
+                    if (controllerEventsEnabled)
+                        GeodeUtils.internalTouchEvent(
+                            timestamp, motionEvent.deviceId, motionEvent.source,
+                            GeodeUtils.TOUCH_TYPE_END, intArrayOf(idPointerUp), floatArrayOf(xPointerUp), floatArrayOf(y2)
+                        )
+                    else
+                        cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
                 }
                 true
             }
@@ -287,24 +310,42 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             return
         }
 
-        if (useKeyboardEvents) {
-            queueEvent {
-                cocos2dxRenderer.handleKeyDown(KeyEvent.KEYCODE_BACK)
-            }
-        } else {
-            val currentTime = System.nanoTime()
-            queueEvent {
-                if (controllerEventsEnabled)
-                    GeodeUtils.setNextInputDevice(-1, InputDevice.SOURCE_ANY)
+        val currentTime = System.nanoTime()
+        queueEvent {
+            sendNextEventTimestamp(currentTime)
 
-                sendNextEventTimestamp(currentTime)
+            if (controllerEventsEnabled) {
+                GeodeUtils.internalKeyEvent(
+                    currentTime,
+                    -1,
+                    InputDevice.SOURCE_ANY,
+                    KeyEvent.KEYCODE_BACK,
+                    0,
+                    true,
+                    0
+                )
+                GeodeUtils.internalKeyEvent(
+                    currentTime,
+                    -1,
+                    InputDevice.SOURCE_ANY,
+                    KeyEvent.KEYCODE_BACK,
+                    0,
+                    false,
+                    0
+                )
+            }
+
+            if (useKeyboardEvents) {
                 GeodeUtils.nativeKeyDown(KeyEvent.KEYCODE_BACK, 0, false)
+                GeodeUtils.nativeKeyUp(KeyEvent.KEYCODE_BACK, 0)
+            } else if (!controllerEventsEnabled) {
+                cocos2dxRenderer.handleKeyDown(KeyEvent.KEYCODE_BACK)
             }
         }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (!useKeyboardEvents) {
+        if (!useKeyboardEvents && !controllerEventsEnabled) {
             return legacyKeyDown(keyCode, event)
         }
 
@@ -319,9 +360,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
-                    sendNextEventDetails(event)
                     sendNextEventTimestamp(event.eventTime * MS_TO_NS)
-                    GeodeUtils.nativeKeyDown(keyCode, event.modifiers, event.repeatCount != 0)
+
+                    if (useKeyboardEvents) {
+                        GeodeUtils.nativeKeyDown(keyCode, event.modifiers, event.repeatCount != 0)
+                    }
+
+                    if (controllerEventsEnabled) {
+                        GeodeUtils.internalKeyEvent(event.eventTime * MS_TO_NS, event.deviceId, event.source, event.keyCode, event.modifiers, true, event.repeatCount)
+                    }
                 }
                 true
             }
@@ -329,7 +376,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (!useKeyboardEvents) {
+        if (!useKeyboardEvents && !controllerEventsEnabled) {
             return super.onKeyUp(keyCode, event)
         }
 
@@ -343,9 +390,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 }
 
                 queueEvent {
-                    sendNextEventDetails(event)
                     sendNextEventTimestamp(event.eventTime * MS_TO_NS)
-                    GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
+
+                    if (useKeyboardEvents) {
+                        GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
+                    }
+
+                    if (controllerEventsEnabled) {
+                        GeodeUtils.internalKeyEvent(event.eventTime * MS_TO_NS, event.deviceId, event.source, event.keyCode, event.modifiers, false, event.repeatCount)
+                    }
                 }
 
                 true
@@ -413,7 +466,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
-        if (!useKeyboardEvents) {
+        if (!useKeyboardEvents && !controllerEventsEnabled) {
             return super.onGenericMotionEvent(event)
         }
 
@@ -424,9 +477,15 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 event.eventTimeNanos else event.eventTime * MS_TO_NS
 
             queueEvent {
-                sendNextEventDetails(event)
                 sendNextEventTimestamp(timestamp)
-                GeodeUtils.nativeActionScroll(scrollX, scrollY)
+
+                if (useKeyboardEvents) {
+                    GeodeUtils.nativeActionScroll(scrollX, scrollY)
+                }
+
+                if (controllerEventsEnabled) {
+                    GeodeUtils.internalScrollEvent(timestamp, event.deviceId, event.source, scrollX, scrollY)
+                }
             }
 
             return true
@@ -445,10 +504,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                 event.eventTimeNanos else event.eventTime * MS_TO_NS
 
             queueEvent {
-                sendNextEventDetails(event)
-                sendNextEventTimestamp(timestamp)
-
-                GeodeUtils.onJoystickEvent(
+                GeodeUtils.internalJoystickEvent(
+                    timestamp, event.deviceId, event.source,
                     motionLeftX, motionLeftY,
                     motionRightX, motionRightY,
                     motionDPadX, motionDPadY,
