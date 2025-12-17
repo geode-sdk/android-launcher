@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
@@ -320,7 +318,7 @@ fun UpdateMessageIndicator(
                 },
             ) {
                 Icon(
-                    Icons.Filled.Refresh,
+                    painterResource(R.drawable.icon_refresh),
                     contentDescription = stringResource(R.string.launcher_retry_icon_alt)
                 )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))

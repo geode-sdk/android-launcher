@@ -21,9 +21,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -123,6 +121,7 @@ fun UpdateIndicator(
     updateStatus: ReleaseViewModel.ReleaseUIState
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     var enablePopup by remember { mutableStateOf(false) }
 
@@ -158,8 +157,8 @@ fun UpdateIndicator(
             is ReleaseViewModel.ReleaseUIState.Failure -> {
                 val message = when (updateStatus.exception) {
                     is UnknownHostException, is ConnectException ->
-                        context.getString(R.string.release_fetch_no_internet)
-                    else -> context.getString(R.string.preference_check_for_updates_failed)
+                        resources.getString(R.string.release_fetch_no_internet)
+                    else -> resources.getString(R.string.preference_check_for_updates_failed)
                 }
 
                 snackbarHostState.showSnackbar(message)
@@ -167,17 +166,17 @@ fun UpdateIndicator(
             is ReleaseViewModel.ReleaseUIState.Finished -> {
                 if (updateStatus.hasUpdated) {
                     snackbarHostState.showSnackbar(
-                        context.getString(R.string.preference_check_for_updates_success)
+                        resources.getString(R.string.preference_check_for_updates_success)
                     )
                 } else {
                     val gameVersion = GamePackageUtils.getGameVersionCodeOrNull(context.packageManager)
                     if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE) {
                         snackbarHostState.showSnackbar(
-                            context.getString(R.string.launcher_game_update_required_short)
+                            resources.getString(R.string.launcher_game_update_required_short)
                         )
                     } else {
                         snackbarHostState.showSnackbar(
-                            context.getString(R.string.preference_check_for_updates_none_found)
+                            resources.getString(R.string.preference_check_for_updates_none_found)
                         )
                     }
                 }
@@ -218,7 +217,7 @@ fun DeveloperModeDialog(onDismiss: () -> Unit, onEnable: () -> Unit) {
     AlertDialog(
         icon = {
             Icon(
-                Icons.Filled.Warning,
+                painterResource(R.drawable.icon_warning),
                 contentDescription = null,
             )
         },
@@ -245,6 +244,7 @@ fun SettingsScreen(
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
     val updateStatus by releaseViewModel.uiState.collectAsState()
@@ -255,7 +255,7 @@ fun SettingsScreen(
     if (showUpdateInProgress) {
         LaunchedEffect(snackbarHostState) {
             snackbarHostState.showSnackbar(
-                context.getString(R.string.preference_check_for_updates_already_updating)
+                resources.getString(R.string.preference_check_for_updates_already_updating)
             )
             showUpdateInProgress = false
         }
@@ -280,14 +280,14 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = context.getString(R.string.back_icon_alt)
+                            painterResource(R.drawable.icon_arrow_back),
+                            contentDescription = stringResource(R.string.back_icon_alt)
                         )
                     }
                 },
                 title = {
                     Text(
-                        context.getString(R.string.title_activity_settings),
+                        stringResource(R.string.title_activity_settings),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -304,7 +304,7 @@ fun SettingsScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OptionsGroup(context.getString(R.string.preference_category_testing)) {
+                OptionsGroup(stringResource(R.string.preference_category_testing)) {
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_theme_name),
                         dialogTitle = stringResource(R.string.preference_theme_select),
@@ -361,8 +361,8 @@ fun SettingsScreen(
 
                 OptionsGroup(stringResource(R.string.preference_category_gameplay)) {
                     SettingsCard(
-                        title = context.getString(R.string.preference_load_automatically_name),
-                        description = context.getString(R.string.preference_load_automatically_description),
+                        title = stringResource(R.string.preference_load_automatically_name),
+                        description = stringResource(R.string.preference_load_automatically_description),
                         preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
                     )
                     SettingsSelectCard(
@@ -407,7 +407,7 @@ fun SettingsScreen(
                         step = 5,
                     ) {
                         SettingsCard(
-                            title = context.getString(R.string.preference_screen_zoom_fit_name),
+                            title = stringResource(R.string.preference_screen_zoom_fit_name),
                             preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM_FIT,
                             asCard = false
                         )
@@ -430,9 +430,9 @@ fun SettingsScreen(
                     )
                 }
 
-                OptionsGroup(context.getString(R.string.preference_category_updater)) {
+                OptionsGroup(stringResource(R.string.preference_category_updater)) {
                     SettingsCard(
-                        title = context.getString(R.string.preference_update_automatically_name),
+                        title = stringResource(R.string.preference_update_automatically_name),
                         preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
                     )
                     OptionsCard(
@@ -538,7 +538,7 @@ fun SettingsScreen(
                         }
 
                         val gameSource = remember {
-                            context.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
+                            resources.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
                                 GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
                                 GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
                                 else -> R.string.preference_game_source_unknown

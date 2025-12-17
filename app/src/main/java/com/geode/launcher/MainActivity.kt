@@ -9,8 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -160,11 +158,11 @@ fun MainScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.geode_logo),
-                contentDescription = context.getString(R.string.launcher_logo_alt),
+                contentDescription = stringResource(R.string.launcher_logo_alt),
                 modifier = Modifier.size(100.dp, 100.dp)
             )
             Text(
-                context.getString(R.string.launcher_title),
+                stringResource(R.string.launcher_title),
                 style = launcherTitleStyle,
                 modifier = Modifier.padding(12.dp)
             )
@@ -199,7 +197,7 @@ fun MainScreen(
                 }
                 gdInstalled -> {
                     Text(
-                        context.getString(R.string.geode_download_title),
+                        stringResource(R.string.geode_download_title),
                         modifier = Modifier.padding(12.dp)
                     )
 
@@ -210,16 +208,16 @@ fun MainScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.icon_download),
-                                contentDescription = context.getString(R.string.launcher_download_icon_alt)
+                                contentDescription = stringResource(R.string.launcher_download_icon_alt)
                             )
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(context.getString(R.string.launcher_download))
+                            Text(stringResource(R.string.launcher_download))
                         }
                         Spacer(Modifier.size(2.dp))
                         IconButton(onClick = { onSettings(context) }) {
                             Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                                painterResource(R.drawable.icon_settings),
+                                contentDescription = stringResource(R.string.launcher_settings_icon_alt)
                             )
                         }
                     }

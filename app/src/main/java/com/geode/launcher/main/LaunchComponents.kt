@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +30,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +68,7 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
         AlertDialog(
             icon = {
                 Icon(
-                    Icons.Filled.Warning,
+                    painterResource(R.drawable.icon_warning),
                     contentDescription = stringResource(R.string.launcher_warning_icon_alt)
                 )
             },
@@ -116,7 +113,7 @@ fun SafeModeDialog(onDismiss: () -> Unit, onLaunch: () -> Unit) {
     AlertDialog(
         icon = {
             Icon(
-                Icons.Filled.Warning,
+                painterResource(R.drawable.icon_warning),
                 contentDescription = stringResource(R.string.launcher_warning_icon_alt)
             )
         },
@@ -243,17 +240,17 @@ fun PlayButton(
             }
         ) {
             Icon(
-                Icons.Filled.PlayArrow,
-                contentDescription = context.getString(R.string.launcher_launch_icon_alt)
+                painterResource(R.drawable.icon_play_arrow),
+                contentDescription = stringResource(R.string.launcher_launch_icon_alt)
             )
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(context.getString(R.string.launcher_launch))
+            Text(stringResource(R.string.launcher_launch))
         }
         Spacer(Modifier.size(2.dp))
         IconButton(onClick = { onSettings(context) }) {
             Icon(
-                Icons.Filled.Settings,
-                contentDescription = context.getString(R.string.launcher_settings_icon_alt)
+                painterResource(R.drawable.icon_settings),
+                contentDescription = stringResource(R.string.launcher_settings_icon_alt)
             )
         }
     }
@@ -295,7 +292,7 @@ fun UnsupportedVersionWarning(modifier: Modifier = Modifier) {
     InlineDialog(
         headline = {
             Icon(
-                Icons.Default.Warning,
+                painterResource(R.drawable.icon_warning),
                 contentDescription = null,
                 modifier = Modifier.size(28.dp)
             )

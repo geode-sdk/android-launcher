@@ -20,10 +20,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -274,7 +270,7 @@ fun StringDialog(
                         if (enteredValue.isNotEmpty()) {
                             IconButton(onClick = { enteredValue = "" }) {
                                 Icon(
-                                    Icons.Filled.Clear,
+                                    painterResource(R.drawable.icon_close_small),
                                     contentDescription = stringResource(R.string.preference_text_clear)
                                 )
                             }
@@ -419,7 +415,7 @@ fun FrameRateDialog(
                         enteredValue = nextValue.toString()
                     }, enabled = currentValue == null || currentValue < maxFrameRate) {
                         Icon(
-                            Icons.Filled.Add,
+                            painterResource(R.drawable.icon_add),
                             contentDescription = stringResource(R.string.preference_limit_framerate_add)
                         )
                     }
@@ -794,7 +790,7 @@ fun ProfileSelectCard() {
                                 )
                             } else {
                                 Icon(
-                                    Icons.Filled.Delete,
+                                    painterResource(R.drawable.icon_delete),
                                     contentDescription = stringResource(R.string.preference_profiles_delete_alt)
                                 )
                             }

@@ -18,11 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,6 +48,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -189,6 +185,7 @@ fun ApplicationLogsScreen(
     val isLoading by logViewModel.isLoading.collectAsState()
 
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val coroutineScope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -236,7 +233,7 @@ fun ApplicationLogsScreen(
                     navigationIcon = {
                         IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                painterResource(R.drawable.icon_arrow_back),
                                 contentDescription = stringResource(R.string.back_icon_alt)
                             )
                         }
@@ -244,7 +241,7 @@ fun ApplicationLogsScreen(
                     actions = {
                         IconButton(onClick = {
                             coroutineScope.launch {
-                                saveLauncher.launch(context.getString(R.string.application_logs_default_filename))
+                                saveLauncher.launch(resources.getString(R.string.application_logs_default_filename))
                             }
                         }, enabled = !logLines.isEmpty()) {
                             Icon(
@@ -254,7 +251,7 @@ fun ApplicationLogsScreen(
                         }
                         IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
                             Icon(
-                                Icons.Filled.MoreVert,
+                                painterResource(R.drawable.icon_more_vert),
                                 contentDescription = stringResource(R.string.application_logs_more)
                             )
                         }
@@ -273,7 +270,7 @@ fun ApplicationLogsScreen(
                                 trailingIcon = {
                                     if (logViewModel.filterCrashes) {
                                         Icon(
-                                            Icons.Filled.Check,
+                                            painterResource(R.drawable.icon_check),
                                             contentDescription = stringResource(R.string.application_logs_crash_only_enabled_alt)
                                         )
                                     }

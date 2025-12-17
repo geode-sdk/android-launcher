@@ -22,12 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -137,8 +131,8 @@ fun LaunchCancelledIcon(cancelReason: LaunchViewModel.LaunchCancelReason, modifi
         LaunchViewModel.LaunchCancelReason.GAME_OUTDATED,
         LaunchViewModel.LaunchCancelReason.GAME_MISSING -> Icon(painterResource(R.drawable.icon_error), contentDescription = null, modifier)
         LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED,
-        LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> Icon(Icons.Default.Warning, contentDescription = null, modifier)
-        else -> Icon(Icons.Default.Info, contentDescription = null, modifier)
+        LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> Icon(painterResource(R.drawable.icon_warning), contentDescription = null, modifier)
+        else -> Icon(painterResource(R.drawable.icon_info), contentDescription = null, modifier)
     }
 }
 
@@ -285,7 +279,7 @@ fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
         LaunchViewModel.LaunchCancelReason.MANUAL,
         LaunchViewModel.LaunchCancelReason.AUTOMATIC -> {
             Icon(
-                Icons.Filled.PlayArrow,
+                painterResource(R.drawable.icon_play_arrow),
                 contentDescription = null
             )
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -293,7 +287,7 @@ fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
         }
         LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> {
             Icon(
-                Icons.Filled.Refresh,
+                painterResource(R.drawable.icon_refresh),
                 contentDescription = null
             )
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -398,7 +392,7 @@ fun ExtraOptions(onSettings: () -> Unit) {
         onClick = onSettings,
     ) {
         Icon(
-            Icons.Filled.Settings,
+            painterResource(R.drawable.icon_settings),
             contentDescription = stringResource(R.string.launcher_settings_icon_alt)
         )
     }

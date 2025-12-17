@@ -20,9 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -114,7 +111,7 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     navigationIcon = {
                         IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                painterResource(R.drawable.icon_arrow_back),
                                 contentDescription = stringResource(R.string.back_icon_alt)
                             )
                         }

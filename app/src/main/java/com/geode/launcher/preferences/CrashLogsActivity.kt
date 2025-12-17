@@ -25,11 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -169,7 +164,7 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
                 shareCrash(context, crashDump.filename)
             }) {
                 Icon(
-                    Icons.Filled.Share,
+                    painterResource(R.drawable.icon_share),
                     contentDescription = stringResource(R.string.application_logs_share)
                 )
             }
@@ -178,7 +173,7 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
                 crashViewModel.removeCrash(crashDump.filename)
             }) {
                 Icon(
-                    Icons.Filled.Delete,
+                    painterResource(R.drawable.icon_delete),
                     contentDescription = stringResource(R.string.application_crashes_delete_one)
                 )
             }
@@ -207,7 +202,7 @@ fun CrashLogsScreen(
                     navigationIcon = {
                         IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                painterResource(R.drawable.icon_arrow_back),
                                 contentDescription = stringResource(R.string.back_icon_alt)
                             )
                         }
@@ -215,7 +210,7 @@ fun CrashLogsScreen(
                     actions = {
                         IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
                             Icon(
-                                Icons.Filled.MoreVert,
+                                painterResource(R.drawable.icon_more_vert),
                                 contentDescription = stringResource(R.string.application_logs_more)
                             )
                         }
