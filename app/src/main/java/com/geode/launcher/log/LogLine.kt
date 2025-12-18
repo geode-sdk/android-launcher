@@ -4,6 +4,9 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import okio.Buffer
 import okio.BufferedSource
 import java.io.IOException
@@ -26,10 +29,29 @@ fun BufferedSource.readCString(): String {
     return buffer.toString()
 }
 
+@Serializable
 data class ProcessInformation(val processId: Int, val threadId: Int, val processUid: Int)
 
+@Serializable
 enum class LogPriority {
-    UNKNOWN, DEFAULT, VERBOSE, DEBUG, INFO, WARN, ERROR, FATAL, SILENT;
+    @SerialName("unknown")
+    UNKNOWN,
+    @SerialName("default")
+    DEFAULT,
+    @SerialName("verbose")
+    VERBOSE,
+    @SerialName("debug")
+    DEBUG,
+    @SerialName("info")
+    INFO,
+    @SerialName("warn")
+    WARN,
+    @SerialName("error")
+    ERROR,
+    @SerialName("fatal")
+    FATAL,
+    @SerialName("silent")
+    SILENT;
 
     class LogPriorityIterator(
         start: LogPriority,
@@ -116,7 +138,8 @@ enum class LogPriority {
 /**
  * Represents a log entry from logcat.
  */
-data class LogLine @OptIn(ExperimentalTime::class) constructor(
+@Serializable
+data class LogLine(
     val process: ProcessInformation,
     val time: Instant,
     val logId: Int,
@@ -198,11 +221,10 @@ data class LogLine @OptIn(ExperimentalTime::class) constructor(
                 time = time,
                 logId = lid,
                 tag = tag,
-                message = message
+                message = message.trimEnd('\u0000')
             )
         }
 
-        @OptIn(ExperimentalTime::class)
         fun showException(exception: Exception) = LogLine(
             process = ProcessInformation(0, 0, 0),
             time = Clock.System.now(),
@@ -213,15 +235,15 @@ data class LogLine @OptIn(ExperimentalTime::class) constructor(
         )
     }
 
-    @OptIn(ExperimentalTime::class)
+    @Transient
     val identifier = time.toJavaInstant()
 
     val messageTrimmed by lazy {
         this.message.trim { it <= ' ' }
     }
 
-    @OptIn(ExperimentalTime::class)
     val formattedTime by lazy { this.time.toLocalDateTime(TimeZone.currentSystemDefault()) }
+
     val asSimpleString by lazy {
         "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.messageTrimmed}"
     }

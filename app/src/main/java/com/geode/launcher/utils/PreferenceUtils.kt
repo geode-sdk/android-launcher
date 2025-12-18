@@ -149,7 +149,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         SCREEN_ZOOM_FIT,
         LIMIT_FRAME_RATE,
         DISABLE_USER_THEME,
-        SELECTED_ICON
+        SELECTED_ICON,
+        DEVELOPER_SERVER,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -200,6 +201,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LIMIT_FRAME_RATE -> "PreferenceLimitFrameRate"
             Key.DISABLE_USER_THEME -> "PreferenceDisableUserTheme"
             Key.SELECTED_ICON -> "PreferenceSelectedIcon"
+            Key.DEVELOPER_SERVER -> "PreferenceDeveloperServer"
         }
     }
 

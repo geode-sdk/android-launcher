@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geode Android Web Interface</title>
+    <meta name="color-scheme" content="light dark">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        .logo {
+            width: 1em;
+            height: 1em;
+        }
+
+        .title {
+            font-family: "Quicksand", sans-serif;
+            font-weight: 600;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3em;
+        }
+
+        .listing-main {
+            display: flex;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+        }
+
+        #file-name {
+            font-family: "Quicksand", sans-serif;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #logs-area {
+            font-family: monospace;
+            font-size: 0.9em;
+            height: 15rem;
+
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="title">
+        <svg
+                width="698"
+                height="698"
+                viewBox="0 0 696 698"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                class="logo"
+        >
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M393.076 24.4223L372.884 9.00248C358.192 -2.21718 337.808 -2.2172 323.116 9.00246L16.9433 242.812C3.28395 253.243 -2.41995 271.086 2.656 287.506L120.413 668.435C125.723 685.612 141.605 697.326 159.584 697.326H536.416C554.395 697.326 570.277 685.612 575.587 668.435L693.344 287.506C698.42 271.086 692.716 253.243 679.057 242.812L650.835 221.26L618.374 323.385L529.198 613.394C525.713 624.725 515.245 632.458 503.39 632.458H190.61C178.755 632.458 168.287 624.725 164.802 613.394L67.1963 295.971C63.8815 285.191 67.6162 273.487 76.562 266.619L330.558 71.6226C331.579 70.8386 332.643 70.1371 333.739 69.5183L393.076 24.4223Z"
+                    fill="currentColor"
+            />
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M336.614 143.264C344.511 137.209 355.489 137.209 363.386 143.264L552.797 288.49C560.096 294.086 563.143 303.632 560.437 312.422L487.62 548.924C484.778 558.153 476.251 564.451 466.594 564.451H233.406C223.749 564.451 215.222 558.153 212.38 548.924L199.934 508.5H261.676C262.393 508.647 263.134 508.724 263.888 508.724H432.112C436.963 508.724 441.241 505.546 442.643 500.903L495.141 326.982C496.452 322.638 494.961 317.934 491.386 315.139L354.777 208.3C350.795 205.186 345.205 205.186 341.223 208.3L215.925 306.292L152.151 353.307L139.563 312.422C136.857 303.632 139.904 294.086 147.203 288.49L336.614 143.264Z"
+                    fill="currentColor"
+            />
+        </svg>
+
+        Geode Android Manager
+    </h1>
+
+    <div class="listing-main">
+        <section>
+            <label for="path-listing">
+                Directory Listing:
+            </label> <br />
+            <select id="path-listing" size=25>
+            </select>
+
+            <br />
+
+            <label for="path-name">Path:</label>
+            <input type="text" id="path-name" />
+            <button id="traverse-btn">Go</button>
+
+            <!--br />
+
+            <input type="file" id="upload-file">
+            <button id="upload-btn">Upload File</button-->
+        </section>
+
+        <section>
+            <h2><span id="file-name"></span></h2>
+
+            <div class="hidden" id="file-metadata">
+                <p>
+                    Size: <span id="file-size"></span> <br />
+                    Modified At: <span id="file-modified"></span> <br />
+                </p>
+
+                <p>
+                    <!-- button id="file-replace">Replace</button>
+                    <button id="file-delete">Delete</button>
+
+                    <br /-->
+
+                    <a href="" download id="file-download">Download</a>
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <div>
+        <h2>Logs</h2>
+
+        <pre id="logs-area"></pre>
+    </div>
+
+<script>
+    const basePath = "/";
+
+    /** @type {HTMLSelectElement | null} */
+    const pathListing = document.querySelector("#path-listing");
+
+    /** @type {HTMLInputElement | null} */
+    const pathName = document.querySelector("#path-name");
+
+    /** @type {HTMLButtonElement | null} */
+    const goBtn = document.querySelector("#traverse-btn");
+
+    /** @type {HTMLSpanElement | null} */
+    const fileName = document.querySelector("#file-name");
+
+    /** @type {HTMLSpanElement | null} */
+    const fileSize = document.querySelector("#file-size");
+
+    /** @type {HTMLSpanElement | null} */
+    const fileModified = document.querySelector("#file-modified");
+
+    /** @type {HTMLAnchorElement | null} */
+    const fileDownload = document.querySelector("#file-download");
+
+    /** @type {HTMLDivElement | null} */
+    const fileMetadata = document.querySelector("#file-metadata");
+
+    /** @type {HTMLPreElement | null} */
+    const logsArea = document.querySelector("#logs-area");
+
+    const currentListing = {};
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes == 0) return "0 B";
+
+        const base = 1024;
+        const units = ["B", "KB", "MB", "GB", "TB"];
+
+        const unitIndex = Math.floor(Math.log(bytes) / Math.log(base));
+
+        const formattedValue = (bytes / Math.pow(base, unitIndex)).toFixed(decimals);
+
+        return `${formattedValue} ${units[unitIndex]}`;
+    };
+
+    async function fetchDirectoryListing(path) {
+        goBtn.disabled = true;
+
+        try {
+            const data = await fetch(`${basePath}files/${path}`);
+            const json = await data.json();
+
+            const selectElements = json.sort((a, b) => {
+                const aIsDir = a.type == "directory";
+                const bIsDir = b.type == "directory";
+
+                if (aIsDir && !bIsDir) {
+                    return -1;
+                }
+
+                if (!aIsDir && bIsDir) {
+                    return 1;
+                }
+
+                return a.filename.localeCompare(b.filename);
+            }).map((f) => {
+                currentListing[f.filename] = f;
+
+                const optionElement = document.createElement("option");
+                optionElement.value = f.filename;
+
+                if (f.type == "directory") {
+                    optionElement.innerText = "📁 " + f.filename;
+                } else {
+                    optionElement.innerText = f.filename;
+                }
+
+                return optionElement;
+            });
+
+            const parentElement = document.createElement("option");
+            parentElement.value = "..";
+            parentElement.innerText = "⤴️ ..";
+
+            selectElements.unshift(parentElement);
+
+            pathListing.replaceChildren(...selectElements);
+
+            pathName.value = path;
+        } catch (e) {
+            console.error(e);
+        } finally {
+            goBtn.disabled = false;
+        }
+    }
+
+    function updateFileData() {
+        if (pathListing.value == "..") {
+            return;
+        }
+
+        const currentFile = currentListing[pathListing.value];
+
+        fileName.innerText = currentFile.filename;
+
+        if (currentFile.type == "directory") {
+            fileMetadata.classList.add("hidden");
+            return;
+        }
+
+        fileMetadata.classList.remove("hidden");
+
+        fileSize.innerText = formatBytes(currentFile.size);
+        const modifiedDate = new Date(currentFile.lastModified);
+        fileModified.innerText = new Intl.DateTimeFormat("default", {
+            timeStyle: "long",
+            dateStyle: "long",
+        }).format(modifiedDate);
+        fileDownload.href = `${basePath}files${updatePath(currentFile.filename)}`;
+    }
+
+    function updatePath(append) {
+        const currentPath = pathName.value;
+
+        if (append == "..") {
+            if (currentPath == "/") {
+                return "/"
+            } else {
+                const path = currentPath.split("/");
+                path.pop();
+
+                return path.join("/");
+            }
+        }
+
+        if (currentPath.endsWith("/")) {
+            return currentPath + append;
+        } else {
+            return `${currentPath}/${append}`;
+        }
+    }
+
+    pathListing.addEventListener("dblclick", async (event) => {
+        const clickedOption = event.target.value;
+
+        if (clickedOption == "..") {
+            const newPath = updatePath("..");
+            await fetchDirectoryListing(newPath);
+            return;
+        }
+
+        const selected = currentListing[clickedOption];
+
+        if (selected.type == "directory") {
+            const newPath = updatePath(selected.filename);
+            await fetchDirectoryListing(newPath);
+        } else {
+            fileDownload.click();
+        }
+    });
+
+    pathListing.addEventListener("change", (event) => {
+        const clickedOption = event.target.value;
+
+        updateFileData();
+    });
+
+    goBtn.addEventListener("click", async () => {
+        const goto = pathName.value;
+        await fetchDirectoryListing(goto);
+    });
+
+    function formatLog(line) {
+        /*
+        {
+            "process": {
+                "processId": 31123,
+                "threadId": 31123,
+                "processUid": 10486
+            },
+            "time": "2025-12-17T10:38:19.488696104Z",
+            "logId": 4,
+            "priority": "error",
+            "tag": "AndroidRuntime",
+            "message": "..."
+        },
+        */
+
+        return `[${line.priority.charAt(0)}] ${line.time} - [${line.tag}] ${line.message}`
+    }
+
+    async function updateLogs() {
+        const data = await fetch(`${basePath}logs`);
+        const json = await data.json();
+
+        const lines = json.map((l) => formatLog(l));
+        const message = lines.join("\n");
+
+        logsArea.innerText = message;
+        logsArea.scrollTop = logsArea.scrollHeight - logsArea.clientHeight
+    }
+
+    const unprocessedLogs = [];
+
+    function onTick() {
+        const batch = unprocessedLogs.splice(0, 100);
+
+        if (batch.length == 0) {
+            return;
+        }
+
+        const formatted = batch.map((l) => formatLog(JSON.parse(l))).join("\n");
+
+        const isScrolledToBottom = (logsArea.scrollHeight - logsArea.clientHeight) <= logsArea.scrollTop + 1;
+
+        logsArea.innerText += `\n${formatted}`;
+
+        if (isScrolledToBottom) {
+            logsArea.scrollTop = logsArea.scrollHeight - logsArea.clientHeight
+        }
+    }
+
+    function animationFrame() {
+        onTick();
+
+        requestAnimationFrame(animationFrame);
+    }
+
+    function openLogsStream() {
+        const evtSource = new EventSource(`${basePath}logs_live`);
+
+        // we store new logs to process on the next frame, to avoid slowdowns when lots of logs come in at once
+        evtSource.addEventListener("log", (event) => {
+            unprocessedLogs.push(event.data);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", async (event) => {
+        await fetchDirectoryListing("/");
+
+        await updateLogs();
+
+        openLogsStream();
+
+        requestAnimationFrame(animationFrame);
+    });
+</script>
+</body>
+</html>

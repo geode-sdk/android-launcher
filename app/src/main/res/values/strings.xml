@@ -262,6 +262,12 @@
     <string name="preference_override_exceptions_description">Uses exception_symbols.txt to patch</string>
     <string name="preference_use_index_update_api">Use index release API</string>
 
+    <string name="preference_development_server_name">Enable development server</string>
+    <string name="preference_development_server_description">Opens a public development server on port 9043.</string>
+
+    <string name="notification_channel_development_server">Development Server Service</string>
+    <string name="notification_channel_development_server_description">Indicates the development server is currently active.</string>
+
     <!-- CrashLogsActivity strings -->
     <string name="title_activity_crash_logs">Crash dumps</string>
     <string name="application_crashes_no_dumps">No crash dumps available.</string>

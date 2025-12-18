@@ -45,7 +45,6 @@ class CrashViewModel(private val application: Application) : ViewModel() {
 
     private var logJob: Job? = null
 
-    @OptIn(ExperimentalTime::class)
     private fun getCrashList(): List<CrashDump> {
         val crashDirectory = LaunchUtils.getCrashDirectory(application)
         if (!crashDirectory.exists()) {

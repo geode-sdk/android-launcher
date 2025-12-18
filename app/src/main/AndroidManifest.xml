@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <uses-feature
         android:name="android.hardware.wifi"
@@ -156,6 +158,12 @@
         <meta-data
             android:name="android.game_mode_config"
             android:resource="@xml/game_mode_config" />
+
+        <service
+            android:name=".DeveloperServerService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>

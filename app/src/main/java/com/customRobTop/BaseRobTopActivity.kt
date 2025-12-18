@@ -24,7 +24,7 @@ object BaseRobTopActivity {
 
     var isPaused = false
 
-    lateinit var me: WeakReference<Activity>
+    var me: WeakReference<Activity> = WeakReference(null)
     private var shouldResumeSound = true
 
     fun setCurrentActivity(currentActivity: Activity) {

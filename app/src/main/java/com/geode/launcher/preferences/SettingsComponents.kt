@@ -925,7 +925,7 @@ fun OptionsLabel(title: String, description: String? = null, icon: (@Composable 
 }
 
 @Composable
-fun SettingsCard(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, asCard: Boolean = true, preferenceKey: PreferenceUtils.Key) {
+fun SettingsCard(title: String, description: String? = null, icon: (@Composable () -> Unit)? = null, asCard: Boolean = true, preferenceKey: PreferenceUtils.Key, onChange: ((Boolean) -> Unit)? = null) {
     val context = LocalContext.current
     val settingEnabled = remember {
         mutableStateOf(getSetting(context, preferenceKey))
@@ -941,7 +941,10 @@ fun SettingsCard(title: String, description: String? = null, icon: (@Composable 
         },
         modifier = Modifier.toggleable(
             value = settingEnabled.value,
-            onValueChange = { settingEnabled.value = toggleSetting(context, preferenceKey) },
+            onValueChange = {
+                settingEnabled.value = toggleSetting(context, preferenceKey)
+                onChange?.invoke(settingEnabled.value)
+            },
             role = Role.Switch,
         ),
         backgroundColor = if (asCard)

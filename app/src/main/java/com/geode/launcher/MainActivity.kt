@@ -1,6 +1,9 @@
 package com.geode.launcher
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,18 +28,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.main.*
-import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.launcherTitleStyle
+import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.Constants
+import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import com.geode.launcher.utils.GamePackageUtils
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +63,23 @@ class MainActivity : ComponentActivity() {
         } else if (LaunchUtils.lastSessionCrashed(this)) {
             LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
         } else { null }
+
+        if (PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DEVELOPER_SERVER)) {
+            val intent = Intent(this, DeveloperServerService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                val name = getString(R.string.notification_channel_development_server)
+                val descriptionText = getString(R.string.notification_channel_development_server_description)
+                val importance = NotificationManager.IMPORTANCE_DEFAULT
+                val mChannel = NotificationChannel("geode_developer_server", name, importance)
+                mChannel.description = descriptionText
+
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.createNotificationChannel(mChannel)
+
+                this.startForegroundService(intent)
+            }
+        }
 
         val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
         if (redirectToAlt) {

@@ -114,6 +114,13 @@ dependencies {
     implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.38.1")
     implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.38.1")
     implementation ("androidx.browser:browser:1.9.0")
+
+    implementation ("io.ktor:ktor-server-core-jvm:3.3.3")
+    implementation ("io.ktor:ktor-server-cio:3.3.3")
+    implementation ("io.ktor:ktor-utils-jvm:3.3.3")
+    implementation ("io.ktor:ktor-server-status-pages:3.3.3")
+    implementation ("io.ktor:ktor-server-sse:3.3.3")
+
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
 }

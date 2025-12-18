@@ -41,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.geode.launcher.R
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
@@ -192,6 +193,18 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         description = LaunchUtils.getBaseDirectory(context).path,
                         onClick = { onOpenFolder(context) }
                     )
+
+                    SettingsCard(
+                        title = stringResource(R.string.preference_development_server_name),
+                        description = stringResource(R.string.preference_development_server_description),
+                        preferenceKey = PreferenceUtils.Key.DEVELOPER_SERVER,
+                    ) { enabled ->
+                        if (enabled) {
+
+                        } else {
+
+                        }
+                    }
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
