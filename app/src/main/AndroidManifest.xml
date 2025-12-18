@@ -22,6 +22,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.LIGHTS" />
 
     <uses-feature
         android:name="android.hardware.wifi"
@@ -29,6 +30,9 @@
     <uses-feature
         android:glEsVersion="0x00020000"
         android:required="true" />
+    <uses-feature
+        android:name="android.hardware.gamepad"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
