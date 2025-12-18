@@ -5,3 +5,4 @@
 
 # note: if you're going to add more rules, consider the @Keep annotation
 # this should really only be kept to non-custom code
+-keep class java.lang.management.** { *; }
