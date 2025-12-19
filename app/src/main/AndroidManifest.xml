@@ -47,7 +47,7 @@
         android:theme="@style/Theme.GeodeLauncher"
         tools:targetApi="35">
         <activity
-            android:name=".AltMainActivity"
+            android:name=".LegacyMainActivity"
             android:exported="false"
             android:theme="@style/Theme.GeodeLauncher" />
         <activity

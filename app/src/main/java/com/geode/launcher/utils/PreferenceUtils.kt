@@ -139,7 +139,6 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LIMIT_ASPECT_RATIO,
         DISPLAY_MODE,
         FORCE_HRR,
-        ENABLE_REDESIGN,
         RELEASE_CHANNEL_TAG,
         DEVELOPER_MODE,
         CLEANUP_APKS,
@@ -149,7 +148,9 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         SCREEN_ZOOM_FIT,
         LIMIT_FRAME_RATE,
         DISABLE_USER_THEME,
-        SELECTED_ICON
+        SELECTED_ICON,
+        DISABLE_REDESIGN,
+        WAIT_PERIOD
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -163,6 +164,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
     private fun defaultValueForIntKey(key: Key) = when (key) {
         Key.DISPLAY_MODE -> if (this.getBoolean(Key.LIMIT_ASPECT_RATIO)) 1 else 0
         Key.SCREEN_ZOOM -> 100
+        Key.WAIT_PERIOD -> 3
         // people wanted a reset on nightly anyways, so this is a good excuse to do so
         else -> 0
     }
@@ -189,7 +191,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LIMIT_ASPECT_RATIO -> "PreferenceLimitAspectRatio"
             Key.DISPLAY_MODE -> "PreferenceDisplayMode"
             Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"
-            Key.ENABLE_REDESIGN -> "PreferenceEnableRedesign"
+            Key.DISABLE_REDESIGN -> "PreferenceDisableRedesign"
             Key.RELEASE_CHANNEL_TAG -> "PreferenceReleaseChannelTag"
             Key.DEVELOPER_MODE -> "PreferenceDeveloperMode"
             Key.CLEANUP_APKS -> "PreferenceCleanupPackages"
@@ -200,6 +202,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LIMIT_FRAME_RATE -> "PreferenceLimitFrameRate"
             Key.DISABLE_USER_THEME -> "PreferenceDisableUserTheme"
             Key.SELECTED_ICON -> "PreferenceSelectedIcon"
+            Key.WAIT_PERIOD -> "PreferenceWaitPeriod"
         }
     }
 

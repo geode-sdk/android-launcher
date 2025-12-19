@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -208,9 +209,21 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_testing)) {
+                    SettingsSelectCard(
+                        title = stringResource(R.string.preference_launch_delay),
+                        dialogTitle = stringResource(R.string.preference_launch_delay_select),
+                        preferenceKey = PreferenceUtils.Key.WAIT_PERIOD,
+                        options = linkedMapOf(
+                            0 to stringResource(R.string.preference_launch_delay_instant),
+                            1 to pluralStringResource(R.plurals.preference_launch_delay_value, 1, 1),
+                            3 to pluralStringResource(R.plurals.preference_launch_delay_value, 3, 3),
+                            5 to pluralStringResource(R.plurals.preference_launch_delay_value, 5, 5),
+                        )
+                    )
+
                     SettingsCard(
-                        title = stringResource(R.string.preference_enable_redesign),
-                        preferenceKey = PreferenceUtils.Key.ENABLE_REDESIGN,
+                        title = stringResource(R.string.preference_disable_redesign),
+                        preferenceKey = PreferenceUtils.Key.DISABLE_REDESIGN,
                     )
                 }
 

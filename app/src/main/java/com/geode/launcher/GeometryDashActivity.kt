@@ -415,8 +415,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         this.mGLSurfaceView = glSurfaceView
         frameLayout.addView(this.mGLSurfaceView)
 
-        val showNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.ENABLE_REDESIGN)
-        if (showNotification) {
+        val disableNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
+        if (!disableNotification) {
             val hasCards = determineDisplayedCards(this)
             if (hasCards.isNotEmpty()) {
                 val notificationView = ComposeView(this)

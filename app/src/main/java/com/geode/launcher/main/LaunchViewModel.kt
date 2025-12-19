@@ -18,8 +18,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-private const val COOLDOWN_LENGTH_MS = 3000L
-
 class LaunchViewModel(private val application: Application): ViewModel() {
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -37,7 +35,13 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     private var readyTimer: CountDownTimer? = null
 
     private fun initReadyTimer() {
-        readyTimer = object : CountDownTimer(COOLDOWN_LENGTH_MS, 1000) {
+        val cooldownLength = PreferenceUtils.get(application).getInt(PreferenceUtils.Key.WAIT_PERIOD) * 1000L
+        if (cooldownLength == 0L) {
+            readyTimerPassed = true
+            return
+        }
+
+        readyTimer = object : CountDownTimer(cooldownLength, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 // no tick necessary
             }

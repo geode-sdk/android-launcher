@@ -146,6 +146,15 @@
     <string name="preference_set_application_icon">Application icon</string>
     <string name="preference_force_hrr">Force maximum refresh rate</string>
     <string name="preference_enable_redesign">✨ Enable UI refresh</string>
+    <string name="preference_disable_redesign">Disable UI refresh</string>
+
+    <string name="preference_launch_delay">Launch delay</string>
+    <string name="preference_launch_delay_select">Select launch delay</string>
+    <string name="preference_launch_delay_instant">None</string>
+    <plurals name="preference_launch_delay_value">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
 
     <string name="preference_display_mode_name">Display mode</string>
     <string name="preference_display_mode_select">Select display mode</string>
