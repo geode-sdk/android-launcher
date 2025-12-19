@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -85,6 +87,40 @@ class ApplicationIconActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun IconSelectConfirmDialog(selectedIcon: ApplicationIconDetails, onDismissRequest: () -> Unit) {
+    AlertDialog(
+        icon = {
+            Image(
+                adaptiveIconPainterResource(selectedIcon.iconId),
+                contentDescription = null
+            )
+        },
+        title = {
+            Text(stringResource(
+                R.string.application_icon_confirm,
+                stringResource(selectedIcon.nameId)
+            ))
+        },
+        text = {
+            Text(stringResource(R.string.application_icon_confirm_description))
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        confirmButton = {
+            val context = LocalContext.current
+
+            TextButton(onClick = { onSelectIcon(context, selectedIcon) }) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        onDismissRequest = onDismissRequest
+    )
+}
+
 fun onSelectIcon(context: Context, selectedIcon: ApplicationIconDetails) {
     val packageManager = context.packageManager
 
@@ -109,7 +145,14 @@ fun onSelectIcon(context: Context, selectedIcon: ApplicationIconDetails) {
 
 @Composable
 fun IconCard(iconData: ApplicationIconDetails, selected: Boolean, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    var showSelection by remember { mutableStateOf(false) }
+
+    if (showSelection) {
+        IconSelectConfirmDialog(iconData) {
+            showSelection = false
+        }
+    }
+
     Row(
         Modifier
             .fillMaxWidth()
@@ -119,7 +162,7 @@ fun IconCard(iconData: ApplicationIconDetails, selected: Boolean, modifier: Modi
             .selectable(
                 selected = selected,
                 onClick = {
-                    onSelectIcon(context, iconData)
+                    showSelection = true
                 },
                 role = Role.RadioButton
             )

@@ -274,6 +274,6 @@
     <string name="application_icon_geode">Geode</string>
     <string name="application_icon_pride">Pride</string>
     <string name="application_icon_trans">Transgender</string>
-
-
+    <string name="application_icon_confirm">Change icon to %1$s?</string>
+    <string name="application_icon_confirm_description">Geode Launcher will close itself to change the application icon.</string>
 </resources>
