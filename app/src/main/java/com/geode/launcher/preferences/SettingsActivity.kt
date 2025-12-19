@@ -439,10 +439,12 @@ fun SettingsScreen(
                         title = {
                             OptionsTitle(
                                 title = stringResource(R.string.preference_check_for_updates_button),
-                                description = stringResource(
-                                    R.string.preference_check_for_updates_description,
-                                    currentRelease ?: "unknown"
-                                )
+                                icon = {
+                                    Icon(
+                                        painterResource(R.drawable.icon_update),
+                                        contentDescription = null
+                                    )
+                                }
                             )
                         },
                         modifier = Modifier
