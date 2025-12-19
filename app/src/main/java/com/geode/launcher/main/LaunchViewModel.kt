@@ -82,7 +82,20 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         data object Ready : LaunchUIState()
     }
 
-    private val _uiState = MutableStateFlow<LaunchUIState>(LaunchUIState.Initial)
+    private val _uiState: MutableStateFlow<LaunchUIState>
+
+    init {
+        val preferenceUtils = PreferenceUtils.get(application)
+        val initialCancel = !preferenceUtils.getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
+                && !preferenceUtils.getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
+
+        // fixes a single frame of progress being displayed when we're not actually going to do work
+        _uiState = MutableStateFlow<LaunchUIState>(
+            if (initialCancel) LaunchUIState.Cancelled(LaunchCancelReason.AUTOMATIC)
+            else LaunchUIState.Initial
+        )
+    }
+
     val uiState = _uiState.asStateFlow()
 
     val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
@@ -210,10 +223,10 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         val reason = if (isAutomatic) LaunchCancelReason.AUTOMATIC else LaunchCancelReason.MANUAL
 
         isCancelling = true
-        _uiState.emit(LaunchUIState.Cancelled(reason, true))
 
         val releaseManager = ReleaseManager.get(application)
         if (releaseManager.isInUpdate) {
+            _uiState.emit(LaunchUIState.Cancelled(reason, true))
             releaseManager.cancelUpdate()
         }
 
