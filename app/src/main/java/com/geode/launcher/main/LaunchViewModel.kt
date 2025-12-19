@@ -105,6 +105,8 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     private var isCancelling = false
     private var hasManuallyStarted = false
 
+    private var restoreUpdateState: LaunchUIState? = null
+
     private suspend fun determineUpdateStatus() {
         ReleaseManager.get(application).uiState.takeWhile {
             it is ReleaseManager.ReleaseManagerState.InUpdateCheck || it is ReleaseManager.ReleaseManagerState.InDownload
@@ -119,6 +121,13 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
         // flow terminates once update check is finished
         hasCheckedForUpdates = true
+
+        val currentState = restoreUpdateState
+        if (currentState != null) {
+            _uiState.emit(currentState)
+            return
+        }
+
         preReadyCheck()
     }
 
@@ -212,6 +221,17 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         }
 
         preReadyCheck()
+    }
+
+    fun retryUpdate() {
+        ReleaseManager.get(application).checkForUpdates(true)
+        if (ReleaseManager.get(application).isInUpdate) {
+            restoreUpdateState = _uiState.value
+            viewModelScope.launch {
+                determineUpdateStatus()
+            }
+            return
+        }
     }
 
     suspend fun cancelLaunch(isAutomatic: Boolean = false) {

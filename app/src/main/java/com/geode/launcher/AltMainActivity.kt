@@ -29,6 +29,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -55,11 +61,15 @@ import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.launcherTitleStyle
+import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 class AltMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -157,9 +167,11 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
         LaunchViewModel.LaunchCancelReason.MANUAL-> LaunchStatusInfo(
             title = null
         )
+        /*
         else -> LaunchStatusInfo(
             title = stringResource(R.string.launcher_cancelled_manual)
         )
+        */
     }
 }
 
@@ -422,6 +434,53 @@ fun GeodeLogo(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Unit) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+
+    val releaseState = ReleaseManager.get(context).uiState.value
+
+    if (releaseState !is ReleaseManager.ReleaseManagerState.Failure) {
+        return
+    }
+
+    val message = when (releaseState.exception) {
+        is UnknownHostException, is ConnectException ->
+            stringResource(R.string.release_fetch_no_internet_short)
+        is ReleaseManager.UpdateException -> {
+            when (releaseState.exception.reason) {
+                ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
+                    R.string.release_fetch_external_in_use_short
+                )
+                else -> stringResource(R.string.release_fetch_generic_short)
+            }
+        }
+        is CancellationException -> null
+        else -> stringResource(R.string.release_fetch_generic_short)
+    }
+
+    if (message == null) {
+        return
+    }
+
+    LaunchedEffect(message) {
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = resources.getString(R.string.release_fetch_button_retry),
+            duration = SnackbarDuration.Indefinite,
+            withDismissAction = true
+        )
+
+        when (result) {
+            SnackbarResult.ActionPerformed -> {
+                onRetry()
+            }
+            else -> {}
+        }
+    }
+}
+
+@Composable
 fun AltMainScreen(
     launchViewModel: LaunchViewModel = viewModel(factory = LaunchViewModel.Factory)
 ) {
@@ -437,70 +496,81 @@ fun AltMainScreen(
 
     var showErrorInfo by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .padding(8.dp)
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
         ) {
-            GeodeLogo()
-
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                LaunchProgressCard(
-                    launchUIState,
-                    crashInfo = launchViewModel.currentCrashInfo(),
-                    onCancel = {
-                        launchInSafeMode = false
-                        coroutineScope.launch {
-                            launchViewModel.cancelLaunch()
-                        }
-                    },
-                    onResume = { safeMode ->
-                        launchInSafeMode = safeMode
+                GeodeLogo()
 
-                        launchViewModel.clearCrashInfo()
-                        coroutineScope.launch {
-                            launchViewModel.beginLaunchFlow(true)
-                        }
-                    },
-                    onMore = {
-                        showErrorInfo = true
-                    },
-                    extraOptions = {
-                        ExtraOptions(
-                            onSettings = {
-                                coroutineScope.launch {
-                                    launchViewModel.cancelLaunch(true)
-                                }
-
-                                onSettings(context)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    LaunchProgressCard(
+                        launchUIState,
+                        crashInfo = launchViewModel.currentCrashInfo(),
+                        onCancel = {
+                            launchInSafeMode = false
+                            coroutineScope.launch {
+                                launchViewModel.cancelLaunch()
                             }
-                        )
-                    },
-                    safeModeEnabled = launchInSafeMode
-                )
+                        },
+                        onResume = { safeMode ->
+                            launchInSafeMode = safeMode
 
-                // only show launcher update in a case where a user won't see it ingame
-                if (launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
-                    val gameVersion = remember { GamePackageUtils.getGameVersionCodeOrNull(context.packageManager) }
+                            launchViewModel.clearCrashInfo()
+                            coroutineScope.launch {
+                                launchViewModel.beginLaunchFlow(true)
+                            }
+                        },
+                        onMore = {
+                            showErrorInfo = true
+                        },
+                        extraOptions = {
+                            ExtraOptions(
+                                onSettings = {
+                                    coroutineScope.launch {
+                                        launchViewModel.cancelLaunch(true)
+                                    }
 
-                    if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
-                        UnsupportedVersionWarning()
-                    }
+                                    onSettings(context)
+                                }
+                            )
+                        },
+                        safeModeEnabled = launchInSafeMode
+                    )
 
-                    val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
-                    if (nextLauncherUpdate != null) {
-                        LauncherUpdateIndicator()
+                    // only show launcher update in a case where a user won't see it ingame
+                    if (launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
+                        val gameVersion = remember { GamePackageUtils.getGameVersionCodeOrNull(context.packageManager) }
+
+                        if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
+                            UnsupportedVersionWarning()
+                        }
+
+                        val nextLauncherUpdate by launchViewModel.nextLauncherUpdate.collectAsState()
+                        if (nextLauncherUpdate != null) {
+                            LauncherUpdateIndicator()
+                        }
+
+                        GeodeUpdateIndicator(snackbarHostState) {
+                            launchViewModel.retryUpdate()
+                        }
                     }
                 }
             }

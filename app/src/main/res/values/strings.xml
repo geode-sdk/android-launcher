@@ -93,6 +93,11 @@
     <string name="release_fetch_try_later">Please try again later.</string>
     <string name="release_fetch_manual_check_required">Externally managed library in use, please manually check for updates if you want to overwrite it.</string>
 
+    <string name="release_fetch_external_in_use_short">Update failed. External library in use.</string>
+    <string name="release_fetch_no_internet_short">Update failed. Internet not connected.</string>
+    <string name="release_fetch_generic_short">Update failed. Please try again later.</string>
+
+
     <!-- GeometryDashActivity strings -->
     <string name="load_failed_link_error">Failed to link libraries</string>
     <string name="load_failed_link_error_description">Game libraries could not be found. Try to:</string>
