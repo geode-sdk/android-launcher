@@ -84,6 +84,14 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         data class Cancelled(val reason: LaunchCancelReason, val inProgress: Boolean = false) : LaunchUIState()
         data object Working : LaunchUIState()
         data object Ready : LaunchUIState()
+
+        fun isInProgress() = when (this) {
+            is Ready,
+            is Working,
+            is Updating,
+            is UpdateCheck -> true
+            else -> false
+        }
     }
 
     private val _uiState: MutableStateFlow<LaunchUIState>
