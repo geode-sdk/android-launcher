@@ -1,11 +1,22 @@
 package com.geode.launcher
 
 import android.content.Intent
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import android.text.format.Formatter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,11 +58,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,6 +79,8 @@ import com.geode.launcher.main.*
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.ui.theme.Theme.DARK
+import com.geode.launcher.ui.theme.Theme.LIGHT
 import com.geode.launcher.ui.theme.launcherTitleStyle
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.Constants
@@ -417,19 +439,157 @@ fun ExtraOptions(onSettings: () -> Unit) {
     }
 }
 
+val lightOuterColorGradient = arrayOf(
+    0.0f to Color(0xfff5b11d),
+    0.10f to Color(0xfff0834d),
+    0.24f to Color(0xffe85f6b),
+    0.49f to Color(0xffc9659e),
+    1.0f to Color(0xffb9588f)
+)
+
+val lightInnerColorGradient = arrayOf(
+    0.48f to Color(0xfff2ce00),
+    0.63f to Color(0xfff4b97e),
+    0.73f to Color(0xfff7b66a),
+    1.0f to Color(0xffeb8fac)
+)
+
+val darkOuterColorGradient = arrayOf(
+    0.0f to Color(0xfffffdff),
+    0.08f to Color(0xffF2EAF5),
+    0.12f to Color(0xffEDE5EF),
+    0.31f to Color(0xffCDB5CD),
+    0.49f to Color(0xffBA9BBC),
+    1.0f to Color(0xff8D7ACF),
+)
+
+val darkInnerColorGradient = arrayOf(
+    0.48f to Color(0xffffffff),
+    0.63f to Color(0xfff5e4c2),
+    0.73f to Color(0xffe5c7ad),
+    1.0f to Color(0xffb790a9),
+)
+
+@Preview(name = "non-animated, light")
+@Preview(name = "non-animated, dark", uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun GeodeLogo(modifier: Modifier = Modifier) {
+fun GeodeLogoPreview() {
+    val theme = if (isSystemInDarkTheme()) DARK else LIGHT
+    CompositionLocalProvider(LocalTheme provides theme) {
+        GeodeLauncherTheme(theme = theme) {
+            Surface {
+                GeodeLogo()
+            }
+        }
+    }
+}
+
+@Preview(name = "animated, light")
+@Preview(name = "animated, dark", uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun GeodeLogoAnimatedPreview() {
+    val theme = if (isSystemInDarkTheme()) DARK else LIGHT
+    CompositionLocalProvider(LocalTheme provides theme) {
+        GeodeLauncherTheme(theme = theme) {
+            Surface {
+                GeodeLogo(true)
+            }
+        }
+    }
+}
+
+@Composable
+fun AnimatedLogo(modifier: Modifier = Modifier) {
+    val theme = LocalTheme.current
+    val innerColorPalette = remember(theme) {
+        if (theme == LIGHT) lightInnerColorGradient else darkInnerColorGradient
+    }
+
+    val outerColorPalette = remember(theme) {
+        if (theme == LIGHT) lightOuterColorGradient else darkOuterColorGradient
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
+    val offset by infiniteTransition.animateFloat(
+        initialValue = -1.0f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "gradient offset"
+    )
+
+    val innerBrush = Brush.linearGradient(
+        colorStops = innerColorPalette,
+        start = Offset(0.0f, 0.0f + (165.06f * offset)),
+        end = Offset(0.0f, 165.06f + (165.06f * offset)),
+        tileMode = TileMode.Mirror
+    )
+
+    val outerBrush = Brush.linearGradient(
+        colorStops = outerColorPalette,
+        start = Offset(0.0f + (84.69f * offset), 0.0f + (165.06f * offset)),
+        end = Offset(84.69f + (84.69f * offset), 169.61f + (165.06f * offset)),
+        tileMode = TileMode.Mirror
+    )
+
+    Box(modifier = modifier) {
+        Icon(
+            painter = painterResource(id = R.drawable.geode_monochrome_inner),
+            contentDescription = null,
+            modifier = Modifier
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = innerBrush,
+                        blendMode = BlendMode.SrcIn
+                    )
+                }
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.geode_monochrome_outer),
+            contentDescription = null,
+            modifier = Modifier
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = outerBrush,
+                        blendMode = BlendMode.SrcIn
+                    )
+                }
+        )
+    }
+}
+
+@Composable
+fun GeodeLogo(shouldAnimate: Boolean = false, modifier: Modifier = Modifier) {
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.geode_monochrome),
-            contentDescription = null,
-            modifier = Modifier
-                .size(64.dp, 64.dp)
-        )
+        val theme = LocalTheme.current
+
+        Crossfade(
+            targetState = shouldAnimate,
+            animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+            label="logo fade"
+        ) { screen ->
+            when (screen) {
+                true -> AnimatedLogo(modifier = Modifier.size(64.dp, 64.dp))
+                false -> Image(
+                    painterResource(if (theme == LIGHT)
+                        R.drawable.geode_base_light else R.drawable.geode_base
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp, 64.dp)
+                )
+            }
+        }
+
         Text(
             stringResource(R.string.launcher_title),
             style = launcherTitleStyle,
@@ -506,12 +666,12 @@ fun AltMainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        modifier = Modifier.safeDrawingPadding()
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
@@ -522,7 +682,7 @@ fun AltMainScreen(
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                GeodeLogo()
+                GeodeLogo(shouldAnimate = launchUIState.isInProgress())
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
