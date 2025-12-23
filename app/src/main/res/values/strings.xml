@@ -64,6 +64,11 @@
     <string name="launcher_notification_compatibility_description">An update is required to receive Geode updates.</string>
     <string name="launcher_notification_update_cta">Tap for more information.</string>
 
+    <string name="launcher_self_update_failed_title">Update failed</string>
+
+    <string name="launcher_self_update_failed">Failed to install launcher update: %1$s.</string>
+    <string name="launcher_self_update_progress">Updating Geode Launcher…</string>
+
     <string name="launcher_starting_game">Starting Geometry Dash…</string>
     <string name="launcher_downloading_update">Downloading update…</string>
     <string name="launcher_downloading_update_details">(%1$s/%2$s)</string>

@@ -134,7 +134,7 @@ class ReleaseManager private constructor(
     private suspend fun downloadLauncherUpdate(release: Downloadable) {
         val download = release.getDownload() ?: return
 
-        val outputDirectory = LaunchUtils.getBaseDirectory(applicationContext)
+        val outputDirectory = applicationContext.filesDir
         val outputFile = File(outputDirectory, download.filename)
 
         if (outputFile.exists()) {

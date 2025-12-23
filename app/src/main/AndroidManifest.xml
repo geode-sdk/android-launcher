@@ -20,7 +20,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.LIGHTS" />
 
@@ -38,14 +39,18 @@
         android:allowBackup="true"
         android:appCategory="game"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
+        android:hasFragileUserData="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:hasFragileUserData="true"
         android:requestLegacyExternalStorage="true"
-        android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.GeodeLauncher"
         tools:targetApi="35">
+        <receiver
+            android:name=".InstallReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <activity
             android:name=".LegacyMainActivity"
             android:exported="false"
@@ -74,15 +79,14 @@
             android:name=".preferences.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings"
-            android:theme="@style/Theme.GeodeLauncher">
-        </activity>
+            android:theme="@style/Theme.GeodeLauncher" />
         <activity
             android:name=".GeometryDashActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize"
             android:exported="true"
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.NoActionBar.Fullscreen"
-            android:configChanges="orientation|screenSize|smallestScreenSize"
             android:windowSoftInputMode="stateAlwaysHidden">
             <meta-data
                 android:name="android.app.lib_name"
@@ -94,45 +98,47 @@
             android:theme="@style/Theme.GeodeLauncher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity-alias
-            android:name=".MainActivityGeode"
+            android:name=".MainActivityTrans"
             android:enabled="false"
             android:exported="true"
+            android:icon="@mipmap/ic_launcher_trans"
             android:label="@string/app_name"
-            android:icon="@mipmap/ic_launcher_geode"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityPride"
             android:enabled="false"
             android:exported="true"
-            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_pride"
+            android:label="@string/app_name"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
-            android:name=".MainActivityTrans"
+            android:name=".MainActivityGeode"
             android:enabled="false"
             android:exported="true"
+            android:icon="@mipmap/ic_launcher_geode"
             android:label="@string/app_name"
-            android:icon="@mipmap/ic_launcher_trans"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
