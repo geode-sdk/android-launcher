@@ -18,6 +18,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
+data class LaunchArguments(
+    val autoSafeMode: Boolean,
+    val forcePause: Boolean,
+    val forceLaunch: Boolean
+)
+
 class LaunchViewModel(private val application: Application): ViewModel() {
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -113,6 +119,8 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
 
     var loadFailure: LoadFailureInfo? = null
+    var launchArguments: LaunchArguments? = null
+
     private var hasCheckedForUpdates = false
     private var isCancelling = false
     private var hasManuallyStarted = false
@@ -191,8 +199,15 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GEODE_NOT_FOUND))
         }
 
+        // if forcing immediate launch, then act as if it's manually started (skips timers)
+        val forceImmediate = launchArguments?.forceLaunch == true
+        if (forceImmediate) {
+            hasManuallyStarted = true
+        }
+
         val loadAutomatically = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
-        if (!loadAutomatically && !hasManuallyStarted) {
+        val forcePause = launchArguments?.forcePause == true
+        if (!hasManuallyStarted && (forcePause || !loadAutomatically)) {
             return cancelLaunch(true)
         }
 

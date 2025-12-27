@@ -107,7 +107,7 @@ fun onOpenFileManager(context: Context) {
 
     try {
         context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
+    } catch (_: ActivityNotFoundException) {
         Toast.makeText(
             context,
             context.getText(R.string.no_activity_found), Toast.LENGTH_SHORT

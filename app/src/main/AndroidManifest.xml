@@ -57,19 +57,43 @@
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
             android:name=".preferences.DeveloperSettingsActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_developer_settings"
-            android:theme="@style/Theme.GeodeLauncher" />
+            android:theme="@style/Theme.GeodeLauncher">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="developer-settings" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".preferences.ApplicationLogsActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_application_logs"
-            android:theme="@style/Theme.GeodeLauncher" />
+            android:theme="@style/Theme.GeodeLauncher">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="logs" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".preferences.CrashLogsActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_crash_logs"
-            android:theme="@style/Theme.GeodeLauncher" />
+            android:theme="@style/Theme.GeodeLauncher">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="crashes" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".preferences.ApplicationIconActivity"
             android:exported="false"
@@ -77,9 +101,17 @@
             android:theme="@style/Theme.GeodeLauncher" />
         <activity
             android:name=".preferences.SettingsActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_settings"
-            android:theme="@style/Theme.GeodeLauncher" />
+            android:theme="@style/Theme.GeodeLauncher">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="settings" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".GeometryDashActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize"
@@ -101,6 +133,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="main" />
+            </intent-filter>
         </activity>
 
         <activity-alias
@@ -115,6 +154,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="main" />
+            </intent-filter>
         </activity-alias>
         <activity-alias
             android:name=".MainActivityPride"
@@ -128,6 +174,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="main" />
+            </intent-filter>
         </activity-alias>
         <activity-alias
             android:name=".MainActivityGeode"
@@ -140,6 +193,13 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="main" />
             </intent-filter>
         </activity-alias>
 

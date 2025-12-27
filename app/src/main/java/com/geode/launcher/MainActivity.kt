@@ -96,11 +96,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
-        clearDownloadedApks(this)
-
         val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
+
+        if (gdInstalled && geodeInstalled && intent.getBooleanExtra("restarted", false)) {
+            onLaunch(this)
+        }
+
+        enableEdgeToEdge()
+        clearDownloadedApks(this)
 
         val returnMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE)
         val returnExtendedMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE)
@@ -115,8 +119,23 @@ class MainActivity : ComponentActivity() {
             LoadFailureInfo(LaunchUtils.LauncherError.CRASHED)
         } else { null }
 
+        var launchArguments: LaunchArguments? = null
+        val intentData = intent.data
+        if (intent.action == Intent.ACTION_VIEW && intentData != null) {
+            val isLaunch = intentData.path == "/launch"
+            val safeMode = if (isLaunch) {
+                intentData.getBooleanQueryParameter("safe-mode", false)
+            } else false
+
+            launchArguments = LaunchArguments(
+                autoSafeMode = safeMode,
+                forcePause = !isLaunch,
+                forceLaunch = isLaunch,
+            )
+        }
+
         val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
-        if (redirectToAlt) {
+        if (redirectToAlt && launchArguments == null) {
             val launchIntent = Intent(this, LegacyMainActivity::class.java)
             launchIntent.putExtras(intent)
             startActivity(launchIntent)
@@ -137,6 +156,10 @@ class MainActivity : ComponentActivity() {
                 launchViewModel.loadFailure = loadFailureInfo
             }
 
+            if (launchArguments != null) {
+                launchViewModel.launchArguments = launchArguments
+            }
+
             CompositionLocalProvider(LocalTheme provides theme) {
                 GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption, dynamicColor = !dynamicColorOption) {
                     Surface(
@@ -144,14 +167,6 @@ class MainActivity : ComponentActivity() {
                     ) {
                         AltMainScreen(launchViewModel)
                     }
-                }
-            }
-        }
-
-        if (gdInstalled && geodeInstalled) {
-            intent.getBooleanExtra("restarted", false).let {
-                if (it) {
-                    onLaunch(this)
                 }
             }
         }
@@ -605,7 +620,7 @@ fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Un
     val context = LocalContext.current
     val resources = LocalResources.current
 
-    val releaseState = ReleaseManager.get(context).uiState.value
+    val releaseState = ReleaseManager.get(context).uiState.collectAsState().value
 
     if (releaseState !is ReleaseManager.ReleaseManagerState.Failure) {
         return
@@ -659,7 +674,9 @@ fun AltMainScreen(
 
     val launchUIState by launchViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    var launchInSafeMode by remember { mutableStateOf(false) }
+    var launchInSafeMode by remember {
+        mutableStateOf(launchViewModel.launchArguments?.autoSafeMode == true)
+    }
 
     var showErrorInfo by remember { mutableStateOf(false) }
 
