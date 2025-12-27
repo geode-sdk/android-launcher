@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.text.format.DateUtils
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -58,6 +59,7 @@ import com.geode.launcher.utils.PreferenceUtils
 import java.net.ConnectException
 import java.net.UnknownHostException
 import kotlin.math.roundToInt
+import kotlin.time.Clock
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -435,6 +437,22 @@ fun SettingsScreen(
                         title = stringResource(R.string.preference_update_automatically_name),
                         preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
                     )
+
+                    val lastUpdateCheck by PreferenceUtils.useLongPreference(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
+                    val checkAgoString = remember(lastUpdateCheck) {
+                        if (lastUpdateCheck != 0L) {
+                            val now = Clock.System.now().toEpochMilliseconds()
+                            DateUtils.getRelativeTimeSpanString(
+                                lastUpdateCheck,
+                                now,
+                                DateUtils.MINUTE_IN_MILLIS,
+                                DateUtils.FORMAT_ABBREV_RELATIVE
+                            )
+                        } else {
+                            "never"
+                        }
+                    }
+
                     OptionsCard(
                         title = {
                             OptionsTitle(
@@ -444,7 +462,9 @@ fun SettingsScreen(
                                         painterResource(R.drawable.icon_update),
                                         contentDescription = null
                                     )
-                                }
+                                },
+                                description = stringResource(R.string.preference_check_for_updates_description, checkAgoString)
+                                    .takeIf { lastUpdateCheck != 0L }
                             )
                         },
                         modifier = Modifier

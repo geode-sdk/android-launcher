@@ -957,7 +957,7 @@ fun SettingsCard(title: String, description: String? = null, icon: (@Composable 
 
 @Composable
 fun OptionsTitle(modifier: Modifier = Modifier, title: String, description: String? = null, icon: (@Composable () -> Unit)? = null) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (icon != null) {
             icon()
         }

@@ -22,6 +22,8 @@ import okio.buffer
 import okio.source
 import java.io.File
 import java.io.InterruptedIOException
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 private const val TAG_LATEST = "latest"
 private const val TAG_BETA = "prerelease"
@@ -245,6 +247,16 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun checkForNewRelease(isManual: Boolean = false) {
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+        val lastCheckTime = sharedPreferences.getLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
+
+        // only check for updates if it's been over 30 minutes since last check
+        val checkMinTime = Clock.System.now().minus(30.minutes).toEpochMilliseconds()
+        if (!isManual && lastCheckTime > checkMinTime) {
+            _uiState.value = ReleaseManagerState.Finished()
+            return
+        }
+
         val release = try {
             getLatestRelease()
         } catch (e: Exception) {
@@ -263,14 +275,15 @@ class ReleaseManager private constructor(
             checkLauncherUpdate(launcherRelease)
         }
 
+        val currentTime = Clock.System.now().toEpochMilliseconds()
+        sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
+
         if (release == null) {
             downloadLauncherUpdateIfNecessary()
 
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
-
-        val sharedPreferences = PreferenceUtils.get(applicationContext)
 
         val currentVersion = sharedPreferences.getLong(PreferenceUtils.Key.CURRENT_VERSION_TIMESTAMP)
         val latestVersion = release.getDescriptor()

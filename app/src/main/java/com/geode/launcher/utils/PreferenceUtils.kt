@@ -150,7 +150,8 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         DISABLE_USER_THEME,
         SELECTED_ICON,
         DISABLE_REDESIGN,
-        WAIT_PERIOD
+        WAIT_PERIOD,
+        LAST_UPDATE_CHECK_TIME
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -203,6 +204,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.DISABLE_USER_THEME -> "PreferenceDisableUserTheme"
             Key.SELECTED_ICON -> "PreferenceSelectedIcon"
             Key.WAIT_PERIOD -> "PreferenceWaitPeriod"
+            Key.LAST_UPDATE_CHECK_TIME -> "PreferenceLastUpdateCheckTime"
         }
     }
 
