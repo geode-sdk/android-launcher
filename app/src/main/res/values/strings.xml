@@ -116,7 +116,7 @@
     <string name="load_failed_recommendation_switch_64bit_abi">Install the non 32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>
     <string name="load_failed_recommendation_report">Report this issue to the developers.</string>
-    <string name="load_failed_recommendation_safe_mode">Hold the Launch button to launch in safe mode.</string>
+    <string name="load_failed_recommendation_safe_mode">Enable the safe mode button in Settings.</string>
     <string name="load_failed_recommendation_dev_stl">Devs: If this is a locally built Geode version, please use the c++_shared ANDROID_STL!</string>
 
     <string name="message_box_cancel">Cancel</string>
@@ -236,6 +236,10 @@
     <string name="preference_check_for_updates_already_updating">An update is already in progress!</string>
 
     <string name="preference_category_developer">Advanced</string>
+
+    <string name="preference_launch_safe_mode">Launch in safe mode</string>
+    <string name="preference_launch_safe_mode_confirm_title">Start in safe mode?</string>
+
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
     <string name="preference_text_clear">Clear</string>

@@ -113,11 +113,11 @@ fun SafeModeDialog(onDismiss: () -> Unit, onLaunch: () -> Unit) {
     AlertDialog(
         icon = {
             Icon(
-                painterResource(R.drawable.icon_warning),
-                contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                painterResource(R.drawable.icon_shield_alert),
+                contentDescription = null
             )
         },
-        title = { Text(stringResource(R.string.safe_mode_enable_title)) },
+        title = { Text(stringResource(R.string.preference_launch_safe_mode_confirm_title)) },
         text = { Text(stringResource(R.string.safe_mode_enable_description)) },
         dismissButton = {
             TextButton(onClick = onDismiss) {

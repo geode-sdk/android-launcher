@@ -20,6 +20,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -1008,6 +1009,31 @@ fun OptionsCard(
 
         content()
     }
+}
+
+@Composable
+fun SafeModeDialog(onDismiss: () -> Unit, onLaunch: () -> Unit) {
+    AlertDialog(
+        icon = {
+            Icon(
+                painterResource(R.drawable.icon_shield_alert),
+                contentDescription = null
+            )
+        },
+        title = { Text(stringResource(R.string.safe_mode_enable_title)) },
+        text = { Text(stringResource(R.string.safe_mode_enable_description)) },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onLaunch) {
+                Text(stringResource(R.string.message_box_continue))
+            }
+        },
+        onDismissRequest = onDismiss
+    )
 }
 
 @Composable

@@ -42,8 +42,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.BuildConfig
+import com.geode.launcher.MainActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.updater.ReleaseViewModel
@@ -512,6 +514,33 @@ fun SettingsScreen(
                             context.startActivity(launchIntent)
                         }
                     )
+
+                    var showSafeModeDialog by remember { mutableStateOf(false) }
+
+                    OptionsButton(
+                        title = stringResource(R.string.preference_launch_safe_mode),
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.icon_shield),
+                                contentDescription = null
+                            )
+                        }
+                    ) {
+                        showSafeModeDialog = true
+                    }
+
+                    if (showSafeModeDialog) {
+                        SafeModeDialog(onDismiss = {
+                            showSafeModeDialog = false
+                        }) {
+                            val launchIntent = Intent(context, MainActivity::class.java).apply {
+                                // hardcode it, why not
+                                action = Intent.ACTION_VIEW
+                                data = "geode-launcher://main/launch?safe-mode=true".toUri()
+                            }
+                            context.startActivity(launchIntent)
+                        }
+                    }
                 }
 
                 OptionsGroup(stringResource(R.string.preference_category_about)) {
