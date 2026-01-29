@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
@@ -14,27 +15,45 @@ import android.os.Build
 import android.util.Log
 import java.io.FileNotFoundException
 
+
 // i never agreed to your licenses! take that
 @SuppressLint("StaticFieldLeak")
 object FMOD {
     private var gContext: Context? = null
+    private var gPluginAudioDeviceCallback: PluginAudioDeviceCallback? = null
     private val gPluginBroadcastReceiver = PluginBroadcastReceiver()
 
     external fun OutputAAudioHeadphonesChanged()
+    external fun SetInputEnumerationChanged()
+    external fun SetOutputEnumerationChanged()
 
     @JvmStatic
     fun init(context: Context?) {
         gContext = context
-        gContext?.registerReceiver(
-            gPluginBroadcastReceiver,
-            IntentFilter(Intent.ACTION_HEADSET_PLUG)
-        )
+        if (context == null) {
+            return
+        }
+
+        val intentFilter = IntentFilter(Intent.ACTION_HEADSET_PLUG)
+        if (Build.VERSION.SDK_INT >= 34) {
+            context.registerReceiver(gPluginBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(gPluginBroadcastReceiver, intentFilter)
+        }
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val pluginAudioDeviceCallback = PluginAudioDeviceCallback(audioManager.getDevices(3))
+        gPluginAudioDeviceCallback = pluginAudioDeviceCallback
+        audioManager.registerAudioDeviceCallback(pluginAudioDeviceCallback, null)
     }
 
     @JvmStatic
     fun close() {
         val context = gContext
-        context?.unregisterReceiver(gPluginBroadcastReceiver)
+        if (context != null) {
+            context.unregisterReceiver(gPluginBroadcastReceiver)
+            (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+                .unregisterAudioDeviceCallback(gPluginAudioDeviceCallback)
+        }
         gContext = null
     }
 
@@ -110,6 +129,12 @@ object FMOD {
     }
 
     @JvmStatic
+    fun getAudioDevices(i: Int): Array<AudioDeviceInfo?>? {
+        val context = gContext ?: return emptyArray()
+        return (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager).getDevices(i)
+    }
+
+    @JvmStatic
     fun fileDescriptorFromUri(str: String?): Int {
         gContext?.apply {
             try {
@@ -125,6 +150,76 @@ object FMOD {
     internal class PluginBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             OutputAAudioHeadphonesChanged()
+        }
+    }
+
+    internal class PluginAudioDeviceCallback : AudioDeviceCallback {
+        val deviceSet: HashSet<Int> = HashSet()
+
+        constructor(audioDeviceInfoArr: Array<out AudioDeviceInfo?>?) {
+            if (audioDeviceInfoArr != null) {
+                deviceSet.addAll(audioDeviceInfoArr.mapNotNull { it?.id })
+            }
+        }
+
+        override fun onAudioDevicesAdded(audioDeviceInfoArr: Array<out AudioDeviceInfo?>?) {
+            var z: Boolean
+            var i = 0
+            if (audioDeviceInfoArr != null) {
+                var i2 = 0
+                z = false
+                while (i < audioDeviceInfoArr.size) {
+                    if (!deviceSet.contains(audioDeviceInfoArr[i]!!.id)) {
+                        if (audioDeviceInfoArr[i]!!.isSource) {
+                            i2 = 1
+                        }
+                        if (audioDeviceInfoArr[i]!!.isSink) {
+                            z = true
+                        }
+                        deviceSet.add(audioDeviceInfoArr[i]!!.id)
+                    }
+                    i++
+                }
+                i = i2
+            } else {
+                z = false
+            }
+            if (i != 0) {
+                SetInputEnumerationChanged()
+            }
+            if (z) {
+                SetOutputEnumerationChanged()
+            }
+        }
+
+        override fun onAudioDevicesRemoved(audioDeviceInfoArr: Array<out AudioDeviceInfo?>?) {
+            var z: Boolean
+            var i = 0
+            if (audioDeviceInfoArr != null) {
+                var i2 = 0
+                z = false
+                while (i < audioDeviceInfoArr.size) {
+                    if (deviceSet.contains(audioDeviceInfoArr[i]!!.id)) {
+                        if (audioDeviceInfoArr[i]!!.isSource) {
+                            i2 = 1
+                        }
+                        if (audioDeviceInfoArr[i]!!.isSink) {
+                            z = true
+                        }
+                        deviceSet.remove(audioDeviceInfoArr[i]!!.id)
+                    }
+                    i++
+                }
+                i = i2
+            } else {
+                z = false
+            }
+            if (i != 0) {
+                SetInputEnumerationChanged()
+            }
+            if (z) {
+                SetOutputEnumerationChanged()
+            }
         }
     }
 }
