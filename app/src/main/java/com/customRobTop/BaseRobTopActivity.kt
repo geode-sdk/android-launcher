@@ -5,11 +5,11 @@ import android.app.Activity
 import android.content.*
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
+import androidx.core.net.toUri
+import com.geode.launcher.R
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.openIMEKeyboard
 import java.lang.ref.WeakReference
@@ -61,19 +61,15 @@ object BaseRobTopActivity {
 
     @JvmStatic
     fun openURL(url: String) {
-        Log.d("MAIN", "Open URL")
         me.get()?.runOnUiThread {
             try {
-                me.get()?.startActivity(
-                    Intent(
-                        "android.intent.action.VIEW",
-                        Uri.parse(url)
-                    )
-                )
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                me.get()?.startActivity(intent)
             } catch (e: ActivityNotFoundException) {
                 Toast.makeText(
                     me.get(),
-                    "No activity found to open this URL.",
+                    R.string.no_activity_found,
                     Toast.LENGTH_SHORT,
                 ).show()
             }
@@ -81,13 +77,24 @@ object BaseRobTopActivity {
     }
 
     @JvmStatic
+    fun copyToClipboard(str: String) {
+        val context = me.get() ?: return
+        context.runOnUiThread {
+            val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboardManager.setPrimaryClip(
+                ClipData.newPlainText("text", str)
+            )
+        }
+    }
+
+    @JvmStatic
     fun sendMail(subject: String, body: String, to: String) {
         me.get()?.runOnUiThread {
-            val i = Intent("android.intent.action.SEND")
+            val i = Intent(Intent.ACTION_SEND)
             i.type = "message/rfc822"
-            i.putExtra("android.intent.extra.EMAIL", arrayOf(to))
-            i.putExtra("android.intent.extra.SUBJECT", subject)
-            i.putExtra("android.intent.extra.TEXT", body)
+            i.putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            i.putExtra(Intent.EXTRA_SUBJECT, subject)
+            i.putExtra(Intent.EXTRA_TEXT, body)
             try {
                 me.get()?.startActivity(Intent.createChooser(i, "Send mail..."))
             } catch (e: ActivityNotFoundException) {
