@@ -23,6 +23,7 @@ import kotlin.math.abs
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
 private const val MS_TO_NS = 1_000_000
+private const val SEC_TO_NS = 1_000_000_000.0
 
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     companion object {
@@ -167,6 +168,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         val ys = FloatArray(pointerNumber)
         val timestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             motionEvent.eventTimeNanos else motionEvent.eventTime * MS_TO_NS
+        val timestampSec = timestamp / SEC_TO_NS
 
         for (i in 0 until pointerNumber) {
             ids[i] = motionEvent.getPointerId(i)
@@ -188,7 +190,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_BEGIN, ids.sliceArray(0..0), xs.sliceArray(0..0), ys.sliceArray(0..0)
                         )
                     else
-                        cocos2dxRenderer.handleActionDown(idDown, xDown, f)
+                        cocos2dxRenderer.handleActionDown(idDown, xDown, f, timestampSec)
                 }
                 true
             }
@@ -205,7 +207,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_END, ids.sliceArray(0..0), xs.sliceArray(0..0), ys.sliceArray(0..0)
                         )
                     else
-                        cocos2dxRenderer.handleActionUp(idUp, f2, f3)
+                        cocos2dxRenderer.handleActionUp(idUp, f2, f3, timestampSec)
                 }
                 true
             }
@@ -219,7 +221,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_MOVE, ids, xs, ys
                         )
                     else
-                        cocos2dxRenderer.handleActionMove(ids, xs, ys)
+                        cocos2dxRenderer.handleActionMove(ids, xs, ys, timestampSec)
                 }
                 true
             }
@@ -233,7 +235,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_CANCEL, ids, xs, ys
                         )
                     else
-                        cocos2dxRenderer.handleActionCancel(ids, xs, ys)
+                        cocos2dxRenderer.handleActionCancel(ids, xs, ys, timestampSec)
                 }
                 true
             }
@@ -251,7 +253,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_BEGIN, intArrayOf(idPointerDown), floatArrayOf(xPointerDown), floatArrayOf(y)
                         )
                     else
-                        cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y)
+                        cocos2dxRenderer.handleActionDown(idPointerDown, xPointerDown, y, timestampSec)
                 }
                 true
             }
@@ -269,7 +271,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             GeodeUtils.TOUCH_TYPE_END, intArrayOf(idPointerUp), floatArrayOf(xPointerUp), floatArrayOf(y2)
                         )
                     else
-                        cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2)
+                        cocos2dxRenderer.handleActionUp(idPointerUp, xPointerUp, y2, timestampSec)
                 }
                 true
             }

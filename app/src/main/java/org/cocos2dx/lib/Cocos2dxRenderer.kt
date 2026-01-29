@@ -40,21 +40,25 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         @JvmStatic
         private external fun nativeTextClosed()
 
+        // timestamp was added in 2.208, but the jni method has no required type signature.
+        // it doesn't hurt to unconditionally send one
+
         @JvmStatic
-        private external fun nativeTouchesBegin(id: Int, x: Float, y: Float)
+        private external fun nativeTouchesBegin(id: Int, x: Float, y: Float, timestamp: Double)
 
         @JvmStatic
         private external fun nativeTouchesCancel(
             ids: IntArray,
             xs: FloatArray,
-            ys: FloatArray
+            ys: FloatArray,
+            timestamp: Double,
         )
 
         @JvmStatic
-        private external fun nativeTouchesEnd(id: Int, x: Float, y: Float)
+        private external fun nativeTouchesEnd(id: Int, x: Float, y: Float, timestamp: Double)
 
         @JvmStatic
-        private external fun nativeTouchesMove(ids: IntArray, xs: FloatArray, ys: FloatArray)
+        private external fun nativeTouchesMove(ids: IntArray, xs: FloatArray, ys: FloatArray, timestamp: Double)
 
         @JvmStatic
         private external fun nativeInit(width: Int, height: Int)
@@ -109,20 +113,20 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         }
     }
 
-    fun handleActionDown(id: Int, x: Float, y: Float) {
-        nativeTouchesBegin(id, x, y)
+    fun handleActionDown(id: Int, x: Float, y: Float, timestamp: Double) {
+        nativeTouchesBegin(id, x, y, timestamp)
     }
 
-    fun handleActionUp(id: Int, x: Float, y: Float) {
-        nativeTouchesEnd(id, x, y)
+    fun handleActionUp(id: Int, x: Float, y: Float, timestamp: Double) {
+        nativeTouchesEnd(id, x, y, timestamp)
     }
 
-    fun handleActionCancel(ids: IntArray, xs: FloatArray, ys: FloatArray) {
-        nativeTouchesCancel(ids, xs, ys)
+    fun handleActionCancel(ids: IntArray, xs: FloatArray, ys: FloatArray, timestamp: Double) {
+        nativeTouchesCancel(ids, xs, ys, timestamp)
     }
 
-    fun handleActionMove(ids: IntArray, xs: FloatArray, ys: FloatArray) {
-        nativeTouchesMove(ids, xs, ys)
+    fun handleActionMove(ids: IntArray, xs: FloatArray, ys: FloatArray, timestamp: Double) {
+        nativeTouchesMove(ids, xs, ys, timestamp)
     }
 
     fun handleKeyDown(keyCode: Int) {
