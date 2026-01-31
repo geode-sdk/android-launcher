@@ -20,7 +20,7 @@ android {
     defaultConfig {
         applicationId = "com.geode.launcher"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 23
         versionName = "1.7.0"
 

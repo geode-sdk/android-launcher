@@ -12,6 +12,7 @@ import android.os.Environment
 import android.text.InputType
 import android.util.Log
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
@@ -22,6 +23,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updatePadding
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
 import com.geode.launcher.main.LaunchNotification
@@ -185,7 +187,34 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         loadInternalMods()
 
-        setContentView(createView())
+        val baseView = createView()
+
+        if (!GeodeUtils.handleSafeArea && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            val frameLayoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            val frameLayout = FrameLayout(this)
+            frameLayout.layoutParams = frameLayoutParams
+
+            frameLayout.setOnApplyWindowInsetsListener { v, insets ->
+                val displayInsets = insets.displayCutout
+                if (displayInsets != null) {
+                    v.updatePadding(
+                        left = displayInsets.safeInsetLeft,
+                        top = displayInsets.safeInsetTop,
+                        right = displayInsets.safeInsetRight,
+                        bottom = displayInsets.safeInsetBottom
+                    )
+                }
+                WindowInsets.CONSUMED
+            }
+
+            frameLayout.addView(baseView)
+            setContentView(frameLayout)
+        } else {
+            setContentView(baseView)
+        }
 
         setupPostLibraryLoad(gdPackageInfo)
 
