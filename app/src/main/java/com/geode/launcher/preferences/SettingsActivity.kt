@@ -554,8 +554,13 @@ fun SettingsScreen(
                     ) {
                         launcherButtonTapped += 1
 
-                        if (launcherButtonTapped >= 7 && !developerModeEnabled) {
-                            showDeveloperDialog = true
+                        if (launcherButtonTapped >= 7) {
+                            if (developerModeEnabled) {
+                                Toast.makeText(context, R.string.preference_enable_developer_again, Toast.LENGTH_SHORT)
+                                    .show()
+                            } else {
+                                showDeveloperDialog = true
+                            }
                             launcherButtonTapped = 0
                         }
                     }

@@ -210,6 +210,7 @@
     <string name="preference_launcher_version_name">Android Launcher</string>
     <string name="preference_launcher_version_description">v%1$s</string>
     <string name="preference_launcher_version">Android Launcher v%1$s</string>
+    <string name="preference_enable_developer_again">You are already a developer!</string>
 
     <string name="preference_loader_version_name">Geode</string>
     <string name="preference_loader_version_description">%1$s</string>
