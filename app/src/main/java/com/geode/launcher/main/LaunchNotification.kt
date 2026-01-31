@@ -38,6 +38,7 @@ import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
+import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 
@@ -124,7 +125,9 @@ fun LaunchNotification() {
             // surface is not in use, so this is unfortunately not provided
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 Column(
-                    modifier = Modifier.displayCutoutPadding()
+                    modifier = if (GeodeUtils.handleSafeArea)
+                        Modifier.displayCutoutPadding()
+                    else Modifier
                 ) {
                     cards.forEach {
                         NotificationCardFromType(it)
