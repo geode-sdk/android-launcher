@@ -250,8 +250,8 @@ class ReleaseManager private constructor(
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val lastCheckTime = sharedPreferences.getLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
 
-        // only check for updates if it's been over 30 minutes since last check
-        val checkMinTime = Clock.System.now().minus(30.minutes).toEpochMilliseconds()
+        // only check for updates if it's been over 15 minutes since last check
+        val checkMinTime = Clock.System.now().minus(15.minutes).toEpochMilliseconds()
         if (!isManual && lastCheckTime > checkMinTime) {
             _uiState.value = ReleaseManagerState.Finished()
             return
