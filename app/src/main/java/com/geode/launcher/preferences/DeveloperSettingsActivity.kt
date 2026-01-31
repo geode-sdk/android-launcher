@@ -20,9 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -221,10 +219,12 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         )
                     )
 
+                    /*
                     SettingsCard(
                         title = stringResource(R.string.preference_disable_redesign),
                         preferenceKey = PreferenceUtils.Key.DISABLE_REDESIGN,
                     )
+                    */
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_profiles)) {

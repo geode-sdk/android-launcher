@@ -52,10 +52,6 @@
             android:enabled="true"
             android:exported="false" />
         <activity
-            android:name=".LegacyMainActivity"
-            android:exported="false"
-            android:theme="@style/Theme.GeodeLauncher" />
-        <activity
             android:name=".preferences.DeveloperSettingsActivity"
             android:exported="true"
             android:label="@string/title_activity_developer_settings"

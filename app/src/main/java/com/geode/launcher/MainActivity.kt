@@ -134,15 +134,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        val redirectToAlt = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
-        if (redirectToAlt && launchArguments == null) {
-            val launchIntent = Intent(this, LegacyMainActivity::class.java)
-            launchIntent.putExtras(intent)
-            startActivity(launchIntent)
-
-            return
-        }
-
         setContent {
             val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
             val theme = Theme.fromInt(themeOption)
