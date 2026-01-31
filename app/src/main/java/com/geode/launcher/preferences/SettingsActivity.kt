@@ -241,17 +241,340 @@ fun DeveloperModeDialog(onDismiss: () -> Unit, onEnable: () -> Unit) {
     )
 }
 
+@Composable
+fun GeneralSettingsGroup() {
+    val context = LocalContext.current
+
+    OptionsGroup(stringResource(R.string.preference_category_testing)) {
+        SettingsSelectCard(
+            title = stringResource(R.string.preference_theme_name),
+            dialogTitle = stringResource(R.string.preference_theme_select),
+            preferenceKey = PreferenceUtils.Key.THEME,
+            options = linkedMapOf(
+                0 to stringResource(R.string.preference_theme_default),
+                1 to stringResource(R.string.preference_theme_light),
+                2 to stringResource(R.string.preference_theme_dark),
+            ),
+            extraSelectBehavior = { updateTheme(context, it) }
+        )
+        SettingsCard(
+            title = stringResource(R.string.preference_black_background_name),
+            preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            SettingsCard(
+                title = stringResource(R.string.preference_disable_styles),
+                preferenceKey = PreferenceUtils.Key.DISABLE_USER_THEME
+            )
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val currentIcon by PreferenceUtils.useStringPreference(PreferenceUtils.Key.SELECTED_ICON)
+            val iconName = remember(currentIcon) {
+                IconUtils.getIconDetails(
+                    ApplicationIcon.fromId(currentIcon ?: "default")
+                ).nameId
+            }
+
+            OptionsButton(
+                title = stringResource(R.string.preference_set_application_icon),
+                onClick = {
+                    val launchIntent = Intent(context, ApplicationIconActivity::class.java)
+                    context.startActivity(launchIntent)
+                },
+                description = stringResource(iconName),
+                displayInline = true,
+            )
+        }
+
+        OptionsButton(
+            title = stringResource(R.string.preferences_open_file_manager),
+            icon = {
+                Icon(
+                    painterResource(R.drawable.icon_folder),
+                    contentDescription = null
+                )
+            },
+            onClick = { onOpenFileManager(context) }
+        )
+    }
+}
+
+@Composable
+fun GameplaySettingsGroup() {
+    val context = LocalContext.current
+
+    OptionsGroup(stringResource(R.string.preference_category_gameplay)) {
+        SettingsCard(
+            title = stringResource(R.string.preference_load_automatically_name),
+            description = stringResource(R.string.preference_load_automatically_description),
+            preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
+        )
+        SettingsSelectCard(
+            title = stringResource(R.string.preference_display_mode_name),
+            dialogTitle = stringResource(R.string.preference_display_mode_select),
+            preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
+            options = buildMap {
+                put(0, stringResource(R.string.preference_display_mode_default))
+                put(1, stringResource(R.string.preference_display_mode_legacy))
+
+                // necessary api doesn't exist on older versions of android
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    put(2, stringResource(R.string.preference_display_mode_fullscreen))
+                }
+            }
+        )
+        val currentDisplayMode by PreferenceUtils.useIntPreference(PreferenceUtils.Key.DISPLAY_MODE)
+
+        if (currentDisplayMode == 1) {
+            SettingsStringSelectCard(
+                title = stringResource(R.string.preference_custom_aspect_ratio_name),
+                description = stringResource(R.string.preference_custom_aspect_ratio_description),
+                dialogTitle = stringResource(R.string.preference_custom_aspect_ratio_select),
+                preferenceKey = PreferenceUtils.Key.CUSTOM_ASPECT_RATIO,
+                options = linkedMapOf(
+                    "16_9" to stringResource(R.string.preference_custom_aspect_ratio_16x9),
+                    "16_10" to stringResource(R.string.preference_custom_aspect_ratio_16x10),
+                    "4_3" to stringResource(R.string.preference_custom_aspect_ratio_4x3),
+                    "1_1" to stringResource(R.string.preference_custom_aspect_ratio_1x1),
+                )
+            )
+        }
+
+        SettingsRangeCard(
+            title = stringResource(R.string.preference_screen_zoom_name),
+            description = stringResource(R.string.preference_screen_zoom_description),
+            dialogTitle = stringResource(R.string.preference_screen_zoom_select),
+            preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM,
+            labelSuffix = "x",
+            range = 25..100,
+            scale = 100,
+            step = 5,
+        ) {
+            SettingsCard(
+                title = stringResource(R.string.preference_screen_zoom_fit_name),
+                preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM_FIT,
+                asCard = false
+            )
+        }
+
+        val maxFrameRate = remember {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.display.supportedModes.maxOf { it.refreshRate }
+            } else {
+                @Suppress("DEPRECATION")
+                (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.refreshRate
+            }.roundToInt()
+        }
+
+        SettingsFPSCard(
+            title = stringResource(R.string.preference_limit_framerate_name),
+            dialogTitle = stringResource(R.string.preference_limit_framerate_select),
+            preferenceKey = PreferenceUtils.Key.LIMIT_FRAME_RATE,
+            maxFrameRate = maxFrameRate
+        )
+    }
+}
+
+@Composable
+fun UpdateSettingsGroup(releaseViewModel: ReleaseViewModel, snackbarHostState: SnackbarHostState, onUpdate: () -> Unit) {
+    val updateStatus by releaseViewModel.uiState.collectAsState()
+
+    OptionsGroup(stringResource(R.string.preference_category_updater)) {
+        SettingsCard(
+            title = stringResource(R.string.preference_update_automatically_name),
+            preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
+        )
+
+        val lastUpdateCheck by PreferenceUtils.useLongPreference(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
+        val checkAgoString = remember(lastUpdateCheck) {
+            if (lastUpdateCheck != 0L) {
+                val now = Clock.System.now().toEpochMilliseconds()
+                DateUtils.getRelativeTimeSpanString(
+                    lastUpdateCheck,
+                    now,
+                    DateUtils.MINUTE_IN_MILLIS,
+                    DateUtils.FORMAT_ABBREV_RELATIVE
+                )
+            } else {
+                "never"
+            }
+        }
+
+        OptionsCard(
+            title = {
+                OptionsTitle(
+                    title = stringResource(R.string.preference_check_for_updates_button),
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.icon_update),
+                            contentDescription = null
+                        )
+                    },
+                    description = stringResource(R.string.preference_check_for_updates_description, checkAgoString)
+                        .takeIf { lastUpdateCheck != 0L }
+                )
+            },
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        onUpdate()
+                    },
+                    role = Role.Button
+                )
+        ) {
+            UpdateIndicator(snackbarHostState, updateStatus)
+        }
+    }
+}
+
+@Composable
+fun AdvancedSettingsGroup(developerModeEnabled: Boolean) {
+    val context = LocalContext.current
+
+    OptionsGroup(stringResource(R.string.preference_category_developer)) {
+        if (developerModeEnabled) {
+            OptionsButton(
+                title = stringResource(R.string.preference_open_developer_options),
+                icon = {
+                    Icon(
+                        painterResource(R.drawable.icon_data_object),
+                        contentDescription = null
+                    )
+                },
+                onClick = { onOpenDeveloperOptions(context) }
+            )
+        }
+
+        OptionsButton(
+            title = stringResource(R.string.preferences_view_crashes),
+            icon = {
+                Icon(
+                    painterResource(R.drawable.icon_bug_report),
+                    contentDescription = null
+                )
+            },
+            onClick = {
+                val launchIntent = Intent(context, CrashLogsActivity::class.java)
+                context.startActivity(launchIntent)
+            }
+        )
+
+        var showSafeModeDialog by remember { mutableStateOf(false) }
+
+        OptionsButton(
+            title = stringResource(R.string.preference_launch_safe_mode),
+            icon = {
+                Icon(
+                    painterResource(R.drawable.icon_shield),
+                    contentDescription = null
+                )
+            }
+        ) {
+            showSafeModeDialog = true
+        }
+
+        if (showSafeModeDialog) {
+            SafeModeDialog(onDismiss = {
+                showSafeModeDialog = false
+            }) {
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                    // hardcode it, why not
+                    action = Intent.ACTION_VIEW
+                    data = "geode-launcher://main/launch?safe-mode=true".toUri()
+                }
+                context.startActivity(launchIntent)
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutSettingsGroup(developerModeEnabled: Boolean) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+
+    OptionsGroup(stringResource(R.string.preference_category_about)) {
+        var launcherButtonTapped by remember { mutableIntStateOf(0) }
+        var showDeveloperDialog by remember { mutableStateOf(false) }
+
+        OptionsButton(
+            stringResource(R.string.preference_launcher_version_name),
+            stringResource(R.string.preference_launcher_version_description, BuildConfig.VERSION_NAME),
+            displayInline = true
+        ) {
+            launcherButtonTapped += 1
+
+            if (launcherButtonTapped >= 7) {
+                if (developerModeEnabled) {
+                    Toast.makeText(context, R.string.preference_enable_developer_again, Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    showDeveloperDialog = true
+                }
+                launcherButtonTapped = 0
+            }
+        }
+
+        if (showDeveloperDialog) {
+            DeveloperModeDialog(
+                onDismiss = {
+                    showDeveloperDialog = false
+                },
+                onEnable = {
+                    PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.DEVELOPER_MODE, true)
+                    showDeveloperDialog = false
+                }
+            )
+        }
+
+        OptionsLabel(
+            stringResource(R.string.preference_loader_version_name),
+            stringResource(R.string.preference_loader_version_description, currentRelease ?: "unknown"),
+            displayInline = true
+        )
+
+        val gameInstalled = remember {
+            GamePackageUtils.isGameInstalled(context.packageManager)
+        }
+
+        if (gameInstalled) {
+            val gameVersion = remember {
+                GamePackageUtils.getUnifiedVersionName(context.packageManager)
+            }
+
+            val gameSource = remember {
+                resources.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
+                    GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
+                    GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
+                    else -> R.string.preference_game_source_unknown
+                })
+            }
+
+            OptionsLabel(
+                stringResource(R.string.preference_game_version_name),
+                stringResource(R.string.preference_game_version_description, gameVersion, gameSource),
+                displayInline = true
+            )
+
+            OptionsLabel(
+                stringResource(R.string.preference_architecture_name),
+                stringResource(R.string.preference_architecture_description, Build.MODEL, LaunchUtils.applicationArchitecture),
+                displayInline = true
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBackPressedDispatcher: OnBackPressedDispatcher?,
     releaseViewModel: ReleaseViewModel = viewModel(factory = ReleaseViewModel.Factory)
 ) {
-    val context = LocalContext.current
     val resources = LocalResources.current
-
-    val currentRelease by PreferenceUtils.useStringPreference(PreferenceUtils.Key.CURRENT_VERSION_TAG)
-    val updateStatus by releaseViewModel.uiState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showUpdateInProgress by remember { mutableStateOf(false) }
@@ -308,312 +631,21 @@ fun SettingsScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OptionsGroup(stringResource(R.string.preference_category_testing)) {
-                    SettingsSelectCard(
-                        title = stringResource(R.string.preference_theme_name),
-                        dialogTitle = stringResource(R.string.preference_theme_select),
-                        preferenceKey = PreferenceUtils.Key.THEME,
-                        options = linkedMapOf(
-                            0 to stringResource(R.string.preference_theme_default),
-                            1 to stringResource(R.string.preference_theme_light),
-                            2 to stringResource(R.string.preference_theme_dark),
-                        ),
-                        extraSelectBehavior = { updateTheme(context, it) }
-                    )
-                    SettingsCard(
-                        title = stringResource(R.string.preference_black_background_name),
-                        preferenceKey = PreferenceUtils.Key.BLACK_BACKGROUND
-                    )
+                GeneralSettingsGroup()
+                GameplaySettingsGroup()
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        SettingsCard(
-                            title = stringResource(R.string.preference_disable_styles),
-                            preferenceKey = PreferenceUtils.Key.DISABLE_USER_THEME
-                        )
+                UpdateSettingsGroup(releaseViewModel, snackbarHostState, onUpdate = {
+                    if (releaseViewModel.isInUpdate) {
+                        showUpdateInProgress = true
+                    } else {
+                        releaseViewModel.runReleaseCheck(true)
                     }
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val currentIcon by PreferenceUtils.useStringPreference(PreferenceUtils.Key.SELECTED_ICON)
-                        val iconName = remember(currentIcon) {
-                            IconUtils.getIconDetails(
-                                ApplicationIcon.fromId(currentIcon ?: "default")
-                            ).nameId
-                        }
-
-                        OptionsButton(
-                            title = stringResource(R.string.preference_set_application_icon),
-                            onClick = {
-                                val launchIntent = Intent(context, ApplicationIconActivity::class.java)
-                                context.startActivity(launchIntent)
-                            },
-                            description = stringResource(iconName),
-                            displayInline = true,
-                        )
-                    }
-
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_open_file_manager),
-                        icon = {
-                            Icon(
-                                painterResource(R.drawable.icon_folder),
-                                contentDescription = null
-                            )
-                        },
-                        onClick = { onOpenFileManager(context) }
-                    )
-                }
-
-                OptionsGroup(stringResource(R.string.preference_category_gameplay)) {
-                    SettingsCard(
-                        title = stringResource(R.string.preference_load_automatically_name),
-                        description = stringResource(R.string.preference_load_automatically_description),
-                        preferenceKey = PreferenceUtils.Key.LOAD_AUTOMATICALLY,
-                    )
-                    SettingsSelectCard(
-                        title = stringResource(R.string.preference_display_mode_name),
-                        dialogTitle = stringResource(R.string.preference_display_mode_select),
-                        preferenceKey = PreferenceUtils.Key.DISPLAY_MODE,
-                        options = buildMap {
-                            put(0, stringResource(R.string.preference_display_mode_default))
-                            put(1, stringResource(R.string.preference_display_mode_legacy))
-
-                            // necessary api doesn't exist on older versions of android
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                put(2, stringResource(R.string.preference_display_mode_fullscreen))
-                            }
-                        }
-                    )
-                    val currentDisplayMode by PreferenceUtils.useIntPreference(PreferenceUtils.Key.DISPLAY_MODE)
-
-                    if (currentDisplayMode == 1) {
-                        SettingsStringSelectCard(
-                            title = stringResource(R.string.preference_custom_aspect_ratio_name),
-                            description = stringResource(R.string.preference_custom_aspect_ratio_description),
-                            dialogTitle = stringResource(R.string.preference_custom_aspect_ratio_select),
-                            preferenceKey = PreferenceUtils.Key.CUSTOM_ASPECT_RATIO,
-                            options = linkedMapOf(
-                                "16_9" to stringResource(R.string.preference_custom_aspect_ratio_16x9),
-                                "16_10" to stringResource(R.string.preference_custom_aspect_ratio_16x10),
-                                "4_3" to stringResource(R.string.preference_custom_aspect_ratio_4x3),
-                                "1_1" to stringResource(R.string.preference_custom_aspect_ratio_1x1),
-                            )
-                        )
-                    }
-
-                    SettingsRangeCard(
-                        title = stringResource(R.string.preference_screen_zoom_name),
-                        description = stringResource(R.string.preference_screen_zoom_description),
-                        dialogTitle = stringResource(R.string.preference_screen_zoom_select),
-                        preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM,
-                        labelSuffix = "x",
-                        range = 25..100,
-                        scale = 100,
-                        step = 5,
-                    ) {
-                        SettingsCard(
-                            title = stringResource(R.string.preference_screen_zoom_fit_name),
-                            preferenceKey = PreferenceUtils.Key.SCREEN_ZOOM_FIT,
-                            asCard = false
-                        )
-                    }
-
-                    val maxFrameRate = remember {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            context.display.supportedModes.maxOf { it.refreshRate }
-                        } else {
-                            @Suppress("DEPRECATION")
-                            (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.refreshRate
-                        }.roundToInt()
-                    }
-
-                    SettingsFPSCard(
-                        title = stringResource(R.string.preference_limit_framerate_name),
-                        dialogTitle = stringResource(R.string.preference_limit_framerate_select),
-                        preferenceKey = PreferenceUtils.Key.LIMIT_FRAME_RATE,
-                        maxFrameRate = maxFrameRate
-                    )
-                }
-
-                OptionsGroup(stringResource(R.string.preference_category_updater)) {
-                    SettingsCard(
-                        title = stringResource(R.string.preference_update_automatically_name),
-                        preferenceKey = PreferenceUtils.Key.UPDATE_AUTOMATICALLY,
-                    )
-
-                    val lastUpdateCheck by PreferenceUtils.useLongPreference(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
-                    val checkAgoString = remember(lastUpdateCheck) {
-                        if (lastUpdateCheck != 0L) {
-                            val now = Clock.System.now().toEpochMilliseconds()
-                            DateUtils.getRelativeTimeSpanString(
-                                lastUpdateCheck,
-                                now,
-                                DateUtils.MINUTE_IN_MILLIS,
-                                DateUtils.FORMAT_ABBREV_RELATIVE
-                            )
-                        } else {
-                            "never"
-                        }
-                    }
-
-                    OptionsCard(
-                        title = {
-                            OptionsTitle(
-                                title = stringResource(R.string.preference_check_for_updates_button),
-                                icon = {
-                                    Icon(
-                                        painterResource(R.drawable.icon_update),
-                                        contentDescription = null
-                                    )
-                                },
-                                description = stringResource(R.string.preference_check_for_updates_description, checkAgoString)
-                                    .takeIf { lastUpdateCheck != 0L }
-                            )
-                        },
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    if (releaseViewModel.isInUpdate) {
-                                        showUpdateInProgress = true
-                                    } else {
-                                        releaseViewModel.runReleaseCheck(true)
-                                    }
-                                },
-                                role = Role.Button
-                            )
-                    ) {
-                        UpdateIndicator(snackbarHostState, updateStatus)
-                    }
-                }
+                })
 
                 val developerModeEnabled by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
 
-                OptionsGroup(stringResource(R.string.preference_category_developer)) {
-                    if (developerModeEnabled) {
-                        OptionsButton(
-                            title = stringResource(R.string.preference_open_developer_options),
-                            icon = {
-                                Icon(
-                                    painterResource(R.drawable.icon_data_object),
-                                    contentDescription = null
-                                )
-                            },
-                            onClick = { onOpenDeveloperOptions(context) }
-                        )
-                    }
-
-                    OptionsButton(
-                        title = stringResource(R.string.preferences_view_crashes),
-                        icon = {
-                            Icon(
-                                painterResource(R.drawable.icon_bug_report),
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            val launchIntent = Intent(context, CrashLogsActivity::class.java)
-                            context.startActivity(launchIntent)
-                        }
-                    )
-
-                    var showSafeModeDialog by remember { mutableStateOf(false) }
-
-                    OptionsButton(
-                        title = stringResource(R.string.preference_launch_safe_mode),
-                        icon = {
-                            Icon(
-                                painterResource(R.drawable.icon_shield),
-                                contentDescription = null
-                            )
-                        }
-                    ) {
-                        showSafeModeDialog = true
-                    }
-
-                    if (showSafeModeDialog) {
-                        SafeModeDialog(onDismiss = {
-                            showSafeModeDialog = false
-                        }) {
-                            val launchIntent = Intent(context, MainActivity::class.java).apply {
-                                // hardcode it, why not
-                                action = Intent.ACTION_VIEW
-                                data = "geode-launcher://main/launch?safe-mode=true".toUri()
-                            }
-                            context.startActivity(launchIntent)
-                        }
-                    }
-                }
-
-                OptionsGroup(stringResource(R.string.preference_category_about)) {
-                    var launcherButtonTapped by remember { mutableIntStateOf(0) }
-                    var showDeveloperDialog by remember { mutableStateOf(false) }
-
-                    OptionsButton(
-                        stringResource(R.string.preference_launcher_version_name),
-                        stringResource(R.string.preference_launcher_version_description, BuildConfig.VERSION_NAME),
-                        displayInline = true
-                    ) {
-                        launcherButtonTapped += 1
-
-                        if (launcherButtonTapped >= 7) {
-                            if (developerModeEnabled) {
-                                Toast.makeText(context, R.string.preference_enable_developer_again, Toast.LENGTH_SHORT)
-                                    .show()
-                            } else {
-                                showDeveloperDialog = true
-                            }
-                            launcherButtonTapped = 0
-                        }
-                    }
-
-                    val context = LocalContext.current
-                    if (showDeveloperDialog) {
-                        DeveloperModeDialog(
-                            onDismiss = {
-                                showDeveloperDialog = false
-                            },
-                            onEnable = {
-                                PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.DEVELOPER_MODE, true)
-                                showDeveloperDialog = false
-                            }
-                        )
-                    }
-
-                    OptionsLabel(
-                        stringResource(R.string.preference_loader_version_name),
-                        stringResource(R.string.preference_loader_version_description, currentRelease ?: "unknown"),
-                        displayInline = true
-                    )
-
-                    val gameInstalled = remember {
-                        GamePackageUtils.isGameInstalled(context.packageManager)
-                    }
-
-                    if (gameInstalled) {
-                        val gameVersion = remember {
-                            GamePackageUtils.getUnifiedVersionName(context.packageManager)
-                        }
-
-                        val gameSource = remember {
-                            resources.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
-                                GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
-                                GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
-                                else -> R.string.preference_game_source_unknown
-                            })
-                        }
-
-                        OptionsLabel(
-                            stringResource(R.string.preference_game_version_name),
-                            stringResource(R.string.preference_game_version_description, gameVersion, gameSource),
-                            displayInline = true
-                        )
-
-                        OptionsLabel(
-                            stringResource(R.string.preference_architecture_name),
-                            stringResource(R.string.preference_architecture_description, Build.MODEL, LaunchUtils.applicationArchitecture),
-                            displayInline = true
-                        )
-                    }
-                }
+                AdvancedSettingsGroup(developerModeEnabled)
+                AboutSettingsGroup(developerModeEnabled)
 
                 Spacer(Modifier.height(4.dp))
             }
