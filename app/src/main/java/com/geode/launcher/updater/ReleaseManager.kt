@@ -252,7 +252,7 @@ class ReleaseManager private constructor(
 
         // only check for updates if it's been over 15 minutes since last check
         val checkMinTime = Clock.System.now().minus(15.minutes).toEpochMilliseconds()
-        if (!isManual && lastCheckTime > checkMinTime) {
+        if (!isManual && lastCheckTime > checkMinTime && !fileWasExternallyModified()) {
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
