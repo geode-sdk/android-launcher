@@ -31,7 +31,7 @@ android {
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
-                arguments("-DUSE_TULIPHOOK:BOOL=OFF", "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES:BOOL=OFF")
+                arguments("-DUSE_TULIPHOOK:BOOL=OFF", "-DANDROID_STL=c++_shared")
             }
         }
 
@@ -96,8 +96,8 @@ dependencies {
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation ("androidx.activity:activity-compose:1.12.2")
-    implementation ("androidx.activity:activity-ktx:1.12.2")
+    implementation ("androidx.activity:activity-compose:1.12.3")
+    implementation ("androidx.activity:activity-ktx:1.12.3")
     implementation ("androidx.appcompat:appcompat:1.7.1")
     implementation ("androidx.documentfile:documentfile:1.1.0")
     implementation ("com.squareup.okio:okio:3.16.4")
