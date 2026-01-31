@@ -185,10 +185,14 @@ object FMOD {
                 z = false
             }
             if (i != 0) {
-                SetInputEnumerationChanged()
+                try {
+                    SetInputEnumerationChanged()
+                } catch (_: UnsatisfiedLinkError) { }
             }
             if (z) {
-                SetOutputEnumerationChanged()
+                try {
+                    SetOutputEnumerationChanged()
+                } catch (_: UnsatisfiedLinkError) { }
             }
         }
 
@@ -215,10 +219,14 @@ object FMOD {
                 z = false
             }
             if (i != 0) {
-                SetInputEnumerationChanged()
+                try {
+                    SetInputEnumerationChanged()
+                } catch (_: UnsatisfiedLinkError) { }
             }
             if (z) {
-                SetOutputEnumerationChanged()
+                try {
+                    SetOutputEnumerationChanged()
+                } catch (_: UnsatisfiedLinkError) { }
             }
         }
     }
