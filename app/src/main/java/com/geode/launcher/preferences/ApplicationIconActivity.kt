@@ -162,7 +162,8 @@ fun IconCard(iconData: ApplicationIconDetails, selected: Boolean, modifier: Modi
             .selectable(
                 selected = selected,
                 onClick = {
-                    showSelection = true
+                    if (!selected)
+                        showSelection = true
                 },
                 role = Role.RadioButton
             )

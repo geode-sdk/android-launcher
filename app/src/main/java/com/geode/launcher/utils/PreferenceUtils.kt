@@ -156,7 +156,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
-            Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR, Key.LOAD_AUTOMATICALLY -> true
+            Key.UPDATE_AUTOMATICALLY, Key.FORCE_HRR -> true
             Key.DEVELOPER_MODE -> BuildConfig.DEBUG
             else -> false
         }
