@@ -498,7 +498,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val chosenDisplay = display.supportedModes?.maxByOrNull { it.refreshRate }
             if (chosenDisplay != null) {
-                var chosenRefreshRate = chosenDisplay.refreshRate
+                val chosenRefreshRate = chosenDisplay.refreshRate
                 println("setupUIState: Forcing a refresh rate of $chosenRefreshRate (display ${chosenDisplay.modeId})")
 
                 window.attributes.preferredRefreshRate = chosenRefreshRate

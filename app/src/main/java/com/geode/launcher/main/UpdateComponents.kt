@@ -5,14 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.Build
-import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -51,7 +49,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -60,7 +57,6 @@ import com.geode.launcher.InstallReceiver
 import com.geode.launcher.R
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.updater.ReleaseManager
-import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import com.mikepenz.markdown.compose.LocalBulletListHandler
@@ -73,8 +69,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import java.io.File
-import java.net.ConnectException
-import java.net.UnknownHostException
 import java.text.DateFormat
 import java.util.Date
 import kotlin.time.toJavaInstant
@@ -410,176 +404,5 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun UpdateProgressIndicator(
-    message: String,
-    releaseViewModel: ReleaseViewModel,
-    modifier: Modifier = Modifier,
-    progress: (() -> Float)? = null
-) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.Start,
-        modifier = modifier
-    ) {
-        Text(message, style = MaterialTheme.typography.labelMedium)
-
-        Spacer(modifier = Modifier.padding(4.dp))
-
-        if (progress == null) {
-            LinearProgressIndicator()
-        } else {
-            LinearProgressIndicator(progress = progress)
-        }
-
-        TextButton(
-            onClick = {
-                releaseViewModel.cancelUpdate()
-            },
-            modifier = Modifier.offset((-12).dp)
-        ) {
-            Text(stringResource(R.string.release_fetch_button_cancel))
-        }
-    }
-}
-
-@Composable
-fun UpdateMessageIndicator(
-    message: String,
-    releaseViewModel: ReleaseViewModel,
-    modifier: Modifier = Modifier,
-    allowRetry: Boolean = false
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
-        Text(
-            message,
-            textAlign = TextAlign.Center,
-        )
-
-        Spacer(modifier = Modifier.padding(4.dp))
-
-        if (allowRetry) {
-            OutlinedButton(
-                onClick = {
-                    releaseViewModel.runReleaseCheck(true)
-                },
-            ) {
-                Icon(
-                    painterResource(R.drawable.icon_refresh),
-                    contentDescription = stringResource(R.string.launcher_retry_icon_alt)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.release_fetch_button_retry))
-            }
-        }
-    }
-}
-
-@Composable
-fun UpdateCard(releaseViewModel: ReleaseViewModel, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-
-    val releaseState by releaseViewModel.uiState.collectAsState()
-
-    when (val state = releaseState) {
-        is ReleaseViewModel.ReleaseUIState.Failure -> {
-            val message = when (state.exception) {
-                is UnknownHostException, is ConnectException ->
-                    stringResource(R.string.release_fetch_no_internet)
-                is ReleaseManager.UpdateException -> {
-                    when (state.exception.reason) {
-                        ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
-                            R.string.release_fetch_manual_check_required
-                        )
-                        else -> null
-                    }
-                }
-                else -> null
-            }
-
-            UpdateMessageIndicator(
-                stringResource(
-                    R.string.release_fetch_failed,
-                    message ?: stringResource(R.string.release_fetch_try_later)
-                ),
-                modifier = modifier,
-                allowRetry = true,
-                releaseViewModel = releaseViewModel
-            )
-        }
-        is ReleaseViewModel.ReleaseUIState.InDownload -> {
-            val downloaded = remember(state.downloaded) {
-                Formatter.formatShortFileSize(context, state.downloaded)
-            }
-
-            val outOf = remember(state.outOf) {
-                state.outOf?.run {
-                    Formatter.formatShortFileSize(context, this)
-                }
-            }
-
-            UpdateProgressIndicator(
-                if (outOf != null) stringResource(
-                        R.string.release_fetch_downloading,
-                        downloaded,
-                        outOf
-                ) else stringResource(
-                    R.string.release_fetch_downloading_indeterminate,
-                    downloaded,
-                ),
-                modifier = modifier,
-                releaseViewModel = releaseViewModel,
-                progress = {
-                    val progress = state.downloaded / state.outOf!!.toDouble()
-                    progress.toFloat()
-                }.takeIf { state.outOf != null }
-            )
-        }
-        is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
-            UpdateProgressIndicator(
-                stringResource(R.string.release_fetch_in_progress),
-                modifier = modifier,
-                releaseViewModel = releaseViewModel
-            )
-        }
-        is ReleaseViewModel.ReleaseUIState.Finished -> {
-            if (state.hasUpdated) {
-                UpdateMessageIndicator(
-                    stringResource(R.string.release_fetch_success),
-                    modifier = modifier,
-                    releaseViewModel = releaseViewModel
-                )
-            }
-        }
-        is ReleaseViewModel.ReleaseUIState.Cancelled -> {
-            if (state.isCancelling) {
-                UpdateProgressIndicator(
-                    stringResource(R.string.release_fetch_cancelling),
-                    modifier = modifier,
-                    releaseViewModel = releaseViewModel
-                )
-            } else {
-                UpdateMessageIndicator(
-                    stringResource(R.string.release_fetch_cancelled),
-                    modifier = modifier,
-                    allowRetry = true,
-                    releaseViewModel = releaseViewModel
-                )
-            }
-        }
-    }
-
-    val nextUpdate by releaseViewModel.nextLauncherUpdate.collectAsState()
-
-    if (!releaseViewModel.isInUpdate && nextUpdate != null) {
-        LauncherUpdateIndicator(
-            modifier = modifier
-        )
     }
 }

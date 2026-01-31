@@ -3,16 +3,13 @@ package com.geode.launcher.main
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
@@ -27,12 +24,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
 import com.geode.launcher.utils.Constants
+import androidx.core.net.toUri
 
 fun onDownloadGame(context: Context) {
     val appUrl = "https://play.google.com/store/apps/details?id=${Constants.PACKAGE_NAME}"
     try {
         val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(appUrl)
+            data = appUrl.toUri()
             setPackage("com.android.vending")
         }
         context.startActivity(intent)
@@ -53,22 +51,6 @@ fun GooglePlayBadge(modifier: Modifier = Modifier) {
             .clip(AbsoluteRoundedCornerShape(4.dp))
             .clickable { onDownloadGame(context) }
     )
-}
-
-@Composable
-fun StatusIndicator(
-    icon: @Composable () -> Unit,
-    text: @Composable () -> Unit,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    ElevatedCard(modifier = modifier, onClick = onClick) {
-        Row(modifier = Modifier.padding(8.dp)) {
-            icon()
-            Spacer(Modifier.size(8.dp))
-            text()
-        }
-    }
 }
 
 @Composable

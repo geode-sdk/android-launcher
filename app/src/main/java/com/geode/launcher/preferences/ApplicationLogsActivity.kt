@@ -1,6 +1,6 @@
 package com.geode.launcher.preferences
 
-import android.content.Intent
+import android.content.ClipData
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -45,14 +45,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -146,7 +145,10 @@ fun SelectLogLevelDialog(
 @Composable
 fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
     val haptics = LocalHapticFeedback.current
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val resources = LocalResources.current
+
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = modifier
@@ -155,7 +157,17 @@ fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
                 detectTapGestures(
                     onLongPress = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        clipboardManager.setText(AnnotatedString(logLine.asSimpleString))
+
+                        val clipboardLabel = resources.getString(R.string.application_log_copy_label)
+                        val clipboardData = logLine.asSimpleString
+
+                        coroutineScope.launch {
+                            clipboard.setClipEntry(
+                                ClipEntry(ClipData.newPlainText(
+                                    clipboardLabel, clipboardData
+                                ))
+                            )
+                        }
                     }
                 )
             },

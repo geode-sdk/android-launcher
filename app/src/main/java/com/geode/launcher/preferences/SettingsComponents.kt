@@ -757,8 +757,8 @@ fun ProfileSelectCard() {
                         .setCurrentProfile(selectedProfileId)
 
                     activity?.run {
-                        packageManager.getLaunchIntentForPackage(packageName)?.also {
-                            val mainIntent = Intent.makeRestartActivityTask(it.component)
+                        packageManager.getLaunchIntentForPackage(packageName)?.also { intent ->
+                            val mainIntent = Intent.makeRestartActivityTask(intent.component)
                             startActivity(mainIntent)
                             exitProcess(0)
                         }

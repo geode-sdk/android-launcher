@@ -197,8 +197,6 @@ fun ApplicationIconScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-    var showMoreOptions by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {

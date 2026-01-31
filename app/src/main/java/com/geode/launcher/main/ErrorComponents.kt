@@ -1,6 +1,7 @@
 package com.geode.launcher.main
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -32,10 +33,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -55,6 +60,7 @@ import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.launch
 
 data class LoadFailureInfo(
     val title: LaunchUtils.LauncherError,
@@ -207,8 +213,11 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
-    val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
+    val clipboard = LocalClipboard.current
+    val coroutineScope = rememberCoroutineScope()
+    val resources = LocalResources.current
 
     FlowRow(
         modifier = modifier,
@@ -227,7 +236,15 @@ fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
             }
 
             FilledTonalButton(onClick = {
-                clipboardManager.setText(AnnotatedString(extraDetails))
+                val clipboardLabel = resources.getString(R.string.application_log_copy_label)
+
+                coroutineScope.launch {
+                    clipboard.setClipEntry(
+                        ClipEntry(ClipData.newPlainText(
+                            clipboardLabel, extraDetails
+                        ))
+                    )
+                }
             }) {
                 Icon(
                     painterResource(R.drawable.icon_content_copy),
