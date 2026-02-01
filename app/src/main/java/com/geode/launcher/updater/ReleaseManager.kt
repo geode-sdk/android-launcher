@@ -147,14 +147,16 @@ class ReleaseManager private constructor(
         _uiState.value = ReleaseManagerState.InDownload(0, download.size)
 
         try {
-            val fileStream = DownloadUtils.downloadStream(
+            DownloadUtils.downloadStream(
                 httpClient,
                 download.url
             ) { progress, outOf ->
                 _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+            }.use { fileStream ->
+                outputFile.outputStream().use {
+                    fileStream.copyTo(it)
+                }
             }
-
-            fileStream.copyTo(outputFile.outputStream())
         } catch (e: Exception) {
             sendError(e)
             return

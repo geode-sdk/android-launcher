@@ -58,9 +58,9 @@ object DownloadUtils {
         val progressClient = progressClientBuilder.build()
 
         val call = progressClient.newCall(request)
-        return call.executeAsync().use { response ->
-            response.body.byteStream()
-        }
+        val response = call.executeAsync()
+
+        return response.body.byteStream()
     }
 
     suspend fun extractFileFromZipStream(inputStream: InputStream, outputStream: OutputStream, zipPath: String) {
