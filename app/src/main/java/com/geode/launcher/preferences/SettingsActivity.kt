@@ -19,10 +19,29 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -48,10 +67,10 @@ import com.geode.launcher.BuildConfig
 import com.geode.launcher.MainActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
-import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
@@ -62,6 +81,7 @@ import java.net.ConnectException
 import java.net.UnknownHostException
 import kotlin.math.roundToInt
 import kotlin.time.Clock
+
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -430,7 +450,7 @@ fun UpdateSettingsGroup(releaseViewModel: ReleaseViewModel, snackbarHostState: S
 }
 
 @Composable
-fun AdvancedSettingsGroup(developerModeEnabled: Boolean) {
+fun AdvancedSettingsGroup(developerModeEnabled: Boolean, snackbarHostState: SnackbarHostState) {
     val context = LocalContext.current
 
     OptionsGroup(stringResource(R.string.preference_category_developer)) {
@@ -487,6 +507,8 @@ fun AdvancedSettingsGroup(developerModeEnabled: Boolean) {
                 context.startActivity(launchIntent)
             }
         }
+
+        BackupButton(snackbarHostState)
     }
 }
 
@@ -644,7 +666,7 @@ fun SettingsScreen(
 
                 val developerModeEnabled by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
 
-                AdvancedSettingsGroup(developerModeEnabled)
+                AdvancedSettingsGroup(developerModeEnabled, snackbarHostState)
                 AboutSettingsGroup(developerModeEnabled)
 
                 Spacer(Modifier.height(4.dp))

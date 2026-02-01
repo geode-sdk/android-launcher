@@ -108,6 +108,10 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.10.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+
+    implementation("com.fleeksoft.ksoup:ksoup:0.2.5")
+    implementation("com.fleeksoft.ksoup:ksoup-okio:0.2.5")
+
     implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.39.1")
     implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.1")
     implementation ("androidx.browser:browser:1.9.0")

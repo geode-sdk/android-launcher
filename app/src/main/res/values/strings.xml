@@ -241,6 +241,28 @@
     <string name="preference_launch_safe_mode">Launch in safe mode</string>
     <string name="preference_launch_safe_mode_confirm_title">Start in safe mode?</string>
 
+    <string name="preference_backup_cloud">Backup save to cloud</string>
+    <string name="preference_backup_confirm_title">Backup save data?</string>
+    <string name="preference_backup_in_progress">Backing up data…</string>
+    <string name="preference_backup_cancelling">Cancelling backup…</string>
+
+    <string name="preference_backup_confirm_description">This will backup your save data using your in-game account. You can then access it on an unmodified version of the game through the account backup menu.\nContinuing will overwrite any save data you currently have on the Geometry Dash servers!</string>
+
+    <string name="preference_backup_save_missing">Failed to find save data.</string>
+    <string name="preference_backup_save_decode_failed">Failed to decode save file.</string>
+    <string name="preference_backup_save_too_large">Save file is too large.</string>
+    <string name="preference_backup_save_details_missing">Failed to find account information.</string>
+
+    <string name="preference_backup_success">Backup success!</string>
+    <string name="preference_backup_cancelled">Backup cancelled.</string>
+    <string name="preference_backup_failed_generic">An unknown error has occurred.</string>
+    <string name="preference_backup_failed_invalid_login">Invalid login information.</string>
+    <string name="preference_backup_failed_network">A network error has occurred. Please try again later.</string>
+
+    <string name="preference_backup_failed_title">Backup failed</string>
+
+    <string name="preference_backup_failed">Backup failed with error code %1$d.</string>
+
     <string name="preference_launch_arguments_name">Launch arguments</string>
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
     <string name="preference_text_clear">Clear</string>
