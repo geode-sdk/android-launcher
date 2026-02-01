@@ -1,6 +1,8 @@
 package com.geode.launcher.preferences
 
 import android.content.Context
+import android.util.Log
+import android.util.Xml
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -16,16 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.fleeksoft.ksoup.Ksoup
-import com.fleeksoft.ksoup.nodes.Document
-import com.fleeksoft.ksoup.parseSource
-import com.fleeksoft.ksoup.parser.Parser
 import com.geode.launcher.R
 import com.geode.launcher.utils.LaunchUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
 import okhttp3.HttpUrl
@@ -38,12 +37,12 @@ import okio.ByteString.Companion.decodeBase64
 import okio.GzipSource
 import okio.buffer
 import okio.source
+import org.xmlpull.v1.XmlPullParser
 import java.io.File
-import kotlin.collections.chunked
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.experimental.xor
 import kotlin.time.Duration.Companion.seconds
+
+const val TAG = "com.geode.launcher.SaveBackup"
 
 data class UserDetails(
     val userName: String,
@@ -89,7 +88,7 @@ suspend fun getAccountBackupUrl(backupClient: OkHttpClient, details: UserDetails
         val call = backupClient.newCall(request)
         call.executeAsync()
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.w(TAG, "getAccountBackupUrl failed: ${e.stackTraceToString()}")
         return Result.failure(BackupUploadException(BackupUploadFailure.NETWORK_ERROR))
     }.use { response ->
         if (response.code != 200) {
@@ -105,12 +104,15 @@ suspend fun getAccountBackupUrl(backupClient: OkHttpClient, details: UserDetails
 
 fun decryptFileToBuffer(file: File, buffer: Buffer) = file.source().buffer()
     .use { baseBuffer ->
+        val key = 0xb.toByte()
+        val nullByte = 0x0.toByte()
+
         while (!baseBuffer.exhausted()) {
             val b = baseBuffer.readByte()
-            val d = b.xor(0xb)
+            val d = b.xor(key)
 
             // gd sometimes encodes garbage after null byte, treat it like a c string
-            if (d == 0.toByte())
+            if (d == nullByte)
                 break
 
             buffer.writeByte(d.toInt())
@@ -162,7 +164,7 @@ suspend fun performBackupRequest(backupClient: OkHttpClient, details: UserDetail
         val call = backupClient.newCall(request)
         call.executeAsync()
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.w(TAG, "performBackupRequest failed: ${e.stackTraceToString()}")
         return Result.failure(BackupUploadException(BackupUploadFailure.GENERIC_ERROR))
     }.use { response ->
         if (response.code != 200) {
@@ -180,7 +182,37 @@ suspend fun performBackupRequest(backupClient: OkHttpClient, details: UserDetail
     }
 }
 
-fun parseSaveFile(file: Document): Result<UserDetails> = try {
+fun skip(parser: XmlPullParser) {
+    if (parser.eventType != XmlPullParser.START_TAG) {
+        throw IllegalStateException()
+    }
+    var depth = 1
+    while (depth != 0) {
+        when (parser.next()) {
+            XmlPullParser.END_TAG -> depth--
+            XmlPullParser.START_TAG -> depth++
+        }
+    }
+}
+
+fun getNextValue(parser: XmlPullParser): String? {
+    while (parser.eventType != XmlPullParser.START_TAG && parser.eventType != XmlPullParser.END_DOCUMENT) {
+        parser.next()
+    }
+
+    if (parser.eventType == XmlPullParser.START_TAG) {
+        // we could support t/f here but we also don't have to
+        if (parser.name != "s" && parser.name != "i") {
+            return null
+        }
+
+        return parser.nextText()
+    }
+
+    return null
+}
+
+fun parseSaveFile(parser: XmlPullParser): Result<UserDetails> = try {
     var userName: String? = null
     var gjp2: String? = null
     var accountId: Int? = null
@@ -188,19 +220,41 @@ fun parseSaveFile(file: Document): Result<UserDetails> = try {
     var udid: String? = null
     var binaryVersion: Int? = null
 
-    val doc = file.child(0).child(0)
-    doc.childNodes.chunked(2).forEach { (k, v) ->
-        if (k.nodeName() == "k") {
-            val keyName = k.nodeValue()
-            when (keyName) {
-                "GJA_001" -> userName = v.nodeValue()
-                "GJA_003" -> accountId = v.nodeValue().toIntOrNull()
-                "GJA_005" -> gjp2 = v.nodeValue()
-                "playerUserID" -> uuid = v.nodeValue().toIntOrNull()
-                "playerUDID" -> udid = v.nodeValue()
-                "binaryVersion" -> binaryVersion = v.nodeValue().toIntOrNull()
+    var inPlist = false
+    var inDict = false
+
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        when (eventType) {
+            XmlPullParser.START_TAG -> {
+                if (inDict) {
+                    // ignore inner elements, just in case they conflict
+                    if (parser.name != "k") {
+                        skip(parser)
+                    } else {
+                        val keyName = parser.nextText()
+                        when (keyName) {
+                            "GJA_001" -> userName = getNextValue(parser)
+                            "GJA_003" -> accountId = getNextValue(parser)?.toIntOrNull()
+                            "GJA_005" -> gjp2 = getNextValue(parser)
+                            "playerUserID" -> uuid = getNextValue(parser)?.toIntOrNull()
+                            "playerUDID" -> udid = getNextValue(parser)
+                            "binaryVersion" -> binaryVersion = getNextValue(parser)?.toIntOrNull()
+                        }
+                    }
+                }
+
+                // traverse to initial plist -> dict element
+                if (!inPlist && parser.name == "plist") {
+                    inPlist = true
+                }
+                if (!inDict && parser.name == "dict") {
+                    inDict = true
+                }
             }
         }
+
+        eventType = parser.next()
     }
 
     if (userName == null || gjp2 == null || accountId == null || uuid == null || udid == null || binaryVersion == null) {
@@ -218,7 +272,7 @@ fun parseSaveFile(file: Document): Result<UserDetails> = try {
         )
     }
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.w(TAG, "parseSaveFile failed: ${e.stackTraceToString()}")
     Result.failure(BackupParseException(BackupParseFailure.DECODE_FAILED))
 }
 
@@ -228,7 +282,7 @@ fun decryptFileToString(file: File) = Buffer()
         decryptedBuffer.readUtf8()
     }
 
-fun getUserDetails(gameManager: File): Result<UserDetails> {
+suspend fun getUserDetails(gameManager: File): Result<UserDetails> {
     return try {
         val base64Decoded = run {
             // free decryptString after decoding
@@ -237,15 +291,19 @@ fun getUserDetails(gameManager: File): Result<UserDetails> {
         } ?: return Result.failure(BackupParseException(BackupParseFailure.DECODE_FAILED))
 
         // gzipSource will close the underlying buffer when closed
-        val saveDoc = GzipSource(
+        GzipSource(
         Buffer().write(base64Decoded)
         ).buffer().use { gzipSource ->
-            Ksoup.parseSource(gzipSource, parser = Parser.xmlParser())
-        }
+            runInterruptible {
+                val parser = Xml.newPullParser()
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
+                parser.setInput(gzipSource.inputStream(), null)
 
-        parseSaveFile(saveDoc)
+                parseSaveFile(parser)
+            }
+        }
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.w(TAG, "getUserDetails failed: ${e.stackTraceToString()}")
         return Result.failure(BackupParseException(BackupParseFailure.DECODE_FAILED))
     }
 }
@@ -265,8 +323,9 @@ suspend fun backupSaveToCloud(context: Context): Result<Unit> {
     // hardcode 32mb max size
     // this is how the game checks it, which probably isn't the best
     val totalSize = (gameManager.length() + localLevels.length()) / MB_TO_BYTES.toDouble()
+    println("Backup - calculated size of %.2fmb".format(totalSize))
+
     if (totalSize > 32.0) {
-        println("Rejecting save file - calculated size of ${totalSize}mb")
         return Result.failure(BackupParseException(BackupParseFailure.SAVE_TOO_LARGE))
     }
 
@@ -274,6 +333,8 @@ suspend fun backupSaveToCloud(context: Context): Result<Unit> {
         val userDetails = getUserDetails(gameManager).getOrElse {
             return@withContext Result.failure(it)
         }
+
+        println("Backup - performing as ${userDetails.userName}, accountID=${userDetails.accountId}")
 
         val backupClient = OkHttpClient.Builder()
             .writeTimeout(500.seconds)
@@ -286,6 +347,8 @@ suspend fun backupSaveToCloud(context: Context): Result<Unit> {
         performBackupRequest(backupClient, userDetails, backupUrl, gameManager, localLevels).getOrElse {
             return@withContext Result.failure(it)
         }
+
+        println("Backup completed!")
 
         Result.success(Unit)
     }
