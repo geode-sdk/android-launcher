@@ -1,6 +1,5 @@
 package com.geode.launcher.updater
 
-import com.geode.launcher.utils.DownloadUtils.executeCoroutine
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlin.time.Instant
@@ -12,6 +11,7 @@ import kotlinx.serialization.json.okio.decodeFromBufferedSource
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.coroutines.executeAsync
 import java.io.IOException
 import java.net.URL
 import kotlin.time.ExperimentalTime
@@ -62,45 +62,46 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .build()
 
         val call = httpClient.newCall(request)
-        val response = call.executeCoroutine()
 
-        return when (response.code) {
-            200 -> {
-                val format = Json {
-                    namingStrategy = JsonNamingStrategy.SnakeCase
-                    ignoreUnknownKeys = true
+        return call.executeAsync().use { response ->
+            when (response.code) {
+                200 -> {
+                    val format = Json {
+                        namingStrategy = JsonNamingStrategy.SnakeCase
+                        ignoreUnknownKeys = true
+                    }
+
+                    val release = format.decodeFromBufferedSource<List<Release>>(
+                        response.body.source()
+                    )
+
+                    (release.find { it.tagName != "nightly" })
+                        ?.let(::DownloadableGitHubLoaderRelease)
                 }
+                403 -> {
+                    // determine if the error code is a ratelimit
+                    // (github docs say it sends 429 too, but haven't seen that)
 
-                val release = format.decodeFromBufferedSource<List<Release>>(
-                    response.body!!.source()
-                )
+                    val limitRemaining = response.headers.get(GITHUB_RATELIMIT_REMAINING)?.toInt()
+                    val limitReset = response.headers.get(GITHUB_RATELIMIT_RESET)?.toLong()
 
-                (release.find { it.tagName != "nightly" })
-                    ?.let(::DownloadableGitHubLoaderRelease)
-            }
-            403 -> {
-                // determine if the error code is a ratelimit
-                // (github docs say it sends 429 too, but haven't seen that)
+                    if (limitRemaining == 0 && limitReset != null) {
+                        // handle ratelimit with a custom error
+                        // there's also a retry-after header but again, haven't seen
+                        val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
+                        val msg = generateRateLimitMessage(resetTime)
 
-                val limitRemaining = response.headers.get(GITHUB_RATELIMIT_REMAINING)?.toInt()
-                val limitReset = response.headers.get(GITHUB_RATELIMIT_RESET)?.toLong()
+                        throw IOException(msg)
+                    }
 
-                if (limitRemaining == 0 && limitReset != null) {
-                    // handle ratelimit with a custom error
-                    // there's also a retry-after header but again, haven't seen
-                    val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
-                    val msg = generateRateLimitMessage(resetTime)
-
-                    throw IOException(msg)
+                    throw IOException("response 403: ${response.body.string()}")
                 }
-
-                throw IOException("response 403: ${response.body!!.string()}")
-            }
-            404 -> {
-                null
-            }
-            else -> {
-                throw IOException("unknown response ${response.code}")
+                404 -> {
+                    null
+                }
+                else -> {
+                    throw IOException("unknown response ${response.code}")
+                }
             }
         }
     }
@@ -124,44 +125,44 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .build()
 
         val call = httpClient.newCall(request)
-        val response = call.executeCoroutine()
+        return call.executeAsync().use { response ->
+            when (response.code) {
+                200 -> {
+                    val format = Json {
+                        namingStrategy = JsonNamingStrategy.SnakeCase
+                        ignoreUnknownKeys = true
+                    }
 
-        return when (response.code) {
-            200 -> {
-                val format = Json {
-                    namingStrategy = JsonNamingStrategy.SnakeCase
-                    ignoreUnknownKeys = true
+                    val release = format.decodeFromBufferedSource<Release>(
+                        response.body.source()
+                    )
+
+                    release
                 }
+                403 -> {
+                    // determine if the error code is a ratelimit
+                    // (github docs say it sends 429 too, but haven't seen that)
 
-                val release = format.decodeFromBufferedSource<Release>(
-                    response.body!!.source()
-                )
+                    val limitRemaining = response.headers[GITHUB_RATELIMIT_REMAINING]?.toInt()
+                    val limitReset = response.headers[GITHUB_RATELIMIT_RESET]?.toLong()
 
-                release
-            }
-            403 -> {
-                // determine if the error code is a ratelimit
-                // (github docs say it sends 429 too, but haven't seen that)
+                    if (limitRemaining == 0 && limitReset != null) {
+                        // handle ratelimit with a custom error
+                        // there's also a retry-after header but again, haven't seen
+                        val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
+                        val msg = generateRateLimitMessage(resetTime)
 
-                val limitRemaining = response.headers[GITHUB_RATELIMIT_REMAINING]?.toInt()
-                val limitReset = response.headers[GITHUB_RATELIMIT_RESET]?.toLong()
+                        throw IOException(msg)
+                    }
 
-                if (limitRemaining == 0 && limitReset != null) {
-                    // handle ratelimit with a custom error
-                    // there's also a retry-after header but again, haven't seen
-                    val resetTime = Instant.fromEpochSeconds(limitReset, 0L)
-                    val msg = generateRateLimitMessage(resetTime)
-
-                    throw IOException(msg)
+                    throw IOException("response 403: ${response.body.string()}")
                 }
-
-                throw IOException("response 403: ${response.body!!.string()}")
-            }
-            404 -> {
-                null
-            }
-            else -> {
-                throw IOException("unknown response ${response.code}")
+                404 -> {
+                    null
+                }
+                else -> {
+                    throw IOException("unknown response ${response.code}")
+                }
             }
         }
     }
@@ -181,28 +182,28 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .build()
 
         val call = httpClient.newCall(request)
-        val response = call.executeCoroutine()
+        return call.executeAsync().use { response ->
+            when (response.code) {
+                200 -> {
+                    val format = Json {
+                        namingStrategy = JsonNamingStrategy.SnakeCase
+                        ignoreUnknownKeys = true
+                    }
 
-        return when (response.code) {
-            200 -> {
-                val format = Json {
-                    namingStrategy = JsonNamingStrategy.SnakeCase
-                    ignoreUnknownKeys = true
+                    val body = format.decodeFromBufferedSource<LoaderPayload<LoaderVersion>>(
+                        response.body.source()
+                    )
+
+                    val release = body.payload ?: throw IOException("index error: ${body.error}")
+
+                    DownloadableLoaderRelease(release)
                 }
-
-                val body = format.decodeFromBufferedSource<LoaderPayload<LoaderVersion>>(
-                    response.body!!.source()
-                )
-
-                val release = body.payload ?: throw IOException("index error: ${body.error}")
-
-                DownloadableLoaderRelease(release)
-            }
-            404 -> {
-                null
-            }
-            else -> {
-                throw IOException("unknown response ${response.code}")
+                404 -> {
+                    null
+                }
+                else -> {
+                    throw IOException("unknown response ${response.code}")
+                }
             }
         }
     }

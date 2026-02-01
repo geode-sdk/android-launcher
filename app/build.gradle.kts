@@ -100,8 +100,11 @@ dependencies {
     implementation ("androidx.activity:activity-ktx:1.12.3")
     implementation ("androidx.appcompat:appcompat:1.7.1")
     implementation ("androidx.documentfile:documentfile:1.1.0")
+
     implementation ("com.squareup.okio:okio:3.16.4")
     implementation ("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation ("com.squareup.okhttp3:okhttp-coroutines:5.3.2")
+
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.10.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")

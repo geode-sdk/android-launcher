@@ -3,17 +3,18 @@ package com.geode.launcher.utils
 import android.os.Build
 import android.os.FileUtils
 import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
+import okhttp3.coroutines.executeAsync
 import okio.Buffer
+import okio.BufferedSink
 import okio.BufferedSource
+import okio.ForwardingSink
 import okio.ForwardingSource
+import okio.Sink
 import okio.Source
 import okio.buffer
 import java.io.IOException
@@ -21,8 +22,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipInputStream
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 
 typealias ProgressCallback = (progress: Long, outOf: Long) -> Unit
@@ -50,7 +49,7 @@ object DownloadUtils {
                 val originalResponse = chain.proceed(chain.request())
                 originalResponse.newBuilder()
                     .body(ProgressResponseBody(
-                        originalResponse.body!!, onProgress
+                        originalResponse.body, onProgress
                     ))
                     .build()
             }
@@ -59,30 +58,8 @@ object DownloadUtils {
         val progressClient = progressClientBuilder.build()
 
         val call = progressClient.newCall(request)
-        val response = call.executeCoroutine()
-
-        return response.body!!.byteStream()
-    }
-
-    suspend fun Call.executeCoroutine(): Response {
-        return suspendCancellableCoroutine { continuation ->
-            this.enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    if (continuation.isCancelled) {
-                        return
-                    }
-
-                    continuation.resumeWithException(e)
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    continuation.resume(response)
-                }
-            })
-
-            continuation.invokeOnCancellation {
-                this.cancel()
-            }
+        return call.executeAsync().use { response ->
+            response.body.byteStream()
         }
     }
 
@@ -163,6 +140,41 @@ private class ProgressResponseBody (
                 )
 
                 return bytesRead
+            }
+        }
+    }
+}
+
+// now based on <https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/UploadProgress.java#L84>
+class ProgressRequestBody(
+    private val requestBody: RequestBody,
+    private val progressCallback: ProgressCallback
+) : RequestBody() {
+    override fun contentType(): MediaType? {
+        return requestBody.contentType()
+    }
+
+    override fun contentLength(): Long {
+        return requestBody.contentLength()
+    }
+
+    override fun writeTo(sink: BufferedSink) {
+        val bufferedSink = this.sink(sink).buffer()
+        requestBody.writeTo(bufferedSink)
+        bufferedSink.flush()
+    }
+
+    private fun sink(sink: Sink): Sink {
+        return object : ForwardingSink(sink) {
+            var totalBytesWritten = 0L
+
+            override fun write(source: Buffer, byteCount: Long) {
+                super.write(source, byteCount)
+                totalBytesWritten += byteCount
+                progressCallback(
+                    totalBytesWritten,
+                    contentLength()
+                )
             }
         }
     }
