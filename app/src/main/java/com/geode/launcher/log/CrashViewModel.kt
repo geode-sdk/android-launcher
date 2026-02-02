@@ -45,7 +45,8 @@ class CrashViewModel(private val application: Application) : ViewModel() {
 
     private var logJob: Job? = null
 
-    @OptIn(ExperimentalTime::class)
+    var hasIndicator = false
+
     private fun getCrashList(): List<CrashDump> {
         val crashDirectory = LaunchUtils.getCrashDirectory(application)
         if (!crashDirectory.exists()) {
@@ -57,6 +58,8 @@ class CrashViewModel(private val application: Application) : ViewModel() {
                 _, name -> name != LaunchUtils.CRASH_INDICATOR_NAME && name != "last-pid"
         } ?: return emptyList()
 
+        hasIndicator = File(crashDirectory, LaunchUtils.CRASH_INDICATOR_NAME).exists()
+
         return children
             .map {
                 CrashDump(
@@ -65,6 +68,15 @@ class CrashViewModel(private val application: Application) : ViewModel() {
                 )
             }
             .sortedByDescending { it.lastModified }
+    }
+
+    fun clearIndicator() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val crashDirectory = LaunchUtils.getCrashDirectory(application)
+            File(crashDirectory, LaunchUtils.CRASH_INDICATOR_NAME).delete()
+
+            hasIndicator = false
+        }
     }
 
     fun clearCrashes() {

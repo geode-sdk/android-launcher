@@ -312,6 +312,7 @@
     <string name="title_activity_crash_logs">Crash dumps</string>
     <string name="application_crashes_no_dumps">No crash dumps available.</string>
     <string name="application_crashes_delete_one">Delete</string>
+    <string name="application_crashes_clear_indicator">Ignore last crash</string>
 
     <!-- ApplicationIconActivity strings -->
     <string name="title_activity_application_icon">Application icons</string>

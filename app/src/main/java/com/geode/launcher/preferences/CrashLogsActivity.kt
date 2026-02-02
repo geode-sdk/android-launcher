@@ -232,6 +232,25 @@ fun CrashLogsScreen(
                                     showMoreOptions = false
                                 }
                             )
+
+                            val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
+                            if (developerMode) {
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(R.drawable.icon_remove_selection),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    text = {
+                                        Text(stringResource(R.string.application_crashes_clear_indicator))
+                                    }, onClick = {
+                                        crashViewModel.clearIndicator()
+                                        showMoreOptions = false
+                                    },
+                                    enabled = crashViewModel.hasIndicator
+                                )
+                            }
                         }
                     },
                     title = {
