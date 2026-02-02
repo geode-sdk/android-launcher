@@ -14,13 +14,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -29,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -51,10 +47,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.geode.launcher.InstallReceiver
 import com.geode.launcher.R
+import com.geode.launcher.main.LauncherUpdater.downloadUpdate
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.LaunchUtils
@@ -63,9 +58,12 @@ import com.mikepenz.markdown.compose.LocalBulletListHandler
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import java.io.File
@@ -101,6 +99,7 @@ fun clearDownloadedApks(context: Context) {
 object LauncherUpdater {
     enum class LauncherUpdateState {
         Began,
+        Downloading,
         Active,
         Inactive,
         Finished;
@@ -113,12 +112,16 @@ object LauncherUpdater {
         _uiState.emit(LauncherUpdateState.Inactive)
     }
 
-    suspend fun installPackage(context: Context, file: File) {
-        if (!file.exists()) {
-            _uiState.emit(LauncherUpdateState.Finished)
-            return
-        }
+    suspend fun downloadUpdate(context: Context): File? {
+        _uiState.emit(LauncherUpdateState.Downloading)
 
+        return withContext(Dispatchers.IO) {
+            ReleaseManager.get(context)
+                .downloadLatestLauncherUpdate()
+        }
+    }
+
+    suspend fun installPackage(context: Context, file: File) {
         _uiState.emit(LauncherUpdateState.Began)
 
         val installer = context.packageManager.packageInstaller
@@ -147,7 +150,7 @@ object LauncherUpdater {
             }
         })
 
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) { runInterruptible {
             file.inputStream().use { apkStream ->
                 val length = file.length()
 
@@ -160,46 +163,39 @@ object LauncherUpdater {
                 }
 
                 val sessionId = installer.createSession(params)
-                val session = installer.openSession(sessionId)
+                installer.openSession(sessionId).use { session ->
+                    session.openWrite("package", 0, length).use { sessionStream ->
+                        apkStream.copyTo(sessionStream)
+                        session.fsync(sessionStream)
+                    }
 
-                session.openWrite("package", 0, length).use { sessionStream ->
-                    apkStream.copyTo(sessionStream)
-                    session.fsync(sessionStream)
+                    val intent = Intent(context, InstallReceiver::class.java)
+                    val pi = PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                    )
+
+                    session.commit(pi.intentSender)
                 }
-
-                val intent = Intent(context, InstallReceiver::class.java)
-                val pi = PendingIntent.getBroadcast(
-                    context,
-                    0,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-                )
-
-                session.commit(pi.intentSender)
-                session.close()
             }
-        }
+        }}
     }
 }
 
-
 suspend fun installLauncherUpdate(context: Context) {
-    val nextUpdate = ReleaseManager.get(context).availableLauncherUpdate.value
-    val launcherDownload = nextUpdate?.getDownload()
+    val launcherDownload = downloadUpdate(context)
 
     if (launcherDownload != null) {
-        val outputFile = launcherDownload.filename
-        val baseDirectory = context.filesDir
-
-        val outputPathFile = File(baseDirectory, outputFile)
-        if (!outputPathFile.exists()) {
+        if (!launcherDownload.exists()) {
             return
         }
 
         PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.CLEANUP_APKS, true)
 
         try {
-            LauncherUpdater.installPackage(context, outputPathFile)
+            LauncherUpdater.installPackage(context, launcherDownload)
         } catch (e: Exception) {
             e.printStackTrace()
             val msg = context.getString(R.string.launcher_self_update_failed, e.message)
@@ -213,7 +209,7 @@ suspend fun installLauncherUpdate(context: Context) {
 }
 
 @Composable
-fun LauncherUpdateDialog(onDismiss: () -> Unit) {
+fun LauncherUpdateDialog(isCancelling: Boolean, onDismiss: () -> Unit) {
     val updateState by LauncherUpdater.uiState.collectAsState()
 
     val cancellable = updateState != LauncherUpdater.LauncherUpdateState.Active
@@ -224,36 +220,32 @@ fun LauncherUpdateDialog(onDismiss: () -> Unit) {
         }
     }
 
-    if (cancellable) {
-        return
-    }
-
-    Dialog(
-        onDismissRequest = {
-            if (cancellable) onDismiss()
+    AlertDialog(
+        icon = {
+            Icon(
+                painterResource(R.drawable.icon_update),
+                contentDescription = null
+            )
         },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            ),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                modifier = Modifier.padding(24.dp)
-            ) {
-                CircularProgressIndicator()
-
-                Text(
-                    stringResource(R.string.launcher_self_update_progress),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+        title = {
+            if (isCancelling) {
+                Text(stringResource(R.string.release_fetch_cancelling))
+            } else if (updateState == LauncherUpdater.LauncherUpdateState.Downloading) {
+                Text(stringResource(R.string.launcher_downloading_update))
+            } else {
+                Text(stringResource(R.string.launcher_self_update_progress))
             }
-        }
-    }
+        },
+        text = {
+            LinearProgressIndicator()
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss, enabled = cancellable && !isCancelling) {
+                Text(stringResource(R.string.message_box_cancel))
+            }
+        },
+        onDismissRequest = {}
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,10 +257,19 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
+    var updateJob by remember { mutableStateOf<Job?>(null) }
+    var cancellingUpdate by remember { mutableStateOf(false) }
+
     var beginUpdate by remember { mutableStateOf(false) }
     if (beginUpdate) {
-        LauncherUpdateDialog(onDismiss = {
-            beginUpdate = false
+        LauncherUpdateDialog(cancellingUpdate, onDismiss = {
+            cancellingUpdate = true
+
+            coroutineScope.launch {
+                updateJob?.cancelAndJoin()
+
+                beginUpdate = false
+            }
         })
     }
 
@@ -295,9 +296,11 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
                     Row(modifier = Modifier.padding(vertical = 12.dp)) {
                         Button(
                             onClick = {
-                                coroutineScope.launch {
-                                    installLauncherUpdate(context)
+                                updateJob = coroutineScope.launch {
+                                    cancellingUpdate = false
                                     beginUpdate = true
+
+                                    installLauncherUpdate(context)
                                 }
                             },
                         ) {
@@ -362,10 +365,19 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
         }
     }
 
+    var updateJob by remember { mutableStateOf<Job?>(null) }
+    var cancellingUpdate by remember { mutableStateOf(false) }
+
     var beginUpdate by remember { mutableStateOf(false) }
     if (beginUpdate) {
-        LauncherUpdateDialog {
-            beginUpdate = false
+        LauncherUpdateDialog(cancellingUpdate) {
+            cancellingUpdate = true
+            coroutineScope.launch {
+                updateJob?.cancelAndJoin()
+                updateJob = null
+
+                beginUpdate = false
+            }
         }
     }
 
@@ -394,9 +406,11 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
 
                 TextButton(
                     onClick = {
-                        coroutineScope.launch {
-                            installLauncherUpdate(context)
+                        updateJob = coroutineScope.launch {
+                            cancellingUpdate = false
                             beginUpdate = true
+
+                            installLauncherUpdate(context)
                         }
                     },
                 ) {

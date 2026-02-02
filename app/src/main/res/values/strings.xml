@@ -67,7 +67,7 @@
     <string name="launcher_self_update_failed_title">Update failed</string>
 
     <string name="launcher_self_update_failed">Failed to install launcher update: %1$s.</string>
-    <string name="launcher_self_update_progress">Updating Geode Launcher…</string>
+    <string name="launcher_self_update_progress">Installing update…</string>
 
     <string name="launcher_starting_game">Starting Geometry Dash…</string>
     <string name="launcher_downloading_update">Downloading update…</string>

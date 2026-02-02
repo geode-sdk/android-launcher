@@ -133,16 +133,18 @@ class ReleaseManager private constructor(
         }
     }
 
-    private suspend fun downloadLauncherUpdate(release: Downloadable) {
-        val download = release.getDownload() ?: return
+    private suspend fun downloadLauncherUpdate(release: Downloadable): File? {
+        val download = release.getDownload() ?: return null
 
         val outputDirectory = applicationContext.filesDir
         val outputFile = File(outputDirectory, download.filename)
 
+        /*
         if (outputFile.exists()) {
             // only download the apk once
             return
         }
+        */
 
         _uiState.value = ReleaseManagerState.InDownload(0, download.size)
 
@@ -159,8 +161,10 @@ class ReleaseManager private constructor(
             }
         } catch (e: Exception) {
             sendError(e)
-            return
+            return null
         }
+
+        return outputFile
     }
 
     private suspend fun performUpdate(release: Downloadable) {
@@ -213,8 +217,6 @@ class ReleaseManager private constructor(
             } catch (_: Exception) { }
         }
 
-        downloadLauncherUpdateIfNecessary()
-
         // extraction performed
         updatePreferences(release)
         _uiState.value = ReleaseManagerState.Finished(true)
@@ -237,15 +239,29 @@ class ReleaseManager private constructor(
         return originalFileHash != currentFileHash
     }
 
-    private fun checkLauncherUpdate(launcherUpdate: DownloadableLauncherRelease) {
-        if (launcherUpdate.release.tagName != BuildConfig.VERSION_NAME) {
-            _availableLauncherUpdate.value = launcherUpdate
+    private suspend fun getLatestLauncherUpdate(): DownloadableLauncherRelease? {
+        return try {
+            releaseRepository.getLatestLauncherRelease()
+        } catch (e: Exception) {
+            sendError(e)
+            return null
         }
     }
 
-    private suspend fun downloadLauncherUpdateIfNecessary() {
-        val update = _availableLauncherUpdate.value ?: return
-        downloadLauncherUpdate(update)
+    private suspend fun checkLauncherUpdate() {
+        val launcherRelease = getLatestLauncherUpdate() ?: return
+
+        if (launcherRelease.release.tagName != BuildConfig.VERSION_NAME) {
+            _availableLauncherUpdate.value = launcherRelease
+        }
+    }
+
+    suspend fun downloadLatestLauncherUpdate(): File? {
+        val update = _availableLauncherUpdate.value
+            ?: getLatestLauncherUpdate()
+            ?: return null
+
+        return downloadLauncherUpdate(update)
     }
 
     private suspend fun checkForNewRelease(isManual: Boolean = false) {
@@ -266,23 +282,12 @@ class ReleaseManager private constructor(
             return
         }
 
-        val launcherRelease = try {
-            releaseRepository.getLatestLauncherRelease()
-        } catch (e: Exception) {
-            sendError(e)
-            return
-        }
-
-        if (launcherRelease != null) {
-            checkLauncherUpdate(launcherRelease)
-        }
+        checkLauncherUpdate()
 
         val currentTime = Clock.System.now().toEpochMilliseconds()
         sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
 
         if (release == null) {
-            downloadLauncherUpdateIfNecessary()
-
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
@@ -292,8 +297,6 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion == currentVersion && !fileWasExternallyModified()) {
-            downloadLauncherUpdateIfNecessary()
-
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
@@ -302,8 +305,6 @@ class ReleaseManager private constructor(
 
         // check if the file was externally modified
         if (!allowOverwriting && fileWasExternallyModified(true)) {
-            downloadLauncherUpdateIfNecessary()
-
             sendError(UpdateException(UpdateException.Reason.EXTERNAL_FILE_IN_USE))
             return
         }
