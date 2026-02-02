@@ -279,6 +279,15 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
         })
     }
 
+    LaunchedEffect(Unit) {
+        if (nextReleaseName != null && nextRelease == null) {
+            coroutineScope.launch { withContext(Dispatchers.IO) {
+                ReleaseManager.get(context)
+                    .checkLauncherUpdate()
+            }}
+        }
+    }
+
     val nextReleaseNameSaved = nextReleaseName
     if (nextReleaseNameSaved != null) {
         ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {

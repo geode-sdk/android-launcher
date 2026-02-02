@@ -251,12 +251,27 @@ class ReleaseManager private constructor(
         }
     }
 
-    private suspend fun checkLauncherUpdate() {
+    suspend fun checkLauncherUpdate() {
         val launcherRelease = getLatestLauncherUpdate() ?: return
 
-        if (launcherRelease.release.tagName != BuildConfig.VERSION_NAME) {
-            _availableLauncherUpdateTag.value = launcherRelease.getDescription()
-            _availableLauncherUpdateDetails.value = launcherRelease
+        // unconditionally track it, we're not using it for checks and it might be good to have
+        _availableLauncherUpdateDetails.value = launcherRelease
+
+        val launcherTag = launcherRelease.release.tagName
+        if (launcherTag != BuildConfig.VERSION_NAME) {
+            _availableLauncherUpdateTag.value = launcherTag
+
+            PreferenceUtils.get(applicationContext)
+                .setString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE, launcherTag)
+        }
+    }
+
+    private fun checkCachedLauncherUpdate() {
+        val lastUpdate = PreferenceUtils.get(applicationContext)
+            .getString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE) ?: return
+
+        if (lastUpdate != BuildConfig.VERSION_NAME) {
+            _availableLauncherUpdateTag.value = lastUpdate
         }
     }
 
@@ -275,6 +290,7 @@ class ReleaseManager private constructor(
         // only check for updates if it's been over 15 minutes since last check
         val checkMinTime = Clock.System.now().minus(15.minutes).toEpochMilliseconds()
         if (!isManual && lastCheckTime > checkMinTime && !fileWasExternallyModified()) {
+            checkCachedLauncherUpdate()
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
