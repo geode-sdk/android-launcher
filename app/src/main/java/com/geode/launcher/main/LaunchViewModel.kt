@@ -116,7 +116,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
     val uiState = _uiState.asStateFlow()
 
-    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
+    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdateTag
 
     var loadFailure: LoadFailureInfo? = null
     var launchArguments: LaunchArguments? = null

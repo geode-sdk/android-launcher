@@ -48,8 +48,19 @@ data class LoaderPayload<T>(
 data class DownloadableAsset(val url: String, val filename: String, val size: Long? = null)
 
 abstract class Downloadable {
+    /**
+     * Human-readable representation of the current version.
+     */
     abstract fun getDescription(): String
+
+    /**
+     * Unique value that refers to the current version, used for comparison.
+     */
     abstract fun getDescriptor(): Long
+
+    /**
+     * Release download link for the current platform
+     */
     abstract fun getDownload(): DownloadableAsset?
 }
 

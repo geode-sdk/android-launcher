@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -253,7 +255,11 @@ fun LauncherUpdateDialog(isCancelling: Boolean, onDismiss: () -> Unit) {
 fun LauncherUpdateInformation(onDismiss: () -> Unit) {
     val context = LocalContext.current
 
-    val nextRelease = remember { ReleaseManager.get(context).availableLauncherUpdate.value }
+    val releaseManager = remember { ReleaseManager.get(context) }
+
+    val nextReleaseName by releaseManager.availableLauncherUpdateTag.collectAsState()
+    val nextRelease by releaseManager.availableLauncherUpdateDetails.collectAsState()
+
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -273,75 +279,88 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
         })
     }
 
-    if (nextRelease != null) {
+    val nextReleaseNameSaved = nextReleaseName
+    if (nextReleaseNameSaved != null) {
         ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
             Box(Modifier.verticalScroll(rememberScrollState())) {
                 Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                     Text(
-                        stringResource(R.string.launcher_update_name, nextRelease.release.tagName),
+                        stringResource(R.string.launcher_update_name, nextReleaseNameSaved),
                         style = Typography.headlineSmall,
                     )
 
-                    val releasedTime = remember {
-                        DateFormat.getDateInstance().format(
-                            Date.from(nextRelease.release.publishedAt.toJavaInstant())
-                        )
-                    }
-
-                    Text(
-                        stringResource(R.string.launcher_update_released, "$releasedTime"),
-                        style = Typography.labelLarge
-                    )
-
-                    Row(modifier = Modifier.padding(vertical = 12.dp)) {
-                        Button(
-                            onClick = {
-                                updateJob = coroutineScope.launch {
-                                    cancellingUpdate = false
-                                    beginUpdate = true
-
-                                    installLauncherUpdate(context)
-                                }
-                            },
-                        ) {
-                            Icon(painterResource(R.drawable.icon_download), contentDescription = null)
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.launcher_install))
-                        }
-
-                        val uriHandler = LocalUriHandler.current
-
-                        IconButton(onClick = { uriHandler.openUri(nextRelease.release.htmlUrl) }) {
-                            Icon(
-                                painterResource(R.drawable.icon_link),
-                                stringResource(R.string.launcher_update_external_link)
+                    val nextRelease = nextRelease
+                    if (nextRelease != null) {
+                        val releasedTime = remember {
+                            DateFormat.getDateInstance().format(
+                                Date.from(nextRelease.release.publishedAt.toJavaInstant())
                             )
                         }
-
-                    }
-
-                    if (nextRelease.release.body != null) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                         Text(
-                            stringResource(R.string.launcher_update_changelog),
-                            style = Typography.titleLarge
+                            stringResource(R.string.launcher_update_released, "$releasedTime"),
+                            style = Typography.labelLarge
                         )
 
-                        // every new release of the markdown library adds another arg to it
-                        CompositionLocalProvider(LocalBulletListHandler provides { _, _, _, _, _ -> "•  " }) {
-                            Markdown(
-                                content = nextRelease.release.body.replace("\r", ""),
-                                typography = markdownTypography(
-                                    textLink = TextLinkStyles(
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            textDecoration = TextDecoration.Underline,
-                                            color = MaterialTheme.colorScheme.primary,
-                                        ).toSpanStyle()
-                                    ),
-                                ),
-                                flavour = GFMFlavourDescriptor(),
+                        Row(modifier = Modifier.padding(vertical = 12.dp)) {
+                            Button(
+                                onClick = {
+                                    updateJob = coroutineScope.launch {
+                                        cancellingUpdate = false
+                                        beginUpdate = true
+
+                                        installLauncherUpdate(context)
+                                    }
+                                },
+                            ) {
+                                Icon(painterResource(R.drawable.icon_download), contentDescription = null)
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text(stringResource(R.string.launcher_install))
+                            }
+
+                            val uriHandler = LocalUriHandler.current
+
+                            IconButton(onClick = { uriHandler.openUri(nextRelease.release.htmlUrl) }) {
+                                Icon(
+                                    painterResource(R.drawable.icon_link),
+                                    stringResource(R.string.launcher_update_external_link)
+                                )
+                            }
+
+                        }
+
+                        if (nextRelease.release.body != null) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            Text(
+                                stringResource(R.string.launcher_update_changelog),
+                                style = Typography.titleLarge
                             )
+
+                            // every new release of the markdown library adds another arg to it
+                            CompositionLocalProvider(LocalBulletListHandler provides { _, _, _, _, _ -> "•  " }) {
+                                Markdown(
+                                    content = nextRelease.release.body.replace("\r", ""),
+                                    typography = markdownTypography(
+                                        textLink = TextLinkStyles(
+                                            style = MaterialTheme.typography.bodyLarge.copy(
+                                                textDecoration = TextDecoration.Underline,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ).toSpanStyle()
+                                        ),
+                                    ),
+                                    flavour = GFMFlavourDescriptor(),
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
 

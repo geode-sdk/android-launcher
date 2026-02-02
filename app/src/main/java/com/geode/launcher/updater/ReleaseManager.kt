@@ -84,8 +84,11 @@ class ReleaseManager private constructor(
     val isInUpdate: Boolean
         get() = _uiState.value !is ReleaseManagerState.Failure && _uiState.value !is ReleaseManagerState.Finished
 
-    private val _availableLauncherUpdate = MutableStateFlow<DownloadableLauncherRelease?>(null)
-    val availableLauncherUpdate = _availableLauncherUpdate.asStateFlow()
+    private val _availableLauncherUpdateTag = MutableStateFlow<String?>(null)
+    val availableLauncherUpdateTag = _availableLauncherUpdateTag.asStateFlow()
+
+    private val _availableLauncherUpdateDetails = MutableStateFlow<DownloadableLauncherRelease?>(null)
+    val availableLauncherUpdateDetails = _availableLauncherUpdateDetails.asStateFlow()
 
     private fun sendError(e: Exception) {
         _uiState.value = ReleaseManagerState.Failure(e)
@@ -252,12 +255,13 @@ class ReleaseManager private constructor(
         val launcherRelease = getLatestLauncherUpdate() ?: return
 
         if (launcherRelease.release.tagName != BuildConfig.VERSION_NAME) {
-            _availableLauncherUpdate.value = launcherRelease
+            _availableLauncherUpdateTag.value = launcherRelease.getDescription()
+            _availableLauncherUpdateDetails.value = launcherRelease
         }
     }
 
     suspend fun downloadLatestLauncherUpdate(): File? {
-        val update = _availableLauncherUpdate.value
+        val update = _availableLauncherUpdateDetails.value
             ?: getLatestLauncherUpdate()
             ?: return null
 

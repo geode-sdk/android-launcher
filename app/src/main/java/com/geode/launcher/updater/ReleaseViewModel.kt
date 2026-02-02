@@ -53,7 +53,7 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     val isInUpdate
         get() = ReleaseManager.get(application).isInUpdate
 
-    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdate
+    val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdateTag
 
     var hasPerformedCheck = false
         private set
