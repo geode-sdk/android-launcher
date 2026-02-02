@@ -160,9 +160,9 @@ suspend fun performBackupRequest(backupClient: OkHttpClient, details: UserDetail
     return try {
         // we split this into multiple functions to free up as many references as we can
         // go little gc go
-        val request = generateBackupRequest(details, url, gameManager, localLevels)
-        val call = backupClient.newCall(request)
-        call.executeAsync()
+        backupClient.newCall(
+            generateBackupRequest(details, url, gameManager, localLevels)
+        ).executeAsync()
     } catch (e: Exception) {
         Log.w(TAG, "performBackupRequest failed: ${e.stackTraceToString()}")
         return Result.failure(BackupUploadException(BackupUploadFailure.GENERIC_ERROR))
