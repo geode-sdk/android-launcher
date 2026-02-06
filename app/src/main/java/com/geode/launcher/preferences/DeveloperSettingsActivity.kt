@@ -194,6 +194,8 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
+                    val context = LocalContext.current
+
                     SettingsSelectCard(
                         title = stringResource(R.string.preference_release_channel_tag_name),
                         dialogTitle = stringResource(R.string.preference_release_channel_select),
@@ -202,7 +204,11 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                             0 to stringResource(R.string.preference_release_channel_stable),
                             1 to stringResource(R.string.preference_release_channel_beta),
                             2 to stringResource(R.string.preference_release_channel_nightly),
-                        )
+                        ),
+                        extraSelectBehavior = {
+                            PreferenceUtils.get(context)
+                                .setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, 0L)
+                        }
                     )
                 }
 
