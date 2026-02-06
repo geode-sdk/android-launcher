@@ -43,10 +43,10 @@ import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 
 enum class LaunchNotificationType {
-    GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED, UNSUPPORTED_VERSION;
+    GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED, UNSUPPORTED_VERSION, FAILED_LOAD;
 }
 
-fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
+fun determineDisplayedCards(context: Context, geodeFailed: Boolean = false): List<LaunchNotificationType> {
     val cards = mutableListOf<LaunchNotificationType>()
 
     if (GamePackageUtils.getGameVersionCode(context.packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
@@ -69,6 +69,10 @@ fun determineDisplayedCards(context: Context): List<LaunchNotificationType> {
 
     if (releaseState is ReleaseManager.ReleaseManagerState.Failure) {
         cards.add(LaunchNotificationType.UPDATE_FAILED)
+    }
+
+    if (geodeFailed) {
+        cards.add(LaunchNotificationType.FAILED_LOAD)
     }
 
     return cards
@@ -105,20 +109,21 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
                 OutdatedVersionContent()
             }
         }
+        LaunchNotificationType.FAILED_LOAD -> {
+            AnimatedNotificationCard {
+                ForwardCompatibilityContent()
+            }
+        }
         else -> {}
     }
 }
 
 @Composable
-fun LaunchNotification() {
-    val context = LocalContext.current
-
+fun LaunchNotification(cards: List<LaunchNotificationType>) {
     val themeOption by PreferenceUtils.useIntPreference(PreferenceUtils.Key.THEME)
     val theme = Theme.fromInt(themeOption)
 
     val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
-
-    val cards = determineDisplayedCards(context)
 
     CompositionLocalProvider(LocalTheme provides theme) {
         GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
@@ -254,6 +259,25 @@ fun UpdateFailedContent(modifier: Modifier = Modifier) {
                 painterResource(R.drawable.icon_warning),
                 contentDescription = null,
             )
+        },
+        modifier = modifier.width(IntrinsicSize.Max)
+    )
+}
+
+@Composable
+fun ForwardCompatibilityContent(modifier: Modifier = Modifier) {
+    ListItem(
+        headlineContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_forwards_compatibility))
+        },
+        leadingContent = {
+            Icon(
+                painterResource(R.drawable.icon_warning),
+                contentDescription = null,
+            )
+        },
+        supportingContent = {
+            Text(text = stringResource(id = R.string.launcher_notification_forwards_compatibility_description))
         },
         modifier = modifier.width(IntrinsicSize.Max)
     )

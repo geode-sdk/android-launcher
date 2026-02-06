@@ -218,12 +218,32 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         setupPostLibraryLoad(gdPackageInfo)
 
-        try {
+        val geodeFailed = try {
             loadGeodeLibrary()
+            false
         } catch (e: UnsatisfiedLinkError) {
             handleGeodeException(e)
+            true
         } catch (e: Exception) {
             handleGeodeException(e)
+            true
+        }
+
+        setupNotificationView(baseView, geodeFailed)
+    }
+
+    private fun setupNotificationView(baseView: FrameLayout, geodeFailed: Boolean) {
+        val disableNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
+        if (!disableNotification) {
+            val cards = determineDisplayedCards(this, geodeFailed)
+            if (cards.isNotEmpty()) {
+                val notificationView = ComposeView(this)
+                baseView.addView(notificationView)
+
+                notificationView.setContent {
+                    LaunchNotification(cards)
+                }
+            }
         }
     }
 
@@ -443,19 +463,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         this.mGLSurfaceView = glSurfaceView
         frameLayout.addView(this.mGLSurfaceView)
-
-        val disableNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
-        if (!disableNotification) {
-            val hasCards = determineDisplayedCards(this)
-            if (hasCards.isNotEmpty()) {
-                val notificationView = ComposeView(this)
-                frameLayout.addView(notificationView)
-
-                notificationView.setContent {
-                    LaunchNotification()
-                }
-            }
-        }
 
         glSurfaceView.setEGLContextClientVersion(2)
         glSurfaceView.setEGLConfigChooser(EGLConfigChooser())
