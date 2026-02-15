@@ -261,8 +261,8 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
 
 // this should be called after gd is loaded but before geode
 extern "C"
-JNIEXPORT int JNICALL Java_com_geode_launcher_LauncherFix_performExceptionsRenaming(JNIEnv*, jobject) {
-    return dl_iterate_phdr(on_dl_iterate, nullptr);
+JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_performExceptionsRenaming(JNIEnv*, jobject) {
+    dl_iterate_phdr(on_dl_iterate, nullptr);
 }
 
 std::optional<std::string> redirect_path(const char* pathname) {

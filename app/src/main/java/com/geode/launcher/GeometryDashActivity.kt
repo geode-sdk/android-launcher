@@ -233,16 +233,13 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     private fun setupNotificationView(baseView: FrameLayout, geodeFailed: Boolean) {
-        val disableNotification = PreferenceUtils.get(this).getBoolean(PreferenceUtils.Key.DISABLE_REDESIGN)
-        if (!disableNotification) {
-            val cards = determineDisplayedCards(this, geodeFailed)
-            if (cards.isNotEmpty()) {
-                val notificationView = ComposeView(this)
-                baseView.addView(notificationView)
+        val cards = determineDisplayedCards(this, geodeFailed)
+        if (cards.isNotEmpty()) {
+            val notificationView = ComposeView(this)
+            baseView.addView(notificationView)
 
-                notificationView.setContent {
-                    LaunchNotification(cards)
-                }
+            notificationView.setContent {
+                LaunchNotification(cards)
             }
         }
     }
