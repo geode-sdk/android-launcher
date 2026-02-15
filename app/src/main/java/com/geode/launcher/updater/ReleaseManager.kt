@@ -285,6 +285,10 @@ class ReleaseManager private constructor(
 
     fun shouldUseCache(): Boolean {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
+        if (sharedPreferences.getBoolean(PreferenceUtils.Key.DISABLE_UPDATE_CACHE)) {
+            return false
+        }
+
         val lastCheckTime = sharedPreferences.getLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
 
         // only check for updates if it's been over 15 minutes since last check

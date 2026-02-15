@@ -271,6 +271,8 @@
     <string name="preference_launch_arguments_set_title">Set launch arguments</string>
     <string name="preference_text_clear">Clear</string>
 
+    <string name="preference_disable_update_cache">Disable update cache</string>
+
     <string name="preference_open_developer_options">Open developer options</string>
     <string name="preference_developer_options_dialog_title">Enable developer options?</string>
 

@@ -210,6 +210,11 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                                 .setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, 0L)
                         }
                     )
+
+                    SettingsCard(
+                        title = stringResource(R.string.preference_disable_update_cache),
+                        preferenceKey = PreferenceUtils.Key.DISABLE_UPDATE_CACHE
+                    )
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_testing)) {

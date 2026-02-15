@@ -153,6 +153,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         WAIT_PERIOD,
         LAST_UPDATE_CHECK_TIME,
         LAST_LAUNCHER_UPDATE,
+        DISABLE_UPDATE_CACHE,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
@@ -207,6 +208,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.WAIT_PERIOD -> "PreferenceWaitPeriod"
             Key.LAST_UPDATE_CHECK_TIME -> "PreferenceLastUpdateCheckTime"
             Key.LAST_LAUNCHER_UPDATE -> "PreferenceLastLauncherUpdate"
+            Key.DISABLE_UPDATE_CACHE -> "PreferenceDisableUpdateCache"
         }
     }
 
