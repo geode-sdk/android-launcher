@@ -21,6 +21,7 @@ import okhttp3.OkHttpClient
 import okio.buffer
 import okio.source
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.InterruptedIOException
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -136,38 +137,27 @@ class ReleaseManager private constructor(
         }
     }
 
-    private suspend fun downloadLauncherUpdate(release: Downloadable): File? {
-        val download = release.getDownload() ?: return null
+    private suspend fun downloadLauncherUpdate(release: Downloadable): Result<File> {
+        val download = release.getDownload()
+            ?: return Result.failure(FileNotFoundException())
 
         val outputDirectory = applicationContext.filesDir
         val outputFile = File(outputDirectory, download.filename)
-
-        /*
-        if (outputFile.exists()) {
-            // only download the apk once
-            return
-        }
-        */
-
-        _uiState.value = ReleaseManagerState.InDownload(0, download.size)
 
         try {
             DownloadUtils.downloadStream(
                 httpClient,
                 download.url
-            ) { progress, outOf ->
-                _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
-            }.use { fileStream ->
+            ).use { fileStream ->
                 outputFile.outputStream().use {
                     fileStream.copyTo(it)
                 }
             }
         } catch (e: Exception) {
-            sendError(e)
-            return null
+            return Result.failure(e)
         }
 
-        return outputFile
+        return Result.success(outputFile)
     }
 
     private suspend fun performUpdate(release: Downloadable) {
@@ -275,10 +265,10 @@ class ReleaseManager private constructor(
         }
     }
 
-    suspend fun downloadLatestLauncherUpdate(): File? {
+    suspend fun downloadLatestLauncherUpdate(): Result<File> {
         val update = _availableLauncherUpdateDetails.value
             ?: getLatestLauncherUpdate()
-            ?: return null
+            ?: return Result.failure(FileNotFoundException())
 
         return downloadLauncherUpdate(update)
     }

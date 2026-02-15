@@ -114,7 +114,7 @@ object LauncherUpdater {
         _uiState.emit(LauncherUpdateState.Inactive)
     }
 
-    suspend fun downloadUpdate(context: Context): File? {
+    suspend fun downloadUpdate(context: Context): Result<File> {
         _uiState.emit(LauncherUpdateState.Downloading)
 
         return withContext(Dispatchers.IO) {
@@ -188,33 +188,37 @@ object LauncherUpdater {
 
 suspend fun installLauncherUpdate(context: Context) {
     val launcherDownload = downloadUpdate(context)
-
-    if (launcherDownload != null) {
-        if (!launcherDownload.exists()) {
+        .getOrElse { e ->
+            e.printStackTrace()
+            Toast.makeText(
+                context, context.getString(
+                    R.string.launcher_update_download_failed,
+                    e.cause
+                ), Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
-        PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.CLEANUP_APKS, true)
+    if (!launcherDownload.exists()) {
+        return
+    }
 
-        try {
-            LauncherUpdater.installPackage(context, launcherDownload)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            val msg = context.getString(R.string.launcher_self_update_failed, e.message)
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.CLEANUP_APKS, true)
 
-            LauncherUpdater.resetState()
-        }
-    } else {
-        Toast.makeText(context, context.getString(R.string.release_fetch_no_releases), Toast.LENGTH_SHORT).show()
+    try {
+        LauncherUpdater.installPackage(context, launcherDownload)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        val msg = context.getString(R.string.launcher_self_update_failed, e.message)
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+
+        LauncherUpdater.resetState()
     }
 }
 
 @Composable
 fun LauncherUpdateDialog(isCancelling: Boolean, onDismiss: () -> Unit) {
     val updateState by LauncherUpdater.uiState.collectAsState()
-
-    val cancellable = updateState != LauncherUpdater.LauncherUpdateState.Active
 
     LaunchedEffect(updateState) {
         if (updateState == LauncherUpdater.LauncherUpdateState.Finished) {
@@ -242,7 +246,7 @@ fun LauncherUpdateDialog(isCancelling: Boolean, onDismiss: () -> Unit) {
             LinearProgressIndicator()
         },
         confirmButton = {
-            TextButton(onClick = onDismiss, enabled = cancellable && !isCancelling) {
+            TextButton(onClick = onDismiss, enabled = !isCancelling) {
                 Text(stringResource(R.string.message_box_cancel))
             }
         },
