@@ -394,6 +394,15 @@ object GeodeUtils {
         return ""
     }
 
+    @JvmStatic
+    fun getGameVersionCode(): Long {
+        activity.get()?.run {
+            return GamePackageUtils.getGameVersionCode(packageManager)
+        }
+
+        return 0L
+    }
+
     /**
      * Returns the current version code of the launcher.
      */
