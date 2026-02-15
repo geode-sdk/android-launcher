@@ -151,6 +151,8 @@ class MainActivity : ComponentActivity() {
                 launchViewModel.launchArguments = launchArguments
             }
 
+            launchViewModel.beginLaunchFlow()
+
             CompositionLocalProvider(LocalTheme provides theme) {
                 GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption, dynamicColor = !dynamicColorOption) {
                     Surface(
@@ -176,6 +178,7 @@ fun LaunchCancelledIcon(cancelReason: LaunchViewModel.LaunchCancelReason, modifi
         LaunchViewModel.LaunchCancelReason.GAME_OUTDATED,
         LaunchViewModel.LaunchCancelReason.GAME_MISSING -> Icon(painterResource(R.drawable.icon_error), contentDescription = null, modifier)
         LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED,
+        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC,
         LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> Icon(painterResource(R.drawable.icon_warning), contentDescription = null, modifier)
         else -> Icon(painterResource(R.drawable.icon_info), contentDescription = null, modifier)
     }
@@ -186,6 +189,9 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
     return when (cancelReason) {
         LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED -> LaunchStatusInfo(
             title = stringResource(R.string.launcher_cancelled_crash)
+        )
+        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC -> LaunchStatusInfo(
+            title = stringResource(R.string.launcher_cancelled_crash_instant)
         )
         LaunchViewModel.LaunchCancelReason.GEODE_NOT_FOUND -> LaunchStatusInfo(
             title = stringResource(R.string.geode_download_title)
@@ -323,6 +329,7 @@ fun RetryButtonContents(reason: LaunchViewModel.LaunchCancelReason) {
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.launcher_cancelled_resume))
         }
+        LaunchViewModel.LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC,
         LaunchViewModel.LaunchCancelReason.MANUAL,
         LaunchViewModel.LaunchCancelReason.AUTOMATIC -> {
             Icon(
@@ -658,10 +665,6 @@ fun AltMainScreen(
     launchViewModel: LaunchViewModel = viewModel(factory = LaunchViewModel.Factory)
 ) {
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        launchViewModel.beginLaunchFlow()
-    }
 
     val launchUIState by launchViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()

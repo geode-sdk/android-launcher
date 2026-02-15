@@ -78,6 +78,7 @@
     <string name="launcher_cancelled_manual">Launch paused.</string>
     <string name="launcher_cancelled_navigated_away">Launch paused.</string>
     <string name="launcher_cancelled_crash">Launch paused due to a crash.</string>
+    <string name="launcher_cancelled_crash_instant">Geode crashed.</string>
     <string name="launcher_cancelled_error">Geode cannot be used.</string>
     <string name="launcher_cancelled_outdated">A Geometry Dash update is required.</string>
     <string name="launcher_cancelled_restart">Restart</string>

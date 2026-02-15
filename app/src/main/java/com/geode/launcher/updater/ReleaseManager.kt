@@ -266,7 +266,7 @@ class ReleaseManager private constructor(
         }
     }
 
-    private fun checkCachedLauncherUpdate() {
+    fun checkCachedLauncherUpdate() {
         val lastUpdate = PreferenceUtils.get(applicationContext)
             .getString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE) ?: return
 
@@ -283,15 +283,25 @@ class ReleaseManager private constructor(
         return downloadLauncherUpdate(update)
     }
 
-    private suspend fun checkForNewRelease(isManual: Boolean = false) {
+    fun shouldUseCache(): Boolean {
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         val lastCheckTime = sharedPreferences.getLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME)
 
         // only check for updates if it's been over 15 minutes since last check
         val checkMinTime = Clock.System.now().minus(15.minutes).toEpochMilliseconds()
-        if (!isManual && lastCheckTime > checkMinTime && !fileWasExternallyModified()) {
-            checkCachedLauncherUpdate()
-            _uiState.value = ReleaseManagerState.Finished()
+        return lastCheckTime > checkMinTime && !fileWasExternallyModified()
+    }
+
+    fun afterUseCachedUpdate() {
+        checkCachedLauncherUpdate()
+        _uiState.tryEmit(ReleaseManagerState.Finished())
+    }
+
+    private suspend fun checkForNewRelease(isManual: Boolean = false) {
+        val sharedPreferences = PreferenceUtils.get(applicationContext)
+
+        if (!isManual && shouldUseCache()) {
+            afterUseCachedUpdate()
             return
         }
 
@@ -388,9 +398,13 @@ class ReleaseManager private constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun checkForUpdates(isManual: Boolean = false): StateFlow<ReleaseManagerState> {
         if (!isInUpdate) {
-            _uiState.value = ReleaseManagerState.InUpdateCheck
-            updateJob = GlobalScope.launch {
-                checkForNewRelease(isManual)
+            if (isManual || !shouldUseCache()) {
+                _uiState.value = ReleaseManagerState.InUpdateCheck
+                updateJob = GlobalScope.launch {
+                    checkForNewRelease(isManual)
+                }
+            } else {
+                afterUseCachedUpdate()
             }
         }
 

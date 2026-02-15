@@ -65,15 +65,23 @@ class LaunchViewModel(private val application: Application): ViewModel() {
     }
 
     enum class LaunchCancelReason {
-        MANUAL, AUTOMATIC, LAST_LAUNCH_CRASHED, GEODE_NOT_FOUND, GAME_MISSING, GAME_OUTDATED;
+        MANUAL, AUTOMATIC, LAST_LAUNCH_CRASHED, LAST_LAUNCH_CRASHED_AUTOMATIC,
+        GEODE_NOT_FOUND, GAME_MISSING, GAME_OUTDATED;
 
         fun allowsRetry() = when (this) {
             MANUAL,
             AUTOMATIC,
             LAST_LAUNCH_CRASHED,
+            LAST_LAUNCH_CRASHED_AUTOMATIC,
             GEODE_NOT_FOUND -> true
             GAME_MISSING,
             GAME_OUTDATED -> false
+        }
+
+        fun isCrash() = when (this) {
+            LAST_LAUNCH_CRASHED,
+            LAST_LAUNCH_CRASHED_AUTOMATIC -> true
+            else -> false
         }
 
         fun isGameInstallIssue() = when (this) {
@@ -100,20 +108,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         }
     }
 
-    private val _uiState: MutableStateFlow<LaunchUIState>
-
-    init {
-        val preferenceUtils = PreferenceUtils.get(application)
-        val initialCancel = !preferenceUtils.getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
-                && !preferenceUtils.getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
-
-        // fixes a single frame of progress being displayed when we're not actually going to do work
-        _uiState = MutableStateFlow<LaunchUIState>(
-            if (initialCancel) LaunchUIState.Cancelled(LaunchCancelReason.AUTOMATIC)
-            else LaunchUIState.Initial
-        )
-    }
-
+    private val _uiState = MutableStateFlow<LaunchUIState>(LaunchUIState.Initial)
     val uiState = _uiState.asStateFlow()
 
     val nextLauncherUpdate = ReleaseManager.get(application).availableLauncherUpdateTag
@@ -153,7 +148,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
     fun currentCrashInfo(): LoadFailureInfo? {
         val currentState = _uiState.value
-        if (currentState is LaunchUIState.Cancelled && currentState.reason == LaunchCancelReason.LAST_LAUNCH_CRASHED) {
+        if (currentState is LaunchUIState.Cancelled && currentState.reason.isCrash()) {
             return loadFailure
         }
 
@@ -162,12 +157,12 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
     fun clearCrashInfo() {
         val currentState = _uiState.value
-        if (currentState is LaunchUIState.Cancelled && currentState.reason == LaunchCancelReason.LAST_LAUNCH_CRASHED) {
+        if (currentState is LaunchUIState.Cancelled && currentState.reason.isCrash()) {
             loadFailure = null
         }
     }
 
-    private suspend fun preReadyCheck() {
+    private fun preReadyCheck() {
         if (isCancelling) {
             // don't let the game start if cancelled
             return
@@ -176,7 +171,8 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         val packageManager = application.packageManager
 
         if (!GamePackageUtils.isGameInstalled(packageManager)) {
-            return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_MISSING))
+            _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_MISSING))
+            return
         }
 
         if (ReleaseManager.get(application).isInUpdate) {
@@ -186,17 +182,25 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return
         }
 
+        // last launch crashed, so cancel
         if (loadFailure != null) {
-            // last launch crashed, so cancel
-            return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.LAST_LAUNCH_CRASHED))
+            // show a different message if this is the first thing users see
+            val cancelType = if (_uiState.value == LaunchUIState.Initial) {
+                LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC
+            } else LaunchCancelReason.LAST_LAUNCH_CRASHED
+
+            _uiState.tryEmit(LaunchUIState.Cancelled(cancelType))
+            return
         }
 
         if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN) {
-            return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
+            _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
+            return
         }
 
         if (!LaunchUtils.isGeodeInstalled(application)) {
-            return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GEODE_NOT_FOUND))
+            _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GEODE_NOT_FOUND))
+            return
         }
 
         // if forcing immediate launch, then act as if it's manually started (skips timers)
@@ -212,13 +216,14 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         }
 
         if (!readyTimerPassed && !hasManuallyStarted) {
-            return _uiState.emit(LaunchUIState.Working)
+            _uiState.tryEmit(LaunchUIState.Working)
+            return
         }
 
-        _uiState.emit(LaunchUIState.Ready)
+        _uiState.tryEmit(LaunchUIState.Ready)
     }
 
-    suspend fun beginLaunchFlow(isRestart: Boolean = false) {
+    fun beginLaunchFlow(isRestart: Boolean = false) {
         if (isRestart) {
             hasManuallyStarted = true
         }
@@ -234,17 +239,23 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         isCancelling = false
 
         if (!GamePackageUtils.isGameInstalled(application.packageManager)) {
-            return _uiState.emit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_MISSING))
+            _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_MISSING))
+            return
         }
 
         if (readyTimer == null) {
             initReadyTimer()
         }
 
+        val releaseManager = ReleaseManager.get(application)
+
         val hasGeode = LaunchUtils.isGeodeInstalled(application)
         val shouldUpdate = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
+
         if ((shouldUpdate && !hasCheckedForUpdates) || !hasGeode) {
-            ReleaseManager.get(application).checkForUpdates(false)
+            releaseManager.checkForUpdates(false)
+        } else {
+            releaseManager.afterUseCachedUpdate()
         }
 
         preReadyCheck()
@@ -261,7 +272,7 @@ class LaunchViewModel(private val application: Application): ViewModel() {
         }
     }
 
-    suspend fun cancelLaunch(isAutomatic: Boolean = false) {
+    fun cancelLaunch(isAutomatic: Boolean = false) {
         // no need to double cancel
         if (_uiState.value is LaunchUIState.Cancelled) {
             return
@@ -273,11 +284,14 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
         val releaseManager = ReleaseManager.get(application)
         if (releaseManager.isInUpdate) {
-            _uiState.emit(LaunchUIState.Cancelled(reason, true))
-            releaseManager.cancelUpdate()
+            _uiState.tryEmit(LaunchUIState.Cancelled(reason, true))
+
+            viewModelScope.launch {
+                releaseManager.cancelUpdate()
+            }
         }
 
-        _uiState.emit(LaunchUIState.Cancelled(reason, false))
+        _uiState.tryEmit(LaunchUIState.Cancelled(reason, false))
     }
 
     override fun onCleared() {
