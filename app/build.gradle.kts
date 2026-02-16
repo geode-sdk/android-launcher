@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 val composeBOM: String by rootProject.extra
 
 kotlin {
@@ -21,8 +19,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 23
-        versionName = "1.7.0"
+        versionCode = 24
+        versionName = "1.7.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -96,8 +94,8 @@ dependencies {
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation ("androidx.activity:activity-compose:1.12.3")
-    implementation ("androidx.activity:activity-ktx:1.12.3")
+    implementation ("androidx.activity:activity-compose:1.12.4")
+    implementation ("androidx.activity:activity-ktx:1.12.4")
     implementation ("androidx.appcompat:appcompat:1.7.1")
     implementation ("androidx.documentfile:documentfile:1.1.0")
 
@@ -109,8 +107,8 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.10.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
 
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.39.1")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.1")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.39.2")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.2")
     implementation ("androidx.browser:browser:1.9.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
