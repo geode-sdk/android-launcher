@@ -357,7 +357,7 @@ class ReleaseManager private constructor(
     }
 
     private fun computeFileHash(file: File): String =
-        file.source().buffer().readByteString().md5().hex()
+        file.source().buffer().use { it.readByteString().md5().hex() }
 
     private fun getGeodeOutputPath(): File {
         val geodeName = LaunchUtils.geodeFilename
