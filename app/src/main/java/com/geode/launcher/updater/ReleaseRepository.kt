@@ -1,5 +1,7 @@
 package com.geode.launcher.updater
 
+import com.geode.launcher.BuildConfig
+import com.geode.launcher.utils.LaunchUtils
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlin.time.Instant
@@ -9,6 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.okio.decodeFromBufferedSource
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.coroutines.executeAsync
@@ -27,6 +30,8 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
 
         private const val GEODE_API_BASE = "https://api.geode-sdk.org/v1"
     }
+
+    private val userAgent = "okhttp/${OkHttp.VERSION} (launcher=${BuildConfig.VERSION_NAME};arch=${LaunchUtils.applicationArchitecture})"
 
     suspend fun getLatestLauncherRelease(): DownloadableLauncherRelease? {
         val releasePath = "$GITHUB_API_BASE/repos/geode-sdk/android-launcher/releases/latest"
@@ -59,6 +64,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .url(url)
             .addHeader("Accept", "application/json")
             .addHeader(GITHUB_API_HEADER, GITHUB_API_VERSION)
+            .addHeader("User-Agent", userAgent)
             .build()
 
         val call = httpClient.newCall(request)
@@ -122,6 +128,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
             .url(url)
             .addHeader("Accept", "application/json")
             .addHeader(GITHUB_API_HEADER, GITHUB_API_VERSION)
+            .addHeader("User-Agent", userAgent)
             .build()
 
         val call = httpClient.newCall(request)
@@ -179,6 +186,7 @@ class ReleaseRepository(private val httpClient: OkHttpClient) {
         val request = Request.Builder()
             .url(url)
             .addHeader("Accept", "application/json")
+            .addHeader("User-Agent", userAgent)
             .build()
 
         val call = httpClient.newCall(request)
