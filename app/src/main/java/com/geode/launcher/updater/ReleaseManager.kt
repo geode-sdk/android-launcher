@@ -91,6 +91,8 @@ class ReleaseManager private constructor(
     private val _availableLauncherUpdateDetails = MutableStateFlow<DownloadableLauncherRelease?>(null)
     val availableLauncherUpdateDetails = _availableLauncherUpdateDetails.asStateFlow()
 
+    var dismissedLauncherUpdate = false
+
     private fun sendError(e: Exception) {
         _uiState.value = ReleaseManagerState.Failure(e)
 

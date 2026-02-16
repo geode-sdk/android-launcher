@@ -258,6 +258,10 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             releaseManager.afterUseCachedUpdate()
         }
 
+        if (isRestart) {
+            releaseManager.dismissedLauncherUpdate = true
+        }
+
         preReadyCheck()
     }
 

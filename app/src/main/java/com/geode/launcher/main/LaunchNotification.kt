@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -27,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -54,10 +52,8 @@ fun determineDisplayedCards(context: Context, geodeFailed: Boolean = false): Lis
     }
 
     val releaseManager = ReleaseManager.get(context)
-    val loadAutomatically = PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.LOAD_AUTOMATICALLY)
-
     val availableUpdate = releaseManager.availableLauncherUpdateTag.value
-    if (loadAutomatically && availableUpdate != null) {
+    if (availableUpdate != null && !releaseManager.dismissedLauncherUpdate) {
         cards.add(LaunchNotificationType.LAUNCHER_UPDATE_AVAILABLE)
     }
 
@@ -212,6 +208,7 @@ fun LauncherUpdateContent(modifier: Modifier = Modifier) {
     )
 }
 
+/*
 @Composable
 fun UpdateNotificationContent(modifier: Modifier = Modifier) {
     ListItem(
@@ -228,6 +225,7 @@ fun UpdateNotificationContent(modifier: Modifier = Modifier) {
         modifier = modifier.width(IntrinsicSize.Max)
     )
 }
+*/
 
 @Composable
 fun OutdatedVersionContent(modifier: Modifier = Modifier) {
