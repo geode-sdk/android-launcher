@@ -79,6 +79,15 @@ class CrashViewModel(private val application: Application) : ViewModel() {
         }
     }
 
+    fun createIndicator() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val crashDirectory = LaunchUtils.getCrashDirectory(application)
+            File(crashDirectory, LaunchUtils.CRASH_INDICATOR_NAME).createNewFile()
+
+            hasIndicator = true
+        }
+    }
+
     fun clearCrashes() {
         logJob?.cancel()
 

@@ -235,21 +235,38 @@ fun CrashLogsScreen(
 
                             val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
                             if (developerMode) {
-                                DropdownMenuItem(
-                                    leadingIcon = {
-                                        Icon(
-                                            painterResource(R.drawable.icon_remove_selection),
-                                            contentDescription = null
-                                        )
-                                    },
-                                    text = {
-                                        Text(stringResource(R.string.application_crashes_clear_indicator))
-                                    }, onClick = {
-                                        crashViewModel.clearIndicator()
-                                        showMoreOptions = false
-                                    },
-                                    enabled = crashViewModel.hasIndicator
-                                )
+
+                                if (crashViewModel.hasIndicator) {
+                                    DropdownMenuItem(
+                                        leadingIcon = {
+                                            Icon(
+                                                painterResource(R.drawable.icon_remove_selection),
+                                                contentDescription = null
+                                            )
+                                        },
+                                        text = {
+                                            Text(stringResource(R.string.application_crashes_clear_indicator))
+                                        }, onClick = {
+                                            crashViewModel.clearIndicator()
+                                            showMoreOptions = false
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        leadingIcon = {
+                                            Icon(
+                                                painterResource(R.drawable.icon_skull),
+                                                contentDescription = null
+                                            )
+                                        },
+                                        text = {
+                                            Text(stringResource(R.string.application_crashes_create_indicator))
+                                        }, onClick = {
+                                            crashViewModel.createIndicator()
+                                            showMoreOptions = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     },
