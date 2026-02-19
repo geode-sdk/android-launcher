@@ -160,10 +160,6 @@ object LauncherUpdater {
                     PackageInstaller.SessionParams.MODE_FULL_INSTALL,
                 )
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-                }
-
                 val sessionId = installer.createSession(params)
                 installer.openSession(sessionId).use { session ->
                     session.openWrite("package", 0, length).use { sessionStream ->
