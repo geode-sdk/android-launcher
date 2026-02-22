@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.hardware.lights.Light
 import android.hardware.lights.LightState
 import android.hardware.lights.LightsRequest
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -769,6 +770,11 @@ object GeodeUtils {
         }
 
         return true
+    }
+
+    @JvmStatic
+    fun getConnectivityManager(): ConnectivityManager? = activity.get()?.run {
+        getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
     external fun nativeKeyUp(keyCode: Int, modifiers: Int)
