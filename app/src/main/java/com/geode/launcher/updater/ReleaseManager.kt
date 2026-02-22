@@ -214,6 +214,11 @@ class ReleaseManager private constructor(
 
         // extraction performed
         updatePreferences(release)
+
+        val currentTime = Clock.System.now().toEpochMilliseconds()
+        PreferenceUtils.get(applicationContext)
+            .setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
+
         _uiState.value = ReleaseManagerState.Finished(true)
     }
 
@@ -310,10 +315,10 @@ class ReleaseManager private constructor(
 
         checkLauncherUpdate()
 
-        val currentTime = Clock.System.now().toEpochMilliseconds()
-        sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
-
         if (release == null) {
+            val currentTime = Clock.System.now().toEpochMilliseconds()
+            sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
+
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
@@ -323,6 +328,9 @@ class ReleaseManager private constructor(
 
         // check if an update is needed
         if (latestVersion == currentVersion && !fileWasExternallyModified()) {
+            val currentTime = Clock.System.now().toEpochMilliseconds()
+            sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
+
             _uiState.value = ReleaseManagerState.Finished()
             return
         }
