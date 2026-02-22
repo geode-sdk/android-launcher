@@ -20,7 +20,7 @@ object Constants {
     const val SUPPORTED_VERSION_CODE_MIN_WARNING = 40L
 
     // anything above this version code will show a warning when starting the game
-    const val SUPPORTED_VERSION_CODE = 40L
+    const val SUPPORTED_VERSION_CODE = 41L
 
-    const val SUPPORTED_VERSION_STRING = "2.2.143"
+    const val SUPPORTED_VERSION_STRING = "2.2.144"
 }
