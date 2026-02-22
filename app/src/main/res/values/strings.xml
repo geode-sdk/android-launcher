@@ -62,7 +62,7 @@
     <string name="launcher_notification_update_success">Geode updated!</string>
     <string name="launcher_notification_compatibility">Unsupported Geometry Dash version.</string>
     <string name="launcher_notification_compatibility_description">An update is required to receive Geode updates.</string>
-    <string name="launcher_notification_forwards_compatibility_description">Geode failed to load.</string>
+    <string name="launcher_notification_forwards_compatibility_description">Geode is currently unavailable.</string>
     <string name="launcher_notification_forwards_compatibility">Unsupported Geometry Dash version.</string>
 
     <string name="launcher_notification_update_cta">Tap for more information.</string>
