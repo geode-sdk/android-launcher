@@ -255,11 +255,12 @@ class ReleaseManager private constructor(
         _availableLauncherUpdateDetails.value = launcherRelease
 
         val launcherTag = launcherRelease.release.tagName
+
+        PreferenceUtils.get(applicationContext)
+            .setString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE, launcherTag)
+
         if (launcherTag != BuildConfig.VERSION_NAME) {
             _availableLauncherUpdateTag.value = launcherTag
-
-            PreferenceUtils.get(applicationContext)
-                .setString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE, launcherTag)
         }
     }
 
