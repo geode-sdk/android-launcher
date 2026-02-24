@@ -169,7 +169,7 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
             }
 
             IconButton(onClick = {
-                crashViewModel.removeCrash(crashDump.filename)
+                crashViewModel.removeFile(crashDump.filename)
             }) {
                 Icon(
                     painterResource(R.drawable.icon_delete),
@@ -228,14 +228,13 @@ fun CrashLogsScreen(
                                 text = {
                                     Text(stringResource(R.string.application_logs_delete))
                                 }, onClick = {
-                                    crashViewModel.clearCrashes()
+                                    crashViewModel.clearAllFiles()
                                     showMoreOptions = false
                                 }
                             )
 
                             val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
                             if (developerMode) {
-
                                 if (crashViewModel.hasIndicator) {
                                     DropdownMenuItem(
                                         leadingIcon = {
