@@ -2,6 +2,7 @@ package com.geode.launcher.preferences
 
 import android.app.UiModeManager
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -37,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,9 +52,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -70,6 +75,8 @@ import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.ui.theme.Typography
+import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
@@ -77,6 +84,7 @@ import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.launch
 import java.net.ConnectException
 import java.net.UnknownHostException
 import kotlin.math.roundToInt
@@ -140,6 +148,51 @@ fun onOpenFileManager(context: Context) {
 }
 
 @Composable
+fun UpdateErrorDialog(
+    error: Exception,
+    onDismiss: () -> Unit
+) {
+    val clipboard = LocalClipboard.current
+    val coroutineScope = rememberCoroutineScope()
+    val clipboardLabel = stringResource(R.string.application_log_copy_label)
+
+    AlertDialog(
+        icon = {
+            Icon(
+                painterResource(R.drawable.icon_warning),
+                contentDescription = null,
+            )
+        },
+        title = { Text(stringResource(R.string.preference_check_for_updates_help_title)) },
+        text = {
+            Text(
+                error.stackTraceToString(),
+                fontFamily = robotoMonoFamily,
+                style = Typography.bodyMedium,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                coroutineScope.launch {
+                    clipboard.setClipEntry(
+                        ClipEntry(ClipData.newPlainText(clipboardLabel, error.stackTraceToString()))
+                    )
+                }
+            }) {
+                Text(stringResource(R.string.preference_check_for_updates_help_copy))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+        onDismissRequest = onDismiss
+    )
+}
+
+@Composable
 fun UpdateIndicator(
     snackbarHostState: SnackbarHostState,
     updateStatus: ReleaseViewModel.ReleaseUIState
@@ -148,6 +201,17 @@ fun UpdateIndicator(
     val resources = LocalResources.current
 
     var enablePopup by remember { mutableStateOf(false) }
+    var enableHelp by remember { mutableStateOf(false) }
+
+    var currentError by remember { mutableStateOf<Exception?>(null) }
+
+    val currentErrorS = currentError
+    if (currentErrorS != null && enableHelp) {
+        UpdateErrorDialog(currentErrorS) {
+            enableHelp = false
+        }
+    }
+
 
     when (updateStatus) {
         is ReleaseViewModel.ReleaseUIState.InUpdateCheck -> {
@@ -185,7 +249,12 @@ fun UpdateIndicator(
                     else -> resources.getString(R.string.preference_check_for_updates_failed)
                 }
 
-                snackbarHostState.showSnackbar(message)
+                currentError = updateStatus.exception
+
+                val snackbarResult = snackbarHostState.showSnackbar(message, resources.getString(R.string.preference_check_for_updates_failed_action))
+                if (snackbarResult == SnackbarResult.ActionPerformed) {
+                    enableHelp = true
+                }
             }
             is ReleaseViewModel.ReleaseUIState.Finished -> {
                 if (updateStatus.hasUpdated) {

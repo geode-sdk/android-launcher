@@ -234,7 +234,12 @@
 
     <string name="preference_check_for_updates_button">Check for updates</string>
     <string name="preference_check_for_updates_description">Last checked %1$s</string>
-    <string name="preference_check_for_updates_failed">Update failed. See logs for more details.</string>
+    <string name="preference_check_for_updates_failed">Update failed.</string>
+    <string name="preference_check_for_updates_failed_action">Help</string>
+
+    <string name="preference_check_for_updates_help_title">Update failed.</string>
+    <string name="preference_check_for_updates_help_copy">Copy</string>
+
     <string name="preference_check_for_updates_none_found">No updates found.</string>
     <string name="preference_check_for_updates_success">Geode has been updated!</string>
     <string name="preference_check_for_updates_downloading">Downloading update…</string>
