@@ -15,43 +15,28 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,7 +48,6 @@ import com.geode.launcher.log.CrashViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
-import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
@@ -180,154 +164,58 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrashLogsScreen(
     onBackPressedDispatcher: OnBackPressedDispatcher?,
     crashViewModel: CrashViewModel = viewModel(factory = CrashViewModel.Factory)
 ) {
-    val logLines = crashViewModel.lineState
-    val isLoading by crashViewModel.isLoading.collectAsState()
-
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
-    var showMoreOptions by remember { mutableStateOf(false) }
-
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            Column {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
+    DirectoryListingScreen(
+        onBackPressedDispatcher,
+        crashViewModel,
+        titleId = R.string.title_activity_crash_logs,
+        noneAvailableId = R.string.application_crashes_no_dumps,
+        additionalOptions = { onDismiss ->
+            val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
+            if (developerMode) {
+                if (crashViewModel.hasIndicator) {
+                    DropdownMenuItem(
+                        leadingIcon = {
                             Icon(
-                                painterResource(R.drawable.icon_arrow_back),
-                                contentDescription = stringResource(R.string.back_icon_alt)
+                                painterResource(R.drawable.icon_remove_selection),
+                                contentDescription = null
                             )
+                        },
+                        text = {
+                            Text(stringResource(R.string.application_crashes_clear_indicator))
+                        }, onClick = {
+                            crashViewModel.clearIndicator()
+                            onDismiss()
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = { showMoreOptions = !showMoreOptions }) {
+                    )
+                } else {
+                    DropdownMenuItem(
+                        leadingIcon = {
                             Icon(
-                                painterResource(R.drawable.icon_more_vert),
-                                contentDescription = stringResource(R.string.application_logs_more)
+                                painterResource(R.drawable.icon_skull),
+                                contentDescription = null
                             )
+                        },
+                        text = {
+                            Text(stringResource(R.string.application_crashes_create_indicator))
+                        }, onClick = {
+                            crashViewModel.createIndicator()
+                            onDismiss()
                         }
-
-                        DropdownMenu(
-                            expanded = showMoreOptions,
-                            onDismissRequest = { showMoreOptions = false }
-                        ) {
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        painterResource(R.drawable.icon_delete),
-                                        contentDescription = null
-                                    )
-                                },
-                                text = {
-                                    Text(stringResource(R.string.application_logs_delete))
-                                }, onClick = {
-                                    crashViewModel.clearAllFiles()
-                                    showMoreOptions = false
-                                }
-                            )
-
-                            val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
-                            if (developerMode) {
-                                if (crashViewModel.hasIndicator) {
-                                    DropdownMenuItem(
-                                        leadingIcon = {
-                                            Icon(
-                                                painterResource(R.drawable.icon_remove_selection),
-                                                contentDescription = null
-                                            )
-                                        },
-                                        text = {
-                                            Text(stringResource(R.string.application_crashes_clear_indicator))
-                                        }, onClick = {
-                                            crashViewModel.clearIndicator()
-                                            showMoreOptions = false
-                                        }
-                                    )
-                                } else {
-                                    DropdownMenuItem(
-                                        leadingIcon = {
-                                            Icon(
-                                                painterResource(R.drawable.icon_skull),
-                                                contentDescription = null
-                                            )
-                                        },
-                                        text = {
-                                            Text(stringResource(R.string.application_crashes_create_indicator))
-                                        }, onClick = {
-                                            crashViewModel.createIndicator()
-                                            showMoreOptions = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    title = {
-                        Text(
-                            stringResource(R.string.title_activity_crash_logs),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
-
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
         }
-    ) { innerPadding ->
-        LazyColumn(
-            Modifier
-                .padding(innerPadding)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            if (!isLoading && logLines.isEmpty()) {
-                item {
-                    Text(
-                        stringResource(R.string.application_crashes_no_dumps),
-                        textAlign = TextAlign.Center,
-                        style = Typography.bodyLarge,
-                        modifier = Modifier.fillMaxSize().padding(8.dp)
-                    )
-                }
-            }
-
-            val itemsSize = logLines.size
-
-            itemsIndexed(
-                logLines,
-                key = { index, line -> line.filename }
-            ) { index, line ->
-                val shape = RoundedCornerShape(
-                    topStart = if (index == 0) 16.dp else 4.dp,
-                    topEnd = if (index == 0) 16.dp else 4.dp,
-                    bottomStart = if (index + 1 == itemsSize) 16.dp else 4.dp,
-                    bottomEnd = if (index + 1 == itemsSize) 16.dp else 4.dp
-                )
-
-                CrashCard(
-                    line,
-                    crashViewModel,
-                    modifier = Modifier.clip(shape)
-                )
-            }
-
-            item {
-                Spacer(Modifier.height(4.dp))
-            }
-        }
+    ) { line, shape ->
+        CrashCard(
+            line,
+            crashViewModel,
+            modifier = Modifier.clip(shape)
+        )
     }
 }
 

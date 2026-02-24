@@ -21,6 +21,8 @@ abstract class BaseDirectoryViewModel<T>(protected val baseDirectory: File) : Vi
 
     abstract fun getFileList(): List<T>
 
+    abstract fun getItemKey(item: T): Any
+
     open fun clearAllFiles() {
         logJob?.cancel()
 

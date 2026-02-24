@@ -31,6 +31,8 @@ class CrashViewModel(crashDirectory: File) : BaseDirectoryViewModel<CrashDump>(c
 
     var hasIndicator = false
 
+    override fun getItemKey(item: CrashDump) = item.filename
+
     override fun getFileList(): List<CrashDump> {
         val crashDirectory = baseDirectory
 
