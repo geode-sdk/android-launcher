@@ -2,7 +2,9 @@ package com.geode.launcher.utils
 
 import android.os.Build
 import android.os.FileUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -12,11 +14,14 @@ import okhttp3.coroutines.executeAsync
 import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource
+import okio.FileSystem
 import okio.ForwardingSink
 import okio.ForwardingSource
+import okio.Path.Companion.toOkioPath
 import okio.Sink
 import okio.Source
 import okio.buffer
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -30,8 +35,9 @@ object DownloadUtils {
     suspend fun downloadStream(
         httpClient: OkHttpClient,
         url: String,
-        onProgress: ProgressCallback? = null
-    ): InputStream {
+        onProgress: ProgressCallback? = null,
+        onResponse: suspend (ResponseBody) -> Unit,
+    ) {
         val request = Request.Builder()
             .url(url)
             .build()
@@ -58,11 +64,19 @@ object DownloadUtils {
         val progressClient = progressClientBuilder.build()
 
         val call = progressClient.newCall(request)
-        val response = call.executeAsync()
-
-        return response.body.byteStream()
+        call.executeAsync().use { response ->
+            when (response.code) {
+                200 -> onResponse(response.body)
+                else -> throw IOException("unexpected response ${response.code}")
+            }
+        }
     }
 
+    /**
+     * Extracts a file named by zipPath from inputStream and copies it to outputStream
+     *
+     * inputStream and outputStream are both closed after this function executes
+     */
     suspend fun extractFileFromZipStream(inputStream: InputStream, outputStream: OutputStream, zipPath: String) {
         // note to self: ZipInputStreams are a little silly
         // (runInterruptible allows it to cancel, otherwise it waits for the stream to finish)
@@ -90,6 +104,22 @@ object DownloadUtils {
         }
     }
 
+    suspend fun copyFile(from: File, to: File) {
+        val fs = FileSystem.SYSTEM
+
+        val fromPath = from.toOkioPath()
+        val toPath = to.toOkioPath()
+
+        withContext(Dispatchers.IO) {
+            fs.copy(fromPath, toPath)
+        }
+    }
+
+    /**
+     * Copies data from inputStream to outputStream
+     *
+     * Both streams are closed upon the conclusion of this function.
+     */
     fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
         // gotta love copying
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

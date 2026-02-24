@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okio.buffer
+import okio.sink
 import okio.source
 import java.io.File
 import java.io.FileNotFoundException
@@ -149,12 +150,15 @@ class ReleaseManager private constructor(
         try {
             DownloadUtils.downloadStream(
                 httpClient,
-                download.url
-            ).use { fileStream ->
-                outputFile.outputStream().use {
-                    fileStream.copyTo(it)
+                download.url,
+                onResponse = { body ->
+                    body.source().use { source ->
+                        outputFile.sink().buffer().use { sink ->
+                            sink.writeAll(source)
+                        }
+                    }
                 }
-            }
+            )
         } catch (e: Exception) {
             return Result.failure(e)
         }
@@ -179,37 +183,49 @@ class ReleaseManager private constructor(
         val tempFilePath = outputFile.path
 
         try {
-            val fileStream = DownloadUtils.downloadStream(
-                httpClient,
-                releaseAsset.url
-            ) { progress, outOf ->
-                _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
-            }
-
-            outputFile.parentFile?.mkdirs()
-
             val geodeFile = getGeodeOutputPath()
 
-            DownloadUtils.extractFileFromZipStream(
-                fileStream,
-                outputFile.outputStream(),
-                geodeFile.name
-            )
-
-            // work around a permission issue from adb push
-            if (geodeFile.exists()) {
-                geodeFile.delete()
+            val geodeParent = geodeFile.parentFile
+            if (geodeParent != null && !geodeParent.exists()) {
+                geodeParent.mkdirs()
             }
 
-            outputFile.renameTo(geodeFile)
+            DownloadUtils.downloadStream(
+                httpClient,
+                releaseAsset.url,
+                onProgress = { progress, outOf ->
+                    _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+                },
+                onResponse = { body ->
+                    DownloadUtils.extractFileFromZipStream(
+                        body.byteStream(),
+                        outputFile.outputStream(),
+                        geodeFile.name
+                    )
+
+                    // work around a permission issue from adb push
+                    if (geodeFile.exists()) {
+                        geodeFile.delete()
+                    }
+
+                    val renameSuccessful = runCatching {
+                        outputFile.renameTo(geodeFile)
+                    }.getOrDefault(false)
+
+                    if (!renameSuccessful) {
+                        // attempt a manual copy if rename fails for whatever reason
+                        DownloadUtils.copyFile(outputFile.inputStream(), geodeFile.outputStream())
+                    }
+                }
+            )
         } catch (e: Exception) {
             sendError(e)
             return
         } finally {
             val tempFileClone = File(tempFilePath)
-            try {
+            runCatching {
                 if (tempFileClone.exists()) tempFileClone.delete()
-            } catch (_: Exception) { }
+            }
         }
 
         // extraction performed
