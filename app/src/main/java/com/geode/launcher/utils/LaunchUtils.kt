@@ -80,6 +80,11 @@ object LaunchUtils {
         return File(base, "game/geode/crashlogs/")
     }
 
+    fun getGeodeLogsDirectory(context: Context): File {
+        val base = getBaseDirectory(context)
+        return File(base, "game/geode/logs/")
+    }
+
     fun getLastCrash(context: Context): File? {
         val crashDirectory = getCrashDirectory(context)
         if (!crashDirectory.exists()) {

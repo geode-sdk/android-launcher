@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,12 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -180,33 +179,35 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
         GamePackageUtils.getUnifiedVersionName(context.packageManager)
     }
 
-    Column(modifier = modifier) {
-        Text(
-            stringResource(R.string.launcher_error_details),
-            style = Typography.headlineSmall
-        )
+    SelectionContainer {
+        Column(modifier = modifier) {
+            Text(
+                stringResource(R.string.launcher_error_details),
+                style = Typography.headlineSmall
+            )
 
-        Spacer(Modifier.size(8.dp))
+            Spacer(Modifier.size(8.dp))
 
-        Text(
-            description,
-            fontFamily = FontFamily.Monospace,
-            style = Typography.bodyMedium
-        )
+            Text(
+                description,
+                fontFamily = FontFamily.Monospace,
+                style = Typography.bodyMedium
+            )
 
-        Spacer(Modifier.size(4.dp))
+            Spacer(Modifier.size(4.dp))
 
-        Text(
-            stringResource(R.string.launcher_error_device_info,
-                Build.MODEL,
-                Build.VERSION.RELEASE,
-                currentRelease ?: "unknown",
-                gameVersion,
-                LaunchUtils.applicationArchitecture,
-                BuildConfig.VERSION_NAME
-            ),
-            style = Typography.labelMedium
-        )
+            Text(
+                stringResource(R.string.launcher_error_device_info,
+                    Build.MODEL,
+                    Build.VERSION.RELEASE,
+                    currentRelease ?: "unknown",
+                    gameVersion,
+                    LaunchUtils.applicationArchitecture,
+                    BuildConfig.VERSION_NAME
+                ),
+                style = Typography.labelMedium
+            )
+        }
     }
 }
 

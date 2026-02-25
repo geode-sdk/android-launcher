@@ -1,6 +1,5 @@
 package com.geode.launcher.preferences
 
-import android.content.ClipData
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -9,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,13 +41,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -144,46 +138,24 @@ fun SelectLogLevelDialog(
 
 @Composable
 fun LogCard(logLine: LogLine, modifier: Modifier = Modifier) {
-    val haptics = LocalHapticFeedback.current
-    val clipboard = LocalClipboard.current
-    val resources = LocalResources.current
+    SelectionContainer {
+        Column(
+            modifier = modifier
+                .padding(8.dp)
+        ) {
+            Text(
+                "[${logLine.priority.toChar()}] ${logLine.formattedTime}",
+                style = Typography.labelSmall,
+                color = getLogColor(logLine.priority),
+                fontFamily = robotoMonoFamily
+            )
 
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(
-        modifier = modifier
-            .padding(8.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-
-                        val clipboardLabel = resources.getString(R.string.application_log_copy_label)
-                        val clipboardData = logLine.asSimpleString
-
-                        coroutineScope.launch {
-                            clipboard.setClipEntry(
-                                ClipEntry(ClipData.newPlainText(
-                                    clipboardLabel, clipboardData
-                                ))
-                            )
-                        }
-                    }
-                )
-            },
-    ) {
-        Text(
-            "[${logLine.priority.toChar()}] ${logLine.formattedTime}",
-            style = Typography.labelSmall,
-            color = getLogColor(logLine.priority),
-            fontFamily = robotoMonoFamily
-        )
-
-        Text(
-            "[${logLine.tag}]: ${logLine.messageTrimmed}",
-            fontFamily = robotoMonoFamily,
-            style = Typography.bodyMedium
-        )
+            Text(
+                "[${logLine.tag}]: ${logLine.messageTrimmed}",
+                fontFamily = robotoMonoFamily,
+                style = Typography.bodyMedium
+            )
+        }
     }
 }
 
