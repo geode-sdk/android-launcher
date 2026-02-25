@@ -182,9 +182,10 @@ class ReleaseManager private constructor(
         // clone the file instance as renameTo may move the original file
         val tempFilePath = outputFile.path
 
-        try {
-            val geodeFile = getGeodeOutputPath()
+        val geodeFile = getGeodeOutputPath()
 
+        try {
+            // tempFile should be in same path as geodeFile
             val geodeParent = geodeFile.parentFile
             if (geodeParent != null && !geodeParent.exists()) {
                 geodeParent.mkdirs()
@@ -199,7 +200,7 @@ class ReleaseManager private constructor(
                 onResponse = { body ->
                     DownloadUtils.extractFileFromZipStream(
                         body.byteStream(),
-                        outputFile.outputStream(),
+                        outputFile,
                         geodeFile.name
                     )
 
@@ -397,7 +398,14 @@ class ReleaseManager private constructor(
         val geodeName = LaunchUtils.geodeFilename
         val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
 
-        val tempFile = File.createTempFile(geodeName, null, geodeDirectory)
+        val alphabet = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+        val suffix = buildString(8) {
+            repeat(8) { append(alphabet.random()) }
+        }
+
+        val tmpName = "tmp-$suffix.$geodeName"
+
+        val tempFile = File(geodeDirectory, tmpName)
 
         return tempFile
     }

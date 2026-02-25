@@ -77,23 +77,22 @@ object DownloadUtils {
      *
      * inputStream and outputStream are both closed after this function executes
      */
-    suspend fun extractFileFromZipStream(inputStream: InputStream, outputStream: OutputStream, zipPath: String) {
+    suspend fun extractFileFromZipStream(inputStream: InputStream, output: File, zipPath: String) {
         // note to self: ZipInputStreams are a little silly
         // (runInterruptible allows it to cancel, otherwise it waits for the stream to finish)
         runInterruptible {
-            inputStream.use {
-                outputStream.use {
+            inputStream.use { input ->
+                output.outputStream().use { out ->
                     // nice indentation
-                    val zip = ZipInputStream(inputStream)
-                    zip.use {
-                        var entry = it.nextEntry
+                    ZipInputStream(input).use { zip ->
+                        var entry = zip.nextEntry
                         while (entry != null) {
                             if (entry.name == zipPath) {
-                                it.copyTo(outputStream)
+                                zip.copyTo(out)
                                 return@runInterruptible
                             }
 
-                            entry = it.nextEntry
+                            entry = zip.nextEntry
                         }
 
                         // no matching entries found, throw exception
