@@ -214,7 +214,7 @@ class ReleaseManager private constructor(
 
                     if (!renameSuccessful) {
                         // attempt a manual copy if rename fails for whatever reason
-                        DownloadUtils.copyFile(outputFile.inputStream(), geodeFile.outputStream())
+                        DownloadUtils.copyFile(outputFile, geodeFile)
                     }
                 }
             )
