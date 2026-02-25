@@ -60,6 +60,15 @@ jobs:
         mv $APK_PATH $OUT_PATH
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
+    - name: Rename mappings
+      id: rename_mappings
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        MAPPING_PATH=${{github.workspace}}/app/build/outputs/mapping/${{ matrix.config.lower }}/mapping.txt
+        OUT_PATH=${{github.workspace}}/mapping-${{ matrix.config.lower }}-android32-$SHORT_SHA.txt
+        mv MAPPING_PATH $OUT_PATH
+        echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
+
     - name: Upload development build
       uses: actions/upload-artifact@v4
       with:
@@ -67,3 +76,4 @@ jobs:
         path: |
           ${{ steps.rename_apk_universal.outputs.path }}
           ${{ steps.rename_apk.outputs.path }}
+          ${{ steps.rename_mappings.outputs.path }}
