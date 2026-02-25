@@ -9,10 +9,9 @@ import com.geode.launcher.utils.LaunchUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-data class CrashDump @OptIn(ExperimentalTime::class) constructor(
+data class CrashDump(
     val filename: String,
     val lastModified: Instant
 )

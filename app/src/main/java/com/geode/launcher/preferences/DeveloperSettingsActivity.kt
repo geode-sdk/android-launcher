@@ -179,11 +179,25 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         title = stringResource(R.string.preferences_view_logs),
                         icon = {
                             Icon(
-                                painterResource(R.drawable.icon_description),
+                                painterResource(R.drawable.icon_mobile_code),
                                 contentDescription = null
                             )
                         },
                         onClick = { onOpenLogs(context) }
+                    )
+
+                    OptionsButton(
+                        title = stringResource(R.string.preferences_view_geode_logs),
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.icon_description),
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            val launchIntent = Intent(context, GeodeLogsListingActivity::class.java)
+                            context.startActivity(launchIntent)
+                        }
                     )
 
                     OptionsButton(

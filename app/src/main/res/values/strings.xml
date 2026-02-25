@@ -145,6 +145,7 @@
     <string name="preferences_open_file_manager">Open file manager</string>
     <string name="preferences_view_logs">View application logs</string>
     <string name="preferences_view_crashes">View crash dumps</string>
+    <string name="preferences_view_geode_logs">View Geode logs</string>
 
     <string name="preference_theme_name">Theme</string>
     <string name="preference_theme_select">Select theme</string>
@@ -336,4 +337,9 @@
     <string name="application_icon_trans">Transgender</string>
     <string name="application_icon_confirm">Change icon to %1$s?</string>
     <string name="application_icon_confirm_description">Geode Launcher will close itself to change the application icon.</string>
+
+    <!-- GeodeLogsListingActivity strings -->
+    <string name="title_activity_geode_logs">Geode logs</string>
+    <string name="application_geode_logs_no_logs">No logs available.</string>
+    <string name="application_geode_logs_empty">File was empty.</string>
 </resources>

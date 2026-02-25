@@ -90,6 +90,24 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".preferences.GeodeLogsListingActivity"
+            android:exported="true"
+            android:label="@string/title_activity_geode_logs"
+            android:theme="@style/Theme.GeodeLauncher">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="geode-logs" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".preferences.GeodeLogViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GeodeLauncher">
+        </activity>
+        <activity
             android:name=".preferences.ApplicationIconActivity"
             android:exported="false"
             android:label="@string/title_activity_application_icon"

@@ -5,13 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.text.format.Formatter
 import android.widget.Toast
-import java.text.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,33 +36,37 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
-import com.geode.launcher.log.CrashDump
-import com.geode.launcher.log.CrashViewModel
+import com.geode.launcher.log.GeodeLog
+import com.geode.launcher.log.GeodeLogsViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
+import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import java.io.File
-import java.util.Date
-import kotlin.time.toJavaInstant
 
-class CrashLogsActivity : ComponentActivity() {
+class GeodeLogsListingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
 
@@ -73,7 +84,7 @@ class CrashLogsActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        CrashLogsScreen(onBackPressedDispatcher)
+                        GeodeLogsListingScreen(onBackPressedDispatcher)
                     }
                 }
             }
@@ -81,9 +92,9 @@ class CrashLogsActivity : ComponentActivity() {
     }
 }
 
-fun shareCrash(context: Context, filename: String) {
+fun shareLog(context: Context, filename: String) {
     val baseDirectory = LaunchUtils.getBaseDirectory(context)
-    val crashPath = File(LaunchUtils.getCrashDirectory(context), filename)
+    val crashPath = File(LaunchUtils.getGeodeLogsDirectory(context), filename)
 
     if (!crashPath.exists()) {
         Toast.makeText(context, R.string.launcher_error_export_missing, Toast.LENGTH_SHORT).show()
@@ -97,7 +108,7 @@ fun shareCrash(context: Context, filename: String) {
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         putExtra(Intent.EXTRA_STREAM, uri)
-        type = "application/octet-stream"
+        type = "text/plain"
     }
 
     try {
@@ -108,41 +119,48 @@ fun shareCrash(context: Context, filename: String) {
 }
 
 @Composable
-fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Modifier = Modifier) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 1.dp, horizontal = 8.dp)
-        .height(64.dp)
-        .then(modifier)
-        .background(MaterialTheme.colorScheme.surfaceContainerLow)
-        .padding(vertical = 8.dp, horizontal = 8.dp)
+fun GeodeLogCard(geodeLog: GeodeLog, geodeLogsViewModel: GeodeLogsViewModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp, horizontal = 8.dp)
+            .height(64.dp)
+            .then(modifier)
+            .clickable {
+                val launchIntent = Intent(context, GeodeLogViewActivity::class.java).run {
+                    putExtra(GeodeLogViewActivity.EXTRA_LOG_VIEW_FILENAME, geodeLog.filename)
+                }
+                context.startActivity(launchIntent)
+            }
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(vertical = 8.dp, horizontal = 8.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxHeight().offset(x = 12.dp).weight(0.7f)
         ) {
             Text(
-                crashDump.filename,
+                geodeLog.filename,
                 fontFamily = robotoMonoFamily,
                 style = MaterialTheme.typography.titleSmall,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
 
-            val formattedLastModified = remember {
-                DateFormat.getDateTimeInstance()
-                    .format(
-                        Date.from(crashDump.lastModified.toJavaInstant())
-                    )
-
+            val context = LocalContext.current
+            val formattedSize = remember(geodeLog.fileSize) {
+                Formatter.formatShortFileSize(context, geodeLog.fileSize)
             }
-            Text(formattedLastModified, style = MaterialTheme.typography.labelMedium)
+            Text(formattedSize, style = MaterialTheme.typography.labelMedium)
         }
 
         Row(modifier = Modifier.weight(0.3f), horizontalArrangement = Arrangement.End) {
             val context = LocalContext.current
             IconButton(onClick = {
-                shareCrash(context, crashDump.filename)
+                shareLog(context, geodeLog.filename)
             }) {
                 Icon(
                     painterResource(R.drawable.icon_share),
@@ -151,7 +169,7 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
             }
 
             IconButton(onClick = {
-                crashViewModel.removeFile(crashDump.filename)
+                geodeLogsViewModel.removeFile(geodeLog.filename)
             }) {
                 Icon(
                     painterResource(R.drawable.icon_delete),
@@ -163,64 +181,20 @@ fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Mo
 }
 
 @Composable
-fun CrashLogsScreen(
+fun GeodeLogsListingScreen(
     onBackPressedDispatcher: OnBackPressedDispatcher?,
-    crashViewModel: CrashViewModel = viewModel(factory = CrashViewModel.Factory)
+    geodeLogsViewModel: GeodeLogsViewModel = viewModel(factory = GeodeLogsViewModel.Factory)
 ) {
     DirectoryListingScreen(
         onBackPressedDispatcher,
-        crashViewModel,
-        titleId = R.string.title_activity_crash_logs,
-        noneAvailableId = R.string.application_crashes_no_dumps,
-        additionalOptions = { onDismiss ->
-            val developerMode by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DEVELOPER_MODE)
-            if (developerMode) {
-                if (crashViewModel.hasIndicator) {
-                    DropdownMenuItem(
-                        leadingIcon = {
-                            Icon(
-                                painterResource(R.drawable.icon_remove_selection),
-                                contentDescription = null
-                            )
-                        },
-                        text = {
-                            Text(stringResource(R.string.application_crashes_clear_indicator))
-                        }, onClick = {
-                            crashViewModel.clearIndicator()
-                            onDismiss()
-                        }
-                    )
-                } else {
-                    DropdownMenuItem(
-                        leadingIcon = {
-                            Icon(
-                                painterResource(R.drawable.icon_skull),
-                                contentDescription = null
-                            )
-                        },
-                        text = {
-                            Text(stringResource(R.string.application_crashes_create_indicator))
-                        }, onClick = {
-                            crashViewModel.createIndicator()
-                            onDismiss()
-                        }
-                    )
-                }
-            }
-        }
+        geodeLogsViewModel,
+        titleId = R.string.title_activity_geode_logs,
+        noneAvailableId = R.string.application_geode_logs_no_logs,
     ) { line, shape ->
-        CrashCard(
+        GeodeLogCard(
             line,
-            crashViewModel,
+            geodeLogsViewModel,
             modifier = Modifier.clip(shape)
         )
-    }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun CrashLogsPreview() {
-    GeodeLauncherTheme {
-        CrashLogsScreen(null)
     }
 }
