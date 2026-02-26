@@ -2,6 +2,7 @@
 
 #include <string>
 #include <array>
+#include <string_view>
 
 #include <link.h>
 
@@ -14,7 +15,7 @@ public:
 };
 
 // this is every function that i thought would be relevant
-constexpr std::array remove_symbols{
+constexpr std::array<const std::string_view, 10> remove_symbols{
         "__gxx_personality_v0",
         "__cxa_throw",
         "__cxa_rethrow",

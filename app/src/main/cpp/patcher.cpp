@@ -25,7 +25,8 @@ struct ElfDynamicState {
 };
 
 // copied from tuliphook source :)
-bool set_mprotect(std::uintptr_t address, size_t size, uint32_t protection) {
+// tuliphook sets WRX perms, but we write to pages with W^X protection
+bool set_mprotect(std::uintptr_t address, size_t size, int protection) {
     auto const page_size = getpagesize();
     auto const page_mask = page_size - 1;
 
@@ -41,12 +42,11 @@ bool set_mprotect(std::uintptr_t address, size_t size, uint32_t protection) {
 }
 
 // i copied this function from the android linker
-std::uint32_t elfhash(const char *_name) {
-    const auto *name = reinterpret_cast<const unsigned char*>(_name);
+constexpr std::uint32_t elfhash(std::string_view name) {
     std::uint32_t h = 0, g;
 
-    while (*name) {
-        h = (h << 4) + *name++;
+    for (const auto c : name) {
+        h = (h << 4) + static_cast<unsigned char>(c);
         g = h & 0xf0000000;
         h ^= g;
         h ^= g >> 24;
@@ -55,9 +55,9 @@ std::uint32_t elfhash(const char *_name) {
     return h;
 }
 
-std::array<std::uint8_t, 3> SYMBOL_PATCH_VALUE{":3"};
+constexpr std::array<const std::uint8_t, 3> SYMBOL_PATCH_VALUE{":3"};
 
-bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_table, const char* orig_name) {
+bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_table, const std::string_view orig_name) {
     auto hash = elfhash(orig_name);
 
     auto nbucket = hash_table[0];
@@ -69,7 +69,7 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
         auto sym = sym_table + i;
         auto sym_name = str_table + sym->st_name;
 
-        if (strcmp(sym_name, orig_name) == 0) {
+        if (orig_name == sym_name) {
             // there's probably no point to checking this, honestly
             if (ELF_ST_BIND(sym->st_info) == STB_GLOBAL && ELF_ST_TYPE(sym->st_info) == STT_FUNC) {
                 // we found it! now go rename the symbol

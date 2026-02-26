@@ -398,6 +398,9 @@ class ReleaseManager private constructor(
         val geodeName = LaunchUtils.geodeFilename
         val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
 
+        // warning!! while File::createTempFile may look tempting, a certain brand of phones has a messed up implementation of it
+        // so we're making a temp file manually (as long as it doesn't collide with the geode download, it's okay)
+
         val alphabet = ('A'..'Z') + ('a'..'z') + ('0'..'9')
         val suffix = buildString(8) {
             repeat(8) { append(alphabet.random()) }
