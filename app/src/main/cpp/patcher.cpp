@@ -165,7 +165,8 @@ bool perform_reloc_patches(dl_phdr_info* info, const ElfDynamicState& state) {
     auto failed = false;
 
     for (auto& plt : std::span{
-            reinterpret_cast<T*>(state.plt_table), table_size
+            reinterpret_cast<T*>(state.plt_table),
+            static_cast<std::size_t>(table_size)
     }) {
         auto sym = ELF_R_SYM(plt.r_info);
         if (sym == 0) continue;
