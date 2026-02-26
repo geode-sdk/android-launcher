@@ -7,16 +7,10 @@
 
 class DataPaths {
 public:
-    std::string original_data_path{};
-    std::string data_path{};
-    std::string load_symbols_from{};
+    static std::string original_data_path;
+    static std::string data_path;
 
-    bool patch_exceptions{};
-
-    static DataPaths& get_instance();
-
-private:
-    DataPaths() {}
+    static bool patch_exceptions;
 };
 
 // this is every function that i thought would be relevant

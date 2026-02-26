@@ -16,6 +16,4 @@ object LauncherFix {
     external fun enableExceptionsRenaming()
 
     external fun performPatches()
-
-    external fun enableCustomSymbolList(symbolsPath: String)
 }

@@ -277,7 +277,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
             failed = true;
         }
 
-        if (DataPaths::get_instance().patch_exceptions) {
+        if (DataPaths::patch_exceptions) {
             if (!perform_symbol_patches(info, state)) {
                 failed = true;
             }
