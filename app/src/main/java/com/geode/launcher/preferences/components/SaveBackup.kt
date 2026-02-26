@@ -1,4 +1,4 @@
-package com.geode.launcher.preferences
+package com.geode.launcher.preferences.components
 
 import android.content.Context
 import android.util.Log

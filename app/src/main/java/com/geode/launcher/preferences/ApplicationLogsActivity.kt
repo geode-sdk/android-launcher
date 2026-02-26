@@ -55,6 +55,8 @@ import com.geode.launcher.R
 import com.geode.launcher.log.LogLine
 import com.geode.launcher.log.LogPriority
 import com.geode.launcher.log.LogViewModel
+import com.geode.launcher.preferences.components.SelectDialog
+import com.geode.launcher.preferences.components.SelectOption
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme

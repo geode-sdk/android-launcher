@@ -41,6 +41,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
+import com.geode.launcher.preferences.components.OptionsButton
+import com.geode.launcher.preferences.components.OptionsGroup
+import com.geode.launcher.preferences.components.ProfileCreateCard
+import com.geode.launcher.preferences.components.ProfileSelectCard
+import com.geode.launcher.preferences.components.SettingsCard
+import com.geode.launcher.preferences.components.SettingsSelectCard
+import com.geode.launcher.preferences.components.SettingsStringCard
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
@@ -151,10 +158,14 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         title = stringResource(R.string.preference_launch_arguments_name),
                         dialogTitle = stringResource(R.string.preference_launch_arguments_set_title),
                         preferenceKey = PreferenceUtils.Key.LAUNCH_ARGUMENTS,
-                        filterInput = { it.filter { c ->
-                            // if only there was a better way to define this!
-                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(c)
-                        }}
+                        filterInput = {
+                            it.filter { c ->
+                                // if only there was a better way to define this!
+                                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(
+                                    c
+                                )
+                            }
+                        }
                     )
 
                     /*
@@ -238,9 +249,21 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         preferenceKey = PreferenceUtils.Key.WAIT_PERIOD,
                         options = linkedMapOf(
                             0 to stringResource(R.string.preference_launch_delay_instant),
-                            1 to pluralStringResource(R.plurals.preference_launch_delay_value, 1, 1),
-                            3 to pluralStringResource(R.plurals.preference_launch_delay_value, 3, 3),
-                            5 to pluralStringResource(R.plurals.preference_launch_delay_value, 5, 5),
+                            1 to pluralStringResource(
+                                R.plurals.preference_launch_delay_value,
+                                1,
+                                1
+                            ),
+                            3 to pluralStringResource(
+                                R.plurals.preference_launch_delay_value,
+                                3,
+                                3
+                            ),
+                            5 to pluralStringResource(
+                                R.plurals.preference_launch_delay_value,
+                                5,
+                                5
+                            ),
                         )
                     )
 

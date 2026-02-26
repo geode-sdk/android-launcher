@@ -73,6 +73,18 @@ import com.geode.launcher.BuildConfig
 import com.geode.launcher.MainActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
+import com.geode.launcher.preferences.components.BackupButton
+import com.geode.launcher.preferences.components.OptionsButton
+import com.geode.launcher.preferences.components.OptionsCard
+import com.geode.launcher.preferences.components.OptionsGroup
+import com.geode.launcher.preferences.components.OptionsLabel
+import com.geode.launcher.preferences.components.OptionsTitle
+import com.geode.launcher.preferences.components.SafeModeDialog
+import com.geode.launcher.preferences.components.SettingsCard
+import com.geode.launcher.preferences.components.SettingsFPSCard
+import com.geode.launcher.preferences.components.SettingsRangeCard
+import com.geode.launcher.preferences.components.SettingsSelectCard
+import com.geode.launcher.preferences.components.SettingsStringSelectCard
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
@@ -531,7 +543,10 @@ fun UpdateSettingsGroup(releaseViewModel: ReleaseViewModel, snackbarHostState: S
                             contentDescription = null
                         )
                     },
-                    description = stringResource(R.string.preference_check_for_updates_description, checkAgoString)
+                    description = stringResource(
+                        R.string.preference_check_for_updates_description,
+                        checkAgoString
+                    )
                         .takeIf { lastUpdateCheck != 0L }
                 )
             },
@@ -596,14 +611,21 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
 
         OptionsButton(
             stringResource(R.string.preference_launcher_version_name),
-            stringResource(R.string.preference_launcher_version_description, BuildConfig.VERSION_NAME),
+            stringResource(
+                R.string.preference_launcher_version_description,
+                BuildConfig.VERSION_NAME
+            ),
             displayInline = true
         ) {
             launcherButtonTapped += 1
 
             if (launcherButtonTapped >= 7) {
                 if (developerModeEnabled) {
-                    Toast.makeText(context, R.string.preference_enable_developer_again, Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        context,
+                        R.string.preference_enable_developer_again,
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 } else {
                     showDeveloperDialog = true
@@ -618,7 +640,8 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
                     showDeveloperDialog = false
                 },
                 onEnable = {
-                    PreferenceUtils.get(context).setBoolean(PreferenceUtils.Key.DEVELOPER_MODE, true)
+                    PreferenceUtils.get(context)
+                        .setBoolean(PreferenceUtils.Key.DEVELOPER_MODE, true)
                     showDeveloperDialog = false
                 }
             )
@@ -626,7 +649,10 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
 
         OptionsLabel(
             stringResource(R.string.preference_loader_version_name),
-            stringResource(R.string.preference_loader_version_description, currentRelease ?: "unknown"),
+            stringResource(
+                R.string.preference_loader_version_description,
+                currentRelease ?: "unknown"
+            ),
             displayInline = true
         )
 
@@ -640,22 +666,32 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
             }
 
             val gameSource = remember {
-                resources.getString(when (GamePackageUtils.identifyGameSource(context.packageManager)) {
-                    GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
-                    GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
-                    else -> R.string.preference_game_source_unknown
-                })
+                resources.getString(
+                    when (GamePackageUtils.identifyGameSource(context.packageManager)) {
+                        GamePackageUtils.GameSource.GOOGLE -> R.string.preference_game_source_google
+                        GamePackageUtils.GameSource.AMAZON -> R.string.preference_game_source_amazon
+                        else -> R.string.preference_game_source_unknown
+                    }
+                )
             }
 
             OptionsLabel(
                 stringResource(R.string.preference_game_version_name),
-                stringResource(R.string.preference_game_version_description, gameVersion, gameSource),
+                stringResource(
+                    R.string.preference_game_version_description,
+                    gameVersion,
+                    gameSource
+                ),
                 displayInline = true
             )
 
             OptionsLabel(
                 stringResource(R.string.preference_architecture_name),
-                stringResource(R.string.preference_architecture_description, Build.MODEL, LaunchUtils.applicationArchitecture),
+                stringResource(
+                    R.string.preference_architecture_description,
+                    Build.MODEL,
+                    LaunchUtils.applicationArchitecture
+                ),
                 displayInline = true
             )
         }
