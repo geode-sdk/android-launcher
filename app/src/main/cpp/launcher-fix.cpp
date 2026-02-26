@@ -4,13 +4,12 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <android/log.h>
 #include <link.h>
 #include <span>
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define LOG_TAG "GeodeLauncher-Fix"
+#include "log.hpp"
 
 class DataPaths {
 public:
@@ -142,17 +141,17 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
             if (ELF_ST_BIND(sym->st_info) == STB_GLOBAL && ELF_ST_TYPE(sym->st_info) == STT_FUNC) {
                 // we found it! now go rename the symbol
 
-                __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "Disabling symbol at %p (%s)", sym_name, sym_name);
+                log::debug("Disabling symbol at {} ({})", reinterpret_cast<void*>(sym_name), sym_name);
 
                 if (!set_mprotect(reinterpret_cast<std::uintptr_t>(sym_name), SYMBOL_PATCH_VALUE.size(), PROT_READ | PROT_WRITE)) {
-                    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "failed to patch symbol: could not set writable flag");
+                    log::warn("failed to patch symbol: could not set writable flag");
                     return false;
                 }
 
                 memcpy(sym_name, SYMBOL_PATCH_VALUE.data(), SYMBOL_PATCH_VALUE.size());
 
                 if (!set_mprotect(reinterpret_cast<std::uintptr_t>(sym_name), SYMBOL_PATCH_VALUE.size(), PROT_READ)) {
-                    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "failed to patch symbol: could not remove writable flag");
+                    log::warn("failed to patch symbol: could not remove writable flag");
                     return false;
                 }
 
@@ -161,7 +160,8 @@ bool patch_symbol(std::uint32_t* hash_table, char* str_table, ElfW(Sym)* sym_tab
         }
     }
 
-    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "could not find symbol %s to patch (hash: %u)", orig_name, hash);
+    log::warn("could not find symbol {} to patch (hash: {})", orig_name, hash);
+
     return false;
 }
 
@@ -186,13 +186,8 @@ constexpr std::array remove_symbols{
 
 bool perform_symbol_patches(dl_phdr_info* info, const ElfDynamicState& state) {
     // patch symbol names
-    auto so_name = state.str_table + state.soname_idx;
-    if (strcmp(so_name, "libcocos2dcpp.so") != 0) {
-        __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "DT_SONAME gives us %s! that's not good", so_name);
-    }
-
     auto has_error = false;
-    for (const auto& symbol : remove_symbols) {
+    for (const auto symbol : remove_symbols) {
         if (!patch_symbol(state.hash_table, state.str_table, state.sym_table, symbol)) {
             has_error = true;
         }
@@ -218,7 +213,7 @@ bool rewrite_symbol_reloc(std::uintptr_t addr, T& r, ElfW(Sym)* sym, void* func)
 
     // we're only interested in JUMP_SLOT symbols
     if (type != R_AARCH64_JUMP_SLOT && type != R_ARM_JUMP_SLOT) {
-        __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "asked to patch unknown symbol type: %llu", type);
+        log::warn("asked to patch unknown symbol type: {:#x}", type);
         return false;
     }
 
@@ -229,10 +224,10 @@ bool rewrite_symbol_reloc(std::uintptr_t addr, T& r, ElfW(Sym)* sym, void* func)
         val += r.r_addend;
     }
 
-    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "Patching relocation at vaddr %#lx (offset=%#llx): %#lx => %#lx", addr, r.r_offset, *write_addr, val);
+    log::debug("Patching relocation at vaddr {:#x} (offset={:#x}): {:#x} => {:#x}", addr, r.r_offset, *write_addr, val);
 
     if (!set_mprotect(addr, sizeof(std::uintptr_t), PROT_WRITE | PROT_READ)) {
-        __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "Failed to patch relocation: failed to add writable flag");
+        log::warn("Failed to patch relocation: failed to add writable flag");
         return false;
     }
 
@@ -240,7 +235,7 @@ bool rewrite_symbol_reloc(std::uintptr_t addr, T& r, ElfW(Sym)* sym, void* func)
     *write_addr = val;
 
     if (!set_mprotect(addr, sizeof(std::uintptr_t), PROT_READ)) {
-        __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "Failed to patch relocation: failed to remove writable flag");
+        log::warn("Failed to patch relocation: failed to remove writable flag");
         return false;
     }
 
@@ -284,7 +279,7 @@ bool perform_reloc_patches(dl_phdr_info* info, const ElfDynamicState& state) {
 int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
     // this is probably going to be gd
     if (info->dlpi_name != nullptr && strstr(info->dlpi_name, "libcocos2dcpp.so") != nullptr) {
-        __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "Base address of libcocos2dcpp: %#llx", info->dlpi_addr);
+        log::debug("Base address of libcocos2dcpp: {:#x}", info->dlpi_addr);
 
         // step 1: get the dynamic table
         std::uintptr_t dyn_addr = 0u;
@@ -297,7 +292,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         }
 
         if (dyn_addr == 0u) {
-            __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "failed to find libcocos dynamic section");
+            log::warn("failed to find libcocos dynamic section");
             return 0;
         }
 
@@ -333,7 +328,7 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
                     auto val = dyn_entry->d_un.d_val;
                     state.plt_table_rela = val == DT_RELA;
                     if (val != DT_RELA && val != DT_REL) {
-                        __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "unrecognized PLTREL type %llx", val);
+                        log::warn("unrecognized PLTREL type {:#x}", val);
                     }
                     break;
                 }
@@ -349,13 +344,24 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         }
 
         if (state.is_empty()) {
-            __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "failed to parse dynamic section (at least one table is null)");
+            log::error("failed to parse dynamic section (at least one table is null)");
             return -1;
         }
 
-        bool failed = state.plt_table_rela
-            ? !perform_reloc_patches<ElfW(Rela)>(info, state)
-            : !perform_reloc_patches<ElfW(Rel)>(info, state);
+        bool failed = false;
+
+        auto so_name = state.str_table + state.soname_idx;
+        if (strcmp(so_name, "libcocos2dcpp.so") != 0) {
+            log::warn("DT_SONAME gives us {}! that's not good", so_name);
+            failed = true;
+        }
+
+        auto reloc_failed = state.plt_table_rela
+                ? !perform_reloc_patches<ElfW(Rela)>(info, state)
+                : !perform_reloc_patches<ElfW(Rel)>(info, state);
+        if (reloc_failed) {
+            failed = true;
+        }
 
         if (DataPaths::get_instance().patch_exceptions) {
             if (!perform_symbol_patches(info, state)) {
@@ -364,11 +370,14 @@ int on_dl_iterate(dl_phdr_info* info, size_t size, void* data) {
         }
 
         if (failed) {
-            __android_log_print(
-                    ANDROID_LOG_INFO,
-                    LOG_TAG,
-                    "symbol patch diagnostics\nlibrary path: %s\naddrs: base=%p sym=%p str=%p hash=%p plt=%p",
-                    info->dlpi_name, reinterpret_cast<void*>(info->dlpi_addr), state.sym_table, state.str_table, state.hash_table, state.plt_table
+            log::info(
+                "symbol patch diagnostics\nlibrary path: {}\naddrs: base={:#x} sym={} str={} hash={} plt={}",
+                info->dlpi_name,
+                info->dlpi_addr,
+                reinterpret_cast<void*>(state.sym_table),
+                reinterpret_cast<void*>(state.str_table),
+                reinterpret_cast<void*>(state.hash_table),
+                state.plt_table
             );
         }
 
@@ -384,15 +393,13 @@ extern "C" JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_performPat
 }
 
 std::optional<std::string> redirect_path(const char* pathname) {
-    auto& data_path = DataPaths::get_instance().data_path;
-    auto& original_data_path = DataPaths::get_instance().original_data_path;
+    std::string_view data_path = DataPaths::get_instance().data_path;
+    std::string_view original_data_path = DataPaths::get_instance().original_data_path;
 
     if (!data_path.empty() && !original_data_path.empty()) {
         // call this a c string optimization
-        if (std::strncmp(pathname, original_data_path.c_str(), original_data_path.size()) == 0) {
-            auto path = data_path + (pathname + original_data_path.size());
-
-            return path;
+        if (std::strncmp(pathname, original_data_path.data(), original_data_path.size()) == 0) {
+            return std::format("{}{}", data_path, (pathname + original_data_path.size()));
         }
     }
 
