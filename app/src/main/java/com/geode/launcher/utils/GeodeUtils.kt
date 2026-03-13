@@ -208,16 +208,14 @@ object GeodeUtils {
         val context = activity.get()!!
 
         val pathFile = File(path)
-        val baseDirectory = LaunchUtils.getBaseDirectory(context)
+        val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
         val isInternalPath = pathFile.startsWith(baseDirectory)
 
         val intent = if (isInternalPath) {
             val relativePath = pathFile.relativeTo(baseDirectory)
-            val profile = ProfileManager.get(context).getCurrentProfile();
-
             val uri = DocumentsContract.buildDocumentUri(
                 "com.android.externalstorage.documents",
-                "primary:Android/media/${context.packageName}/${if (profile.isNullOrEmpty()) "" else "profiles/${profile}/"}${relativePath}"
+                "primary:Android/media/${context.packageName}/$relativePath"
             )
 
             Intent(Intent.ACTION_VIEW).apply {
