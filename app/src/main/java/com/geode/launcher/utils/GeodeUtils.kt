@@ -208,24 +208,20 @@ object GeodeUtils {
         val context = activity.get()!!
 
         val pathFile = File(path)
-        val baseDirectory = LaunchUtils.getBaseDirectory(context)
+        val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
         val isInternalPath = pathFile.startsWith(baseDirectory)
 
         val intent = if (isInternalPath) {
-            // TODO: figure out how to get this to point to the path it should be pointing at
-            // (the best i got was pointing at a file)
-            // val relativePath = pathFile.relativeTo(baseDirectory)
+            val relativePath = pathFile.relativeTo(baseDirectory)
+            val uri = DocumentsContract.buildDocumentUri(
+                "com.android.externalstorage.documents",
+                "primary:Android/media/${context.packageName}/$relativePath"
+            )
 
             Intent(Intent.ACTION_VIEW).apply {
-                data = DocumentsContract.buildRootUri(
-                    "${context.packageName}.user", UserDirectoryProvider.ROOT
-                )
+                setDataAndType(uri, DocumentsContract.Document.MIME_TYPE_DIR)
 
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-                        Intent.FLAG_GRANT_PREFIX_URI_PERMISSION or
-                        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                )
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         } else {
             Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
