@@ -69,8 +69,15 @@ object GamePackageUtils {
             packageInfo.applicationInfo!!.flags and ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS == ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS
         val isSplit = (packageInfo.applicationInfo?.splitSourceDirs?.size ?: 0) > 1
 
+        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode.toLong()
+        }
+
         val metadata =
-            "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi"
+            "Geometry Dash metadata:\nSplit sources: $isSplit\nExtracted libraries: $isExtracted\nLauncher architecture: $abi\nGame version: $versionCode"
         Log.i("GeodeLauncher", metadata)
 
         // easiest check! these messages are hardcoded in bionic/linker/linker_phdr.cpp
