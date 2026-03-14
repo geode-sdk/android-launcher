@@ -10,13 +10,16 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -120,9 +123,10 @@ fun LaunchNotification(cards: List<LaunchNotificationType>) {
     val theme = Theme.fromInt(themeOption)
 
     val backgroundOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.BLACK_BACKGROUND)
+    val dynamicColorOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DISABLE_USER_THEME)
 
     CompositionLocalProvider(LocalTheme provides theme) {
-        GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption) {
+        GeodeLauncherTheme(theme = theme, blackBackground = backgroundOption, dynamicColor = !dynamicColorOption) {
             // surface is not in use, so this is unfortunately not provided
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 Column(
@@ -279,4 +283,27 @@ fun ForwardCompatibilityContent(modifier: Modifier = Modifier) {
         },
         modifier = modifier.width(IntrinsicSize.Max)
     )
+}
+
+@Composable
+fun FullScreenLoadingIndicator() {
+    val theme = Theme.DARK
+    val dynamicColorOption by PreferenceUtils.useBooleanPreference(PreferenceUtils.Key.DISABLE_USER_THEME)
+
+    CompositionLocalProvider(LocalTheme provides theme) {
+        GeodeLauncherTheme(theme = theme, blackBackground = true, dynamicColor = !dynamicColorOption) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                var showProgress by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    delay(1000L)
+                    showProgress = true
+                }
+
+                AnimatedVisibility(showProgress) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
 }

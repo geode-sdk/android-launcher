@@ -119,6 +119,12 @@ object LaunchUtils {
         }
     }
 
+    data class FullLauncherError(
+        val error: LauncherError,
+        val returnMessage: String,
+        val extendedMessage: String? = null,
+    ) : Serializable
+
     const val LAUNCHER_KEY_RETURN_ERROR = "return_error"
     const val LAUNCHER_KEY_RETURN_MESSAGE = "return_message"
     const val LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE = "return_extended_message"

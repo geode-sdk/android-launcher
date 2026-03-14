@@ -24,8 +24,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import com.customRobTop.BaseRobTopActivity
 import com.customRobTop.JniToCpp
+import com.geode.launcher.main.FullScreenLoadingIndicator
 import com.geode.launcher.main.LaunchNotification
 import com.geode.launcher.main.determineDisplayedCards
 import com.geode.launcher.utils.Constants
@@ -35,13 +37,14 @@ import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView
 import org.cocos2dx.lib.Cocos2dxHelper
 import org.cocos2dx.lib.Cocos2dxRenderer
 import org.fmod.FMOD
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
@@ -91,97 +94,88 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return
         }
 
-        try {
-            createVersionFile()
-            tryLoadGame()
-        } catch (e: UnsatisfiedLinkError) {
-            Log.e("GeodeLauncher", "Library linkage failure", e)
+        val rootLayout = setupContext()
+        val loadingView = ComposeView(this).apply {
+            setContent {
+                FullScreenLoadingIndicator()
+            }
+        }
 
-            // generates helpful information for use in debugging library load failures
-            val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-            val abiMismatch = GamePackageUtils.detectAbiMismatch(this, gdPackageInfo, e)
+        if (rootLayout != null) {
+            rootLayout.addView(loadingView)
+        } else {
+            setContentView(loadingView)
+        }
 
-            val is64bit = LaunchUtils.is64bit
-            val errorMessage = when {
-                abiMismatch && is64bit -> LaunchUtils.LauncherError.LINKER_NEEDS_32BIT
-                abiMismatch -> LaunchUtils.LauncherError.LINKER_NEEDS_64BIT
-                e.message?.contains("__gxx_personality_v0") == true ->
-                    LaunchUtils.LauncherError.LINKER_FAILED_STL
-                else -> LaunchUtils.LauncherError.LINKER_FAILED
+        lifecycleScope.launch {
+            val error = preloadGame(rootLayout)
+            if (error != null) {
+                returnToMain(error)
             }
 
-            returnToMain(errorMessage, e.message, e.stackTraceToString())
-
-            return
-        } catch (e: Exception) {
-            Log.e("GeodeLauncher", "Uncaught error during game load", e)
-
-            returnToMain(
-                LaunchUtils.LauncherError.GENERIC,
-                e.message ?: "Unknown Exception",
-                e.stackTraceToString()
-            )
-
-            return
+            rootLayout?.removeView(loadingView)
         }
+    }
+
+    suspend fun preloadGame(rootLayout: FrameLayout?): LaunchUtils.FullLauncherError? = try {
+        createVersionFile()
+        val loadFailed = tryLoadGame()
+
+        val baseView = createView()
+
+        if (rootLayout != null) {
+            rootLayout.addView(baseView)
+        } else {
+            setContentView(baseView)
+        }
+
+        mGLSurfaceView?.manualBackEvents = true
+
+        setupNotificationView(baseView, loadFailed)
+
+        null
+    } catch (e: UnsatisfiedLinkError) {
+        Log.e("GeodeLauncher", "Library linkage failure", e)
+
+        // generates helpful information for use in debugging library load failures
+        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+        val abiMismatch = GamePackageUtils.detectAbiMismatch(this, gdPackageInfo, e)
+
+        val is64bit = LaunchUtils.is64bit
+        val errorMessage = when {
+            abiMismatch && is64bit -> LaunchUtils.LauncherError.LINKER_NEEDS_32BIT
+            abiMismatch -> LaunchUtils.LauncherError.LINKER_NEEDS_64BIT
+            e.message?.contains("__gxx_personality_v0") == true ->
+                LaunchUtils.LauncherError.LINKER_FAILED_STL
+            else -> LaunchUtils.LauncherError.LINKER_FAILED
+        }
+
+        LaunchUtils.FullLauncherError(
+            errorMessage,
+            e.message ?: "Unknown exception",
+            e.stackTraceToString()
+        )
+    } catch (e: Exception) {
+        Log.e("GeodeLauncher", "Uncaught error during game load", e)
+
+        LaunchUtils.FullLauncherError(
+            LaunchUtils.LauncherError.GENERIC,
+            e.message ?: "Unknown Exception",
+            e.stackTraceToString()
+        )
+    }
+
+    private fun setupContext(): FrameLayout? {
+        Cocos2dxHelper.init(this, this)
+
+        GeodeUtils.setContext(this)
+        GeodeUtils.setCapabilityListener(this)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 mGLSurfaceView?.sendKeyBack()
             }
         })
-        mGLSurfaceView?.manualBackEvents = true
-    }
-
-    private fun createVersionFile() {
-        val versionPath = File(filesDir, "game_version.txt")
-        val gameVersion = GamePackageUtils.getGameVersionCode(packageManager)
-
-        versionPath.writeText("$gameVersion")
-    }
-
-    private fun returnToMain(
-        error: LaunchUtils.LauncherError? = null,
-        returnMessage: String? = null,
-        returnExtendedMessage: String? = null
-    ) {
-        val launchIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-
-            if (error != null && !returnMessage.isNullOrEmpty()) {
-                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_ERROR, error)
-                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE, returnMessage)
-                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE, returnExtendedMessage)
-            }
-        }
-
-        startActivity(launchIntent)
-    }
-
-    private fun tryLoadGame() {
-        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-
-        setupRedirection(gdPackageInfo)
-
-        Cocos2dxHelper.init(this, this)
-
-        GeodeUtils.setContext(this)
-        GeodeUtils.setCapabilityListener(this)
-
-        tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
-        tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
-
-        if (GamePackageUtils.getGameVersionCode(packageManager) >= 39L) {
-            // this fix requires geode v3, which is 2.206+
-            // there is a short period in which 2.206 users will still have geode v2, but whatever. ig
-            LauncherFix.enableExceptionsRenaming()
-        }
-
-        LauncherFix.performPatches()
-
-        loadInternalMods()
-
-        val baseView = createView()
 
         if (!GeodeUtils.handleSafeArea && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val frameLayoutParams = ViewGroup.LayoutParams(
@@ -204,15 +198,61 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 WindowInsets.CONSUMED
             }
 
-            frameLayout.addView(baseView)
             setContentView(frameLayout)
-        } else {
-            setContentView(baseView)
+            return frameLayout
         }
+
+        return null
+    }
+
+    private suspend fun createVersionFile() = runCatching {
+        val gameVersion = GamePackageUtils.getGameVersionCode(packageManager)
+
+        val versionPath = File(filesDir, "game_version.txt")
+
+        withContext(Dispatchers.IO) {
+            if (versionPath.exists()) {
+                versionPath.delete()
+            }
+
+            versionPath.writeText("$gameVersion")
+        }
+    }
+
+    private fun returnToMain(message: LaunchUtils.FullLauncherError? = null, ) {
+        val launchIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+
+            if (message != null) {
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_ERROR, message.error)
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE, message.returnMessage)
+                putExtra(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE, message.extendedMessage)
+            }
+        }
+
+        startActivity(launchIntent)
+    }
+
+    private suspend fun tryLoadGame(): Boolean {
+        val gdPackageInfo = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+        setupRedirection(gdPackageInfo)
+
+        tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
+        tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
+
+        if (GamePackageUtils.getGameVersionCode(packageManager) >= 39L) {
+            // this fix requires geode v3, which is 2.206+
+            // there is a short period in which 2.206 users will still have geode v2, but whatever. ig
+            LauncherFix.enableExceptionsRenaming()
+        }
+
+        LauncherFix.performPatches()
+
+        loadInternalMods()
 
         setupPostLibraryLoad(gdPackageInfo)
 
-        val geodeFailed = try {
+        return try {
             loadGeodeLibrary()
             false
         } catch (e: UnsatisfiedLinkError) {
@@ -222,8 +262,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             handleGeodeException(e)
             true
         }
-
-        setupNotificationView(baseView, geodeFailed)
     }
 
     private fun setupNotificationView(baseView: FrameLayout, geodeFailed: Boolean) {
@@ -283,7 +321,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
+    private suspend fun tryLoadLibrary(packageInfo: PackageInfo, libraryName: String) {
         val nativeDir = getNativeLibraryDirectory(packageInfo.applicationInfo!!)
         val libraryPath = if (nativeDir.endsWith('/')) "${nativeDir}lib$libraryName.so" else "$nativeDir/lib$libraryName.so"
 
@@ -302,7 +340,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadLibraryCopy(libraryName: String, libraryPath: String) {
+    private suspend fun loadLibraryCopy(libraryName: String, libraryPath: String) {
         if (libraryPath.contains("!/")) {
             // library in apk can't be loaded directly
             loadLibraryFromAssetsCopy(libraryName)
@@ -312,11 +350,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val library = File(libraryPath)
         val libraryCopy = File(cacheDir, "lib$libraryName.so")
 
-        libraryCopy.outputStream().use { libraryOutput ->
-            library.inputStream().use { inputStream ->
-                DownloadUtils.copyFile(inputStream, libraryOutput)
-            }
-        }
+        DownloadUtils.copyFile(library, libraryCopy)
 
         System.load(libraryCopy.path)
 
@@ -324,7 +358,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadLibraryFromAssetsCopy(libraryName: String) {
+    private suspend fun loadLibraryFromAssetsCopy(libraryName: String) {
         // loads a library loaded in assets
         // this copies the library to a non-compressed directory
 
@@ -339,9 +373,11 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         // there doesn't seem to be a way to load a library from a file descriptor
         val libraryCopy = File(cacheDir, "lib$libraryName.so")
 
-        libraryCopy.outputStream().use { libraryOutput ->
-            libraryFd.createInputStream().use { inputStream ->
-                DownloadUtils.copyFile(inputStream, libraryOutput)
+        withContext(Dispatchers.IO) {
+            libraryCopy.outputStream().use { libraryOutput ->
+                libraryFd.createInputStream().use { inputStream ->
+                    DownloadUtils.copyFile(inputStream, libraryOutput)
+                }
             }
         }
 
@@ -376,7 +412,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     }
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun loadGeodeLibrary() {
+    private suspend fun loadGeodeLibrary() {
         // Load Geode if exists
         // bundling the object with the application allows for nicer backtraces
         try {
@@ -397,22 +433,23 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             // also i get 20 million permission denied errors
             val externalGeodePath = LaunchUtils.getInstalledGeodePath(this)!!
 
-            val copiedPath = File(filesDir.path, "copied")
+            val copiedPath = File(filesDir, "copied")
             if (copiedPath.exists()) {
                 copiedPath.deleteRecursively()
             }
             copiedPath.mkdir()
 
-            val copiedGeodePath = File(copiedPath.path, "Geode.so")
+            val copiedGeodePath = File(copiedPath, "Geode.so")
 
             if (externalGeodePath.exists()) {
                 DownloadUtils.copyFile(
-                    FileInputStream(externalGeodePath),
-                    FileOutputStream(copiedGeodePath)
+                    externalGeodePath,
+                    copiedGeodePath
                 )
 
                 if (copiedGeodePath.exists()) {
                     println("Loading Geode from ${externalGeodePath.name}")
+
                     System.load(copiedGeodePath.path)
                     return
                 }
