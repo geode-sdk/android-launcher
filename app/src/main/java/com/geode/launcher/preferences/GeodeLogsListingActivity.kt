@@ -117,8 +117,8 @@ fun GeodeLogCard(geodeLog: GeodeLog, geodeLogsViewModel: GeodeLogsViewModel, mod
             .height(64.dp)
             .then(modifier)
             .clickable {
-                val launchIntent = Intent(context, GeodeLogViewActivity::class.java).run {
-                    putExtra(GeodeLogViewActivity.EXTRA_LOG_VIEW_FILENAME, geodeLog.filename)
+                val launchIntent = Intent(context, TextViewActivity::class.java).run {
+                    putExtra(TextViewActivity.EXTRA_LOG_VIEW_FILENAME, geodeLog.fullPath)
                 }
                 context.startActivity(launchIntent)
             }

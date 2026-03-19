@@ -13,7 +13,8 @@ import kotlin.time.Instant
 
 data class CrashDump(
     val filename: String,
-    val lastModified: Instant
+    val lastModified: Instant,
+    val fullPath: String,
 )
 
 class CrashViewModel(crashDirectory: File) : BaseDirectoryViewModel<CrashDump>(crashDirectory) {
@@ -41,16 +42,19 @@ class CrashViewModel(crashDirectory: File) : BaseDirectoryViewModel<CrashDump>(c
 
         val children = crashDirectory.listFiles {
             // ignore indicator files (including old file)
-                _, name -> name != LaunchUtils.CRASH_INDICATOR_NAME && name != "last-pid"
+                _, name -> !LaunchUtils.CRASH_INDICATOR_NAMES.contains(name)
         } ?: return emptyList()
 
-        hasIndicator = File(crashDirectory, LaunchUtils.CRASH_INDICATOR_NAME).exists()
+        hasIndicator = LaunchUtils.CRASH_INDICATOR_NAMES.any {
+            File(crashDirectory, it).exists()
+        }
 
         return children
             .map {
                 CrashDump(
                     filename = it.name,
-                    lastModified = Instant.fromEpochMilliseconds(it.lastModified())
+                    lastModified = Instant.fromEpochMilliseconds(it.lastModified()),
+                    fullPath = it.path,
                 )
             }
             .sortedByDescending { it.lastModified }
@@ -58,7 +62,12 @@ class CrashViewModel(crashDirectory: File) : BaseDirectoryViewModel<CrashDump>(c
 
     fun clearIndicator() {
         viewModelScope.launch(Dispatchers.IO) {
-            File(baseDirectory, LaunchUtils.CRASH_INDICATOR_NAME).delete()
+            LaunchUtils.CRASH_INDICATOR_NAMES.forEach {
+                val crashFile = File(baseDirectory, it)
+                if (crashFile.exists()) {
+                    crashFile.delete()
+                }
+            }
 
             hasIndicator = false
         }
@@ -66,7 +75,8 @@ class CrashViewModel(crashDirectory: File) : BaseDirectoryViewModel<CrashDump>(c
 
     fun createIndicator() {
         viewModelScope.launch(Dispatchers.IO) {
-            File(baseDirectory, LaunchUtils.CRASH_INDICATOR_NAME).createNewFile()
+            val crashFile = File(baseDirectory, LaunchUtils.CRASH_INDICATOR_NAMES.first())
+            crashFile.createNewFile()
 
             hasIndicator = true
         }

@@ -103,7 +103,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".preferences.GeodeLogViewActivity"
+            android:name=".preferences.TextViewActivity"
             android:exported="false"
             android:theme="@style/Theme.GeodeLauncher">
         </activity>

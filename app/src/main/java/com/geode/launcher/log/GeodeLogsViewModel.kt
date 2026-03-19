@@ -14,6 +14,7 @@ data class GeodeLog(
     val filename: String,
     val lastModified: Instant,
     val fileSize: Long,
+    val fullPath: String,
 )
 
 class GeodeLogsViewModel(crashDirectory: File) : BaseDirectoryViewModel<GeodeLog>(crashDirectory) {
@@ -43,7 +44,8 @@ class GeodeLogsViewModel(crashDirectory: File) : BaseDirectoryViewModel<GeodeLog
                 GeodeLog(
                     filename = it.name,
                     lastModified = Instant.fromEpochMilliseconds(it.lastModified()),
-                    fileSize = it.length()
+                    fileSize = it.length(),
+                    fullPath = it.path,
                 )
             }
             .sortedByDescending { it.lastModified }

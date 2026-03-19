@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -40,18 +39,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.R
-import com.geode.launcher.log.GeodeLogsViewModel
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.robotoMonoFamily
 import com.geode.launcher.utils.PreferenceUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 
 
-class GeodeLogViewActivity : ComponentActivity() {
+class TextViewActivity : ComponentActivity() {
     companion object {
         const val EXTRA_LOG_VIEW_FILENAME = "EXTRA_LOG_FILENAME"
     }
@@ -95,14 +95,23 @@ class GeodeLogViewActivity : ComponentActivity() {
 fun GeodeLogView(
     onBackPressedDispatcher: OnBackPressedDispatcher?,
     filename: String,
-    geodeLogsViewModel: GeodeLogsViewModel = viewModel(factory = GeodeLogsViewModel.Factory)
 ) {
     var loadingFile by remember { mutableStateOf(true) }
     var description by remember { mutableStateOf(emptyList<String>()) }
 
+    val toRead = File(filename)
+
     LaunchedEffect(filename) {
         loadingFile = true
-        description = geodeLogsViewModel.getFileText(filename)
+
+        withContext(Dispatchers.IO) {
+            if (!toRead.isFile) {
+                description = listOf("File does not exist!")
+            } else {
+                description = toRead.readLines()
+            }
+        }
+
         loadingFile = false
     }
 
@@ -123,7 +132,7 @@ fun GeodeLogView(
                     },
                     title = {
                         Text(
-                            filename,
+                            toRead.name,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

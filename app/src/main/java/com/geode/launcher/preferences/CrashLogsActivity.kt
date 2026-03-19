@@ -12,6 +12,7 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -110,11 +111,20 @@ fun shareCrash(context: Context, filename: String) {
 
 @Composable
 fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Modifier = Modifier) {
+    val isReadable = crashDump.filename.endsWith(".txt")
+    val context = LocalContext.current
+
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 1.dp, horizontal = 8.dp)
         .height(64.dp)
         .then(modifier)
+        .clickable(isReadable) {
+            val launchIntent = Intent(context, TextViewActivity::class.java).run {
+                putExtra(TextViewActivity.EXTRA_LOG_VIEW_FILENAME, crashDump.fullPath)
+            }
+            context.startActivity(launchIntent)
+        }
         .background(MaterialTheme.colorScheme.surfaceContainerLow)
         .padding(vertical = 8.dp, horizontal = 8.dp)
     ) {

@@ -73,7 +73,7 @@ object LaunchUtils {
         return File(getBaseDirectory(context), "save")
     }
 
-    const val CRASH_INDICATOR_NAME = "lastSessionDidCrash"
+    val CRASH_INDICATOR_NAMES = setOf("lastSessionDidCrash", "last-pid", "last-crashed")
 
     fun getCrashDirectory(context: Context): File {
         val base = getBaseDirectory(context)
@@ -93,7 +93,7 @@ object LaunchUtils {
 
         val children = crashDirectory.listFiles {
             // ignore indicator files (including old file)
-            _, name -> name != CRASH_INDICATOR_NAME && name != "last-pid"
+            _, name -> !CRASH_INDICATOR_NAMES.contains(name)
         }
 
         return children?.maxByOrNull { it.lastModified() }
@@ -101,9 +101,9 @@ object LaunchUtils {
 
     fun lastSessionCrashed(context: Context): Boolean {
         val base = getCrashDirectory(context)
-        val crashIndicatorFile = File(base, CRASH_INDICATOR_NAME)
-
-        return crashIndicatorFile.exists()
+        return CRASH_INDICATOR_NAMES.any {
+            File(base, it).exists()
+        }
     }
 
     enum class LauncherError : Serializable {
