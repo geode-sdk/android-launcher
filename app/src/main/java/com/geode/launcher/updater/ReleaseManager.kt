@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.Cache
 import okhttp3.OkHttpClient
+import okio.HashingSink
+import okio.blackholeSink
 import okio.buffer
 import okio.sink
 import okio.source
@@ -252,7 +254,6 @@ class ReleaseManager private constructor(
             ?: return false
 
         val currentFileHash = computeFileHash(geodeFile)
-
         return originalFileHash != currentFileHash
     }
 
@@ -384,8 +385,14 @@ class ReleaseManager private constructor(
         sharedPreferences.setString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED, fileHash)
     }
 
-    private fun computeFileHash(file: File): String =
-        file.source().buffer().use { it.readByteString().md5().hex() }
+    private fun computeFileHash(file: File): String {
+        val sink = HashingSink.md5(blackholeSink())
+        file.source().buffer().use {
+            it.readAll(sink)
+        }
+
+        return sink.hash.hex()
+    }
 
     private fun getGeodeOutputPath(): File {
         val geodeName = LaunchUtils.geodeFilename
