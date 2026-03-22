@@ -80,7 +80,7 @@ class GeodeLogsListingActivity : ComponentActivity() {
 }
 
 fun shareLog(context: Context, filename: String) {
-    val baseDirectory = LaunchUtils.getBaseDirectory(context)
+    val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
     val crashPath = File(LaunchUtils.getGeodeLogsDirectory(context), filename)
 
     if (!crashPath.exists()) {

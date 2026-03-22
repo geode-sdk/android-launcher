@@ -53,6 +53,7 @@
     <string name="launcher_error_view_logs">View logs</string>
     <string name="launcher_error_copy_error_alt">Copy</string>
     <string name="launcher_error_copy">Copy details</string>
+    <string name="launcher_error_view_details">View details</string>
     <string name="launcher_error_export_crash">Share crash</string>
     <string name="launcher_error_export_missing">No crash dump was found!</string>
     <string name="launcher_error_device_info">Android %2$s, %1$s (%5$s)\nGD %4$s, Geode %3$s + v%6$s</string>
@@ -118,10 +119,10 @@
     <string name="load_failed_crashed_description">A crash was reported during the last session. Try to:</string>
     <string name="load_failed_recommendation_reinstall">Reinstall Geometry Dash.</string>
     <string name="load_failed_recommendation_switch_32bit_abi">Install the 32-bit version of the launcher.</string>
-    <string name="load_failed_recommendation_switch_64bit_abi">Install the non 32-bit version of the launcher.</string>
+    <string name="load_failed_recommendation_switch_64bit_abi">Install the non-32-bit version of the launcher.</string>
     <string name="load_failed_recommendation_update">Verify that the latest versions of the launcher and Geometry Dash are installed.</string>
     <string name="load_failed_recommendation_report">Report this issue to the developers.</string>
-    <string name="load_failed_recommendation_safe_mode">Enable the safe mode button in Settings.</string>
+    <string name="load_failed_recommendation_safe_mode">Use the safe mode button in Settings.</string>
     <string name="load_failed_recommendation_dev_stl">Devs: If this is a locally built Geode version, please use the c++_shared ANDROID_STL!</string>
 
     <string name="message_box_cancel">Cancel</string>

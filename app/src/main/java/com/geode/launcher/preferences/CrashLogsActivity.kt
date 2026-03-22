@@ -84,7 +84,7 @@ class CrashLogsActivity : ComponentActivity() {
 }
 
 fun shareCrash(context: Context, filename: String) {
-    val baseDirectory = LaunchUtils.getBaseDirectory(context)
+    val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
     val crashPath = File(LaunchUtils.getCrashDirectory(context), filename)
 
     if (!crashPath.exists()) {

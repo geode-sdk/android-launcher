@@ -55,11 +55,14 @@ import com.geode.launcher.preferences.ApplicationLogsActivity
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
+import com.geode.launcher.preferences.GeodeLogsListingActivity
+import com.geode.launcher.preferences.TextViewActivity
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.launch
+import java.io.File
 
 data class LoadFailureInfo(
     val title: LaunchUtils.LauncherError,
@@ -137,14 +140,28 @@ fun ErrorInfoTitle(failureReason: LaunchUtils.LauncherError) {
 
 }
 
-fun onShareCrash(context: Context) {
+fun findSomethingForCrash(context: Context): File? {
     val lastCrash = LaunchUtils.getLastCrash(context)
+    if (lastCrash != null) {
+        return lastCrash
+    }
+
+    val logsDirectory = LaunchUtils.getGeodeLogsDirectory(context)
+    if (!logsDirectory.exists()) {
+        return null
+    }
+
+    return logsDirectory.listFiles()?.maxByOrNull { it.lastModified() }
+}
+
+fun onShareCrash(context: Context) {
+    val lastCrash = findSomethingForCrash(context)
     if (lastCrash == null) {
         Toast.makeText(context, R.string.launcher_error_export_missing, Toast.LENGTH_SHORT).show()
         return
     }
 
-    val baseDirectory = LaunchUtils.getBaseDirectory(context)
+    val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
 
     val providerLocation = lastCrash.toRelativeString(baseDirectory)
     val documentsPath = "${UserDirectoryProvider.ROOT}${providerLocation}"
@@ -161,6 +178,19 @@ fun onShareCrash(context: Context) {
     } catch (_: ActivityNotFoundException) {
         Toast.makeText(context, R.string.no_activity_found, Toast.LENGTH_SHORT).show()
     }
+}
+
+fun openLastCrash(context: Context) {
+    val lastCrash = findSomethingForCrash(context)
+    if (lastCrash == null) {
+        Toast.makeText(context, R.string.launcher_error_export_missing, Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val launchIntent = Intent(context, TextViewActivity::class.java).run {
+        putExtra(TextViewActivity.EXTRA_LOG_VIEW_FILENAME, lastCrash.path)
+    }
+    context.startActivity(launchIntent)
 }
 
 fun onShowLogs(context: Context) {
@@ -255,20 +285,34 @@ fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.launcher_error_copy))
             }
         } else {
-            Button(onClick = { onShareCrash(context) }) {
-                Icon(
-                    painterResource(R.drawable.icon_share),
-                    contentDescription = null
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.launcher_error_export_crash))
-            }
+            val crashFile = remember { findSomethingForCrash(context) }
+            val readableCrash = remember { crashFile?.extension == "log" }
 
-            val developerSettingsEnabled = remember {
-                PreferenceUtils.get(context).getBoolean(PreferenceUtils.Key.DEVELOPER_MODE)
-            }
-            if (developerSettingsEnabled) {
-                FilledTonalButton(onClick = { onShowLogs(context) }) {
+            if (crashFile != null) {
+                Button(onClick = { onShareCrash(context) }) {
+                    Icon(
+                        painterResource(R.drawable.icon_share),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.launcher_error_export_crash))
+                }
+
+                if (readableCrash) {
+                    FilledTonalButton(onClick = { openLastCrash(context) }) {
+                        Icon(
+                            painterResource(R.drawable.icon_description),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.launcher_error_view_details))
+                    }
+                }
+            } else {
+                Button(onClick = {
+                    val launchIntent = Intent(context, GeodeLogsListingActivity::class.java)
+                    context.startActivity(launchIntent)
+                }) {
                     Icon(
                         painterResource(R.drawable.icon_description),
                         contentDescription = null
