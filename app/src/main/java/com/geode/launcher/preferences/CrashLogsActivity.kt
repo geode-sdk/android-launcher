@@ -111,7 +111,7 @@ fun shareCrash(context: Context, filename: String) {
 
 @Composable
 fun CrashCard(crashDump: CrashDump, crashViewModel: CrashViewModel, modifier: Modifier = Modifier) {
-    val isReadable = crashDump.filename.endsWith(".txt")
+    val isReadable = crashDump.filename.endsWith(".log")
     val context = LocalContext.current
 
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
