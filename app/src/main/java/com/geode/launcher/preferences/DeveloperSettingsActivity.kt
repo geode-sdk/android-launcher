@@ -198,20 +198,6 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     )
 
                     OptionsButton(
-                        title = stringResource(R.string.preferences_view_geode_logs),
-                        icon = {
-                            Icon(
-                                painterResource(R.drawable.icon_description),
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            val launchIntent = Intent(context, GeodeLogsListingActivity::class.java)
-                            context.startActivity(launchIntent)
-                        }
-                    )
-
-                    OptionsButton(
                         title = stringResource(R.string.preferences_copy_external_button),
                         description = LaunchUtils.getBaseDirectory(context).path,
                         onClick = { onOpenFolder(context) }
