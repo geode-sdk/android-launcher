@@ -1,7 +1,11 @@
 package com.geode.launcher.preferences
 
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
@@ -34,17 +38,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.R
+import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.ui.theme.GeodeLauncherTheme
 import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.robotoMonoFamily
+import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -87,6 +94,26 @@ class TextViewActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+fun onShareFile(context: Context, filename: File) {
+    val baseDirectory = LaunchUtils.getBaseDirectory(context, true)
+
+    val providerLocation = filename.toRelativeString(baseDirectory)
+    val documentsPath = "${UserDirectoryProvider.ROOT}${providerLocation}"
+
+    val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        putExtra(Intent.EXTRA_STREAM, uri)
+        type = "application/octet-stream"
+    }
+
+    try {
+        context.startActivity(shareIntent)
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, R.string.no_activity_found, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -138,6 +165,15 @@ fun GeodeLogView(
                         )
                     },
                     scrollBehavior = scrollBehavior,
+                    actions = {
+                        val context = LocalContext.current
+                        IconButton(onClick = { onShareFile(context, toRead) }) {
+                            Icon(
+                                painterResource(R.drawable.icon_share),
+                                contentDescription = stringResource(R.string.application_logs_share)
+                            )
+                        }
+                    }
                 )
 
                 if (loadingFile) {
