@@ -72,6 +72,35 @@ object DownloadUtils {
         }
     }
 
+    suspend fun copyZipStreamToDirectory(inputStream: InputStream, output: File) = runInterruptible {
+        ZipInputStream(inputStream).use { zipStream ->
+            if (output.exists()) output.deleteRecursively()
+            output.mkdirs()
+
+            val canonicalOutput = output.canonicalPath
+
+            var entry = zipStream.nextEntry
+            while (entry != null) {
+                val destination = File(output, entry.name)
+                if (!destination.canonicalPath.startsWith(canonicalOutput)) {
+                    throw IOException("attempted copy to outside of output directory: ${entry.name}")
+                }
+
+                if (destination.isDirectory) {
+                    destination.mkdirs()
+                } else {
+                    destination.parentFile?.mkdirs()
+
+                    destination.outputStream().use { destinationStream ->
+                        zipStream.copyTo(destinationStream)
+                    }
+                }
+
+                entry = zipStream.nextEntry
+            }
+        }
+    }
+
     /**
      * Extracts a file named by zipPath from inputStream and copies it to outputStream
      *

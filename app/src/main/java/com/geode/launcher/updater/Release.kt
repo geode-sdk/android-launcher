@@ -62,6 +62,11 @@ abstract class Downloadable {
      * Release download link for the current platform
      */
     abstract fun getDownload(): DownloadableAsset?
+
+    /**
+     * Resources download link for current platform.
+     */
+    abstract fun getResourcesDownload(): DownloadableAsset?
 }
 
 class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadable() {
@@ -101,6 +106,18 @@ class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadab
             size = download.size.toLong()
         )
     }
+
+    override fun getResourcesDownload(): DownloadableAsset? {
+        val download = release.assets.find {
+            it.name == "resources.zip"
+        } ?: return null
+
+        return DownloadableAsset(
+            url = download.browserDownloadUrl,
+            filename = download.name,
+            size = download.size.toLong()
+        )
+    }
 }
 
 class DownloadableLauncherRelease(val release: Release) : Downloadable() {
@@ -126,8 +143,7 @@ class DownloadableLauncherRelease(val release: Release) : Downloadable() {
              * 0     | 0        | 1
              * surprise! it's an xnor
              */
-
-            (asset.name.contains("android32")) == use32BitPlatform
+            asset.name.endsWith("apk") && asset.name.contains("android32") == use32BitPlatform
         }
     }
 
@@ -138,6 +154,10 @@ class DownloadableLauncherRelease(val release: Release) : Downloadable() {
             filename = download.name,
             size = download.size.toLong()
         )
+    }
+
+    override fun getResourcesDownload(): DownloadableAsset? {
+        return null
     }
 }
 
@@ -151,10 +171,18 @@ class DownloadableLoaderRelease(private val version: LoaderVersion) : Downloadab
         return version.createdAt.epochSeconds
     }
 
-    override fun getDownload(): DownloadableAsset? {
+    override fun getDownload(): DownloadableAsset {
         val filename = "geode-${version.tag}-${LaunchUtils.platformName}.zip"
         return DownloadableAsset(
             url = "https://github.com/geode-sdk/geode/releases/download/${version.tag}/$filename",
+            filename = filename
+        )
+    }
+
+    override fun getResourcesDownload(): DownloadableAsset {
+        val filename = "resources.zip"
+        return DownloadableAsset(
+            url = "https://github.com/geode-sdk/geode/releases/download/${version.tag}/resources.zip",
             filename = filename
         )
     }

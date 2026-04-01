@@ -25,7 +25,9 @@ import okio.sink
 import okio.source
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InterruptedIOException
+import kotlin.math.max
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
@@ -168,6 +170,53 @@ class ReleaseManager private constructor(
         return Result.success(outputFile)
     }
 
+    private suspend fun performResourceDownload(resourceAsset: DownloadableAsset, initialSize: Long) {
+        val guessSize = if (resourceAsset.size == null) null else initialSize + resourceAsset.size
+        val guessInitial = if (guessSize == null) 0 else initialSize
+        _uiState.value = ReleaseManagerState.InDownload(guessInitial, guessSize)
+
+        val outputDir = getTempResourcesDirectory()
+        val outputPath = outputDir.path
+
+        val finalDir = LaunchUtils.getGeodeResourcesDirectory(applicationContext)
+
+        try {
+            if (!outputDir.exists()) {
+                outputDir.mkdirs()
+            }
+
+            DownloadUtils.downloadStream(
+                httpClient,
+                resourceAsset.url,
+                onProgress = { progress, outOf ->
+                    _uiState.value = ReleaseManagerState.InDownload(initialSize + progress, outOf + initialSize)
+                },
+                onResponse = { body ->
+                    DownloadUtils.copyZipStreamToDirectory(
+                        body.byteStream(),
+                        outputDir
+                    )
+
+                    if (finalDir.exists()) {
+                        finalDir.deleteRecursively()
+                    }
+
+                    if (!outputDir.renameTo(finalDir)) {
+                        throw IOException("failed to rename resources output directory")
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            sendError(e)
+            return
+        } finally {
+            val tempPathClone = File(outputPath)
+            runCatching {
+                if (tempPathClone.exists()) tempPathClone.deleteRecursively()
+            }
+        }
+    }
+
     private suspend fun performUpdate(release: Downloadable) {
         val releaseAsset = release.getDownload()
         if (releaseAsset == null) {
@@ -177,8 +226,14 @@ class ReleaseManager private constructor(
             return
         }
 
+        val resourcesAsset = release.getResourcesDownload()
+
+        var releaseSize = releaseAsset.size ?: 0L
+        val resourcesSize = resourcesAsset?.size ?: 0L
+
         // set an initial download size
-        _uiState.value = ReleaseManagerState.InDownload(0, releaseAsset.size)
+        val initialSize = if (releaseAsset.size == null && resourcesAsset?.size == null) null else releaseSize + resourcesSize
+        _uiState.value = ReleaseManagerState.InDownload(0, initialSize)
 
         val outputFile = getTempFile()
         // clone the file instance as renameTo may move the original file
@@ -197,7 +252,9 @@ class ReleaseManager private constructor(
                 httpClient,
                 releaseAsset.url,
                 onProgress = { progress, outOf ->
-                    _uiState.value = ReleaseManagerState.InDownload(progress, outOf)
+                    _uiState.value = ReleaseManagerState.InDownload(progress, outOf + resourcesSize)
+
+                    releaseSize = max(outOf, releaseSize)
                 },
                 onResponse = { body ->
                     DownloadUtils.extractFileFromZipStream(
@@ -231,6 +288,10 @@ class ReleaseManager private constructor(
             }
         }
 
+        if (resourcesAsset != null) {
+            performResourceDownload(resourcesAsset, releaseSize)
+        }
+
         // extraction performed
         updatePreferences(release)
 
@@ -251,7 +312,7 @@ class ReleaseManager private constructor(
         val sharedPreferences = PreferenceUtils.get(applicationContext)
 
         val originalFileHash = sharedPreferences.getString(PreferenceUtils.Key.CURRENT_RELEASE_MODIFIED)
-            ?: return false
+            ?: return true
 
         val currentFileHash = computeFileHash(geodeFile)
         return originalFileHash != currentFileHash
@@ -401,6 +462,13 @@ class ReleaseManager private constructor(
         return File(geodeDirectory, geodeName)
     }
 
+    private fun createRandomString(): String {
+        val alphabet = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+        return buildString(8) {
+            repeat(8) { append(alphabet.random()) }
+        }
+    }
+
     private fun getTempFile(): File {
         val geodeName = LaunchUtils.geodeFilename
         val geodeDirectory = LaunchUtils.getBaseDirectory(applicationContext)
@@ -408,16 +476,25 @@ class ReleaseManager private constructor(
         // warning!! while File::createTempFile may look tempting, a certain brand of phones has a messed up implementation of it
         // so we're making a temp file manually (as long as it doesn't collide with the geode download, it's okay)
 
-        val alphabet = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-        val suffix = buildString(8) {
-            repeat(8) { append(alphabet.random()) }
-        }
-
+        val suffix = createRandomString()
         val tmpName = "tmp-$suffix.$geodeName"
 
         val tempFile = File(geodeDirectory, tmpName)
 
         return tempFile
+    }
+
+    private fun getTempResourcesDirectory(): File {
+        val finalDir = LaunchUtils.getGeodeResourcesDirectory(applicationContext)
+        val suffix = createRandomString()
+        val tempDirName = "tmp-$suffix-geode.loader"
+
+        val parentDir = finalDir.parentFile
+        return if (parentDir != null) {
+            File(finalDir.parentFile, tempDirName)
+        } else {
+            File(tempDirName)
+        }
     }
 
     /**
