@@ -19,8 +19,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 26
-        versionName = "1.7.3"
+        versionCode = 27
+        versionName = "1.7.4"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -78,7 +78,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            version = "4.0.0+"
+            version = "3.21.0+"
             path = file("src/main/cpp/CMakeLists.txt")
         }
     }
@@ -88,18 +88,18 @@ android {
 
 dependencies {
     implementation (platform("androidx.compose:compose-bom:$composeBOM"))
-    implementation ("androidx.core:core-ktx:1.17.0")
+    implementation ("androidx.core:core-ktx:1.18.0")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation ("androidx.activity:activity-compose:1.12.4")
-    implementation ("androidx.activity:activity-ktx:1.12.4")
+    implementation ("androidx.activity:activity-compose:1.13.0")
+    implementation ("androidx.activity:activity-ktx:1.13.0")
     implementation ("androidx.appcompat:appcompat:1.7.1")
     implementation ("androidx.documentfile:documentfile:1.1.0")
 
-    implementation ("com.squareup.okio:okio:3.16.4")
+    implementation ("com.squareup.okio:okio:3.17.0")
     implementation ("com.squareup.okhttp3:okhttp:5.3.2")
     implementation ("com.squareup.okhttp3:okhttp-coroutines:5.3.2")
 
@@ -109,7 +109,7 @@ dependencies {
 
     implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.39.2")
     implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.2")
-    implementation ("androidx.browser:browser:1.9.0")
+    implementation ("androidx.browser:browser:1.10.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
 }
