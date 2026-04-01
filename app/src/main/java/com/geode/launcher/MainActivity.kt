@@ -7,6 +7,8 @@ import android.text.format.Formatter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -70,6 +72,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -82,12 +86,14 @@ import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Theme.DARK
 import com.geode.launcher.ui.theme.Theme.LIGHT
 import com.geode.launcher.ui.theme.launcherTitleStyle
+import com.geode.launcher.ui.theme.sapphireTitleStyle
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
+import com.geode.launcher.utils.checkIconDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.net.ConnectException
@@ -453,35 +459,104 @@ fun ExtraOptions(onSettings: () -> Unit) {
     }
 }
 
-val lightOuterColorGradient = arrayOf(
-    0.0f to Color(0xfff5b11d),
-    0.10f to Color(0xfff0834d),
-    0.24f to Color(0xffe85f6b),
-    0.49f to Color(0xffc9659e),
-    1.0f to Color(0xffb9588f)
+data class ColorPalette(
+    val outerColors: List<Pair<Float, Color>>,
+    val innerColors: List<Pair<Float, Color>>,
 )
 
-val lightInnerColorGradient = arrayOf(
-    0.48f to Color(0xfff2ce00),
-    0.63f to Color(0xfff4b97e),
-    0.73f to Color(0xfff7b66a),
-    1.0f to Color(0xffeb8fac)
+data class BrandPalette(
+    val lightPalette: ColorPalette,
+    val darkPalette: ColorPalette,
+
+    @param:DrawableRes val innerId: Int,
+    @param:DrawableRes val outerId: Int,
+
+    @param:DrawableRes val darkLogo: Int,
+    @param:DrawableRes val lightLogo: Int,
+
+    @param:StringRes val title: Int,
+    val titleFont: TextStyle,
 )
 
-val darkOuterColorGradient = arrayOf(
-    0.0f to Color(0xfffffdff),
-    0.08f to Color(0xffF2EAF5),
-    0.12f to Color(0xffEDE5EF),
-    0.31f to Color(0xffCDB5CD),
-    0.49f to Color(0xffBA9BBC),
-    1.0f to Color(0xff8D7ACF),
+val geodeColorPalette = BrandPalette(
+    lightPalette = ColorPalette(
+        outerColors = listOf(
+            0.0f to Color(0xfff5b11d),
+            0.10f to Color(0xfff0834d),
+            0.24f to Color(0xffe85f6b),
+            0.49f to Color(0xffc9659e),
+            1.0f to Color(0xffb9588f)
+        ),
+        innerColors = listOf(
+            0.48f to Color(0xfff2ce00),
+            0.63f to Color(0xfff4b97e),
+            0.73f to Color(0xfff7b66a),
+            1.0f to Color(0xffeb8fac)
+        )
+    ),
+    darkPalette = ColorPalette(
+        outerColors = listOf(
+            0.0f to Color(0xfffffdff),
+            0.08f to Color(0xffF2EAF5),
+            0.12f to Color(0xffEDE5EF),
+            0.31f to Color(0xffCDB5CD),
+            0.49f to Color(0xffBA9BBC),
+            1.0f to Color(0xff8D7ACF),
+        ),
+        innerColors = listOf(
+            0.48f to Color(0xffffffff),
+            0.63f to Color(0xfff5e4c2),
+            0.73f to Color(0xffe5c7ad),
+            1.0f to Color(0xffb790a9),
+        )
+    ),
+    innerId = R.drawable.geode_monochrome_inner,
+    outerId = R.drawable.geode_monochrome_outer,
+    darkLogo = R.drawable.geode_base,
+    lightLogo = R.drawable.geode_base_light,
+    title = R.string.launcher_title,
+    titleFont = launcherTitleStyle
 )
 
-val darkInnerColorGradient = arrayOf(
-    0.48f to Color(0xffffffff),
-    0.63f to Color(0xfff5e4c2),
-    0.73f to Color(0xffe5c7ad),
-    1.0f to Color(0xffb790a9),
+val sapphireColorPalette = BrandPalette(
+    lightPalette = ColorPalette(
+        outerColors = listOf(
+            0.0f to Color(0xff906FFF),
+            0.08f to Color(0xff9E81FF),
+            0.12f to Color(0xffAB8DFF),
+            0.31f to Color(0xffBE89FF),
+            0.49f to Color(0xff979BD7),
+            1.0f to Color(0xff558DDA),
+        ),
+        innerColors = listOf(
+            0.48f to Color(0xffFFB65C),
+            0.63f to Color(0xffFFADA4),
+            0.73f to Color(0xffF0A3A4),
+            1.0f to Color(0xffD066A6),
+        )
+    ),
+    darkPalette = ColorPalette(
+        outerColors = listOf(
+            0.0f to Color(0xfffffdff),
+            0.08f to Color(0xffF2EAF5),
+            0.12f to Color(0xffEDE5EF),
+            0.31f to Color(0xffC0B5CD),
+            0.49f to Color(0xff9B9DBC),
+            1.0f to Color(0xff558DDA),
+        ),
+        innerColors = listOf(
+            0.48f to Color(0xffFFF9F5),
+            0.63f to Color(0xffF2DCD3),
+            0.73f to Color(0xffDBA7A8),
+            1.0f to Color(0xffD066A6),
+        )
+    ),
+    innerId = R.drawable.sapphire_monochrome_inner,
+    outerId = R.drawable.sapphire_monochrome_outer,
+    darkLogo = R.drawable.sapphire_base,
+    lightLogo = R.drawable.sapphire_base_light,
+    title = R.string.application_icon_sapphire,
+    titleFont = sapphireTitleStyle
 )
 
 @Preview(name = "non-animated, light")
@@ -512,18 +587,43 @@ fun GeodeLogoAnimatedPreview() {
     }
 }
 
+@Preview(name = "sapphire, non-animated, light")
+@Preview(name = "sapphire, non-animated, dark", uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
-    val theme = LocalTheme.current
-    val innerColorPalette = remember(theme) {
-        if (theme == LIGHT) lightInnerColorGradient
-        else darkInnerColorGradient
+fun SapphireLogoPreview() {
+    val theme = if (isSystemInDarkTheme()) DARK else LIGHT
+    CompositionLocalProvider(LocalTheme provides theme) {
+        GeodeLauncherTheme(theme = theme) {
+            Surface {
+                GeodeLogo(shouldAnimate = false, basePalette = sapphireColorPalette)
+            }
+        }
     }
+}
 
-    val outerColorPalette = remember(theme) {
-        if (theme == LIGHT) lightOuterColorGradient
-        else darkOuterColorGradient
+@Preview(name = "sapphire, animated, light")
+@Preview(name = "sapphire, animated, dark", uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun SapphireLogoAnimatedPreview() {
+    val theme = if (isSystemInDarkTheme()) DARK else LIGHT
+    CompositionLocalProvider(LocalTheme provides theme) {
+        GeodeLauncherTheme(theme = theme) {
+            Surface {
+                GeodeLogo(shouldAnimate = true, basePalette = sapphireColorPalette)
+            }
+        }
     }
+}
+
+@Composable
+fun AnimatedLogo(modifier: Modifier = Modifier, basePalette: BrandPalette) {
+    val theme = LocalTheme.current
+
+    val colorPalette = if (theme == LIGHT) basePalette.lightPalette
+        else basePalette.darkPalette
+
+    val innerColorPalette = colorPalette.innerColors
+    val outerColorPalette = colorPalette.outerColors
 
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
     val offset by infiniteTransition.animateFloat(
@@ -537,14 +637,14 @@ fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
     )
 
     val innerBrush = Brush.linearGradient(
-        colorStops = innerColorPalette,
+        colorStops = innerColorPalette.toTypedArray(),
         start = Offset(0.0f, 0.0f + (165.06f * offset)),
         end = Offset(0.0f, 165.06f + (165.06f * offset)),
         tileMode = TileMode.Mirror
     )
 
     val outerBrush = Brush.linearGradient(
-        colorStops = outerColorPalette,
+        colorStops = outerColorPalette.toTypedArray(),
         start = Offset(0.0f + (84.69f * offset), 0.0f + (165.06f * offset)),
         end = Offset(84.69f + (84.69f * offset), 169.61f + (165.06f * offset)),
         tileMode = TileMode.Mirror
@@ -552,8 +652,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
 
     Box(modifier = modifier) {
         Icon(
-            painter = if (sapphire) painterResource(R.drawable.sapphire_monochrome_inner)
-                else painterResource(id = R.drawable.geode_monochrome_inner),
+            painter = painterResource(basePalette.innerId),
             contentDescription = null,
             modifier = Modifier
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -566,8 +665,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
                 }
         )
         Icon(
-            painter = if (sapphire) painterResource(R.drawable.sapphire_monochrome_outer)
-                else painterResource(id = R.drawable.geode_monochrome_outer),
+            painter = painterResource(basePalette.outerId),
             contentDescription = null,
             modifier = Modifier
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -583,7 +681,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
 }
 
 @Composable
-fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false) {
+fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false, basePalette: BrandPalette = geodeColorPalette) {
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -591,41 +689,26 @@ fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false) {
     ) {
         val theme = LocalTheme.current
 
-        val context = LocalContext.current
-        val sapphireLogo = remember {
-            PreferenceUtils.get(context).getString(PreferenceUtils.Key.SELECTED_ICON) == ApplicationIcon.SAPPHIRE.toId()
-        }
-
-        if (sapphireLogo) {
-            Icon(
-                painterResource(R.drawable.sapphire_monochrome),
-                contentDescription = null,
-                modifier = Modifier.size(64.dp, 64.dp)
-            )
-        } else {
-            Crossfade(
-                targetState = shouldAnimate,
-                animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
-                label="logo fade"
-            ) { screen ->
-                when (screen) {
-                    true -> AnimatedLogo(modifier = Modifier.size(64.dp, 64.dp))
-                    false -> Image(
-                        painterResource(if (theme == LIGHT)
-                            R.drawable.geode_base_light else R.drawable.geode_base
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp, 64.dp)
-                    )
-                }
+        Crossfade(
+            targetState = shouldAnimate,
+            animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+            label="logo fade"
+        ) { screen ->
+            when (screen) {
+                true -> AnimatedLogo(modifier = Modifier.size(64.dp, 64.dp), basePalette = basePalette)
+                false -> Image(
+                    painterResource(if (theme == LIGHT)
+                        basePalette.lightLogo else basePalette.darkLogo
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp, 64.dp)
+                )
             }
-
         }
 
         Text(
-            if (sapphireLogo) stringResource(R.string.application_icon_sapphire)
-                else stringResource(R.string.launcher_title),
-            style = launcherTitleStyle,
+            stringResource(basePalette.title),
+            style = basePalette.titleFont,
             fontSize = 64.sp,
             modifier = Modifier
                 .padding(12.dp)
@@ -713,7 +796,14 @@ fun AltMainScreen(
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                GeodeLogo(shouldAnimate = launchUIState.isInProgress())
+                val sapphireLogo = remember {
+                    checkIconDate() || PreferenceUtils.get(context)
+                        .getString(PreferenceUtils.Key.SELECTED_ICON) == ApplicationIcon.SAPPHIRE.toId()
+                }
+
+                val basePalette = if (sapphireLogo) sapphireColorPalette
+                    else geodeColorPalette
+                GeodeLogo(shouldAnimate = launchUIState.isInProgress(), basePalette = basePalette)
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),

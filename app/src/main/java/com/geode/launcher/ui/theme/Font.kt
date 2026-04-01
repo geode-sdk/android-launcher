@@ -16,9 +16,20 @@ val quicksandFamily = FontFamily(
     Font(R.font.quicksand_semibold, FontWeight.SemiBold)
 )
 
+val googleSansFamily = FontFamily(
+    Font(R.font.googlesans_medium, FontWeight.Medium)
+)
+
 val launcherTitleStyle = TextStyle(
     fontFamily = quicksandFamily,
     fontWeight = FontWeight.SemiBold,
+    fontSize = 32.sp,
+    letterSpacing = 0.sp
+)
+
+val sapphireTitleStyle = TextStyle(
+    fontFamily = googleSansFamily,
+    fontWeight = FontWeight.Medium,
     fontSize = 32.sp,
     letterSpacing = 0.sp
 )

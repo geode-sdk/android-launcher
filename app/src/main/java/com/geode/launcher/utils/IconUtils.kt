@@ -15,6 +15,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.geode.launcher.R
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 // https://gist.github.com/tkuenneth/ddf598663f041dc79960cda503d14448?permalink_comment_id=4660486#gistcomment-4660486
 @Composable
@@ -64,6 +68,11 @@ enum class ApplicationIcon {
         TRANS -> "trans"
         SAPPHIRE -> "sapphire"
     }
+}
+
+fun checkIconDate(): Boolean {
+    val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    return currentDate.month == Month.APRIL && currentDate.day <= 7
 }
 
 data class ApplicationIconDetails(
