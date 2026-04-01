@@ -653,9 +653,9 @@ fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
 
 @Composable
 fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false, basePalette: BrandPalette = geodeColorPalette) {
-    Row(
+    FlowRow(
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        itemVerticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
         val theme = LocalTheme.current
