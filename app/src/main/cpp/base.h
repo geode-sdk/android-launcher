@@ -15,7 +15,7 @@ public:
 };
 
 // this is every function that i thought would be relevant
-constexpr std::array<const std::string_view, 12> remove_symbols{
+constexpr std::array<const std::string_view, 11> remove_symbols{
         "__gxx_personality_v0",
         "__cxa_throw",
         "__cxa_rethrow",
@@ -26,8 +26,8 @@ constexpr std::array<const std::string_view, 12> remove_symbols{
         "__cxa_guard_acquire",
         "__cxa_guard_release",
         "__cxa_free_exception",
-        "__emutls_get_address", // added in 2.208
-        "__cxa_thread_atexit"
+        "__emutls_get_address" // added in 2.208
+        // "__cxa_thread_atexit" // conflicts with fix within geode on some devices
 
         // android 10's libc doesn't have these symbols
         // and the ndk is forbidden from exporting them!! so keep it for old mods...
