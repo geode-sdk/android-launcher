@@ -98,7 +98,10 @@ class ReleaseManager private constructor(
 
     var dismissedLauncherUpdate = false
 
+    var skipStateUpdate = false
+
     private fun sendError(e: Exception) {
+        skipStateUpdate = true
         _uiState.value = ReleaseManagerState.Failure(e)
 
         // ignore cancellation, it's good actually
@@ -170,7 +173,7 @@ class ReleaseManager private constructor(
         return Result.success(outputFile)
     }
 
-    private suspend fun performResourceDownload(resourceAsset: DownloadableAsset, initialSize: Long) {
+    private suspend fun performResourceDownload(resourceAsset: DownloadableAsset, initialSize: Long): Boolean {
         val guessSize = if (resourceAsset.size == null) null else initialSize + resourceAsset.size
         val guessInitial = if (guessSize == null) 0 else initialSize
         _uiState.value = ReleaseManagerState.InDownload(guessInitial, guessSize)
@@ -189,7 +192,8 @@ class ReleaseManager private constructor(
                 httpClient,
                 resourceAsset.url,
                 onProgress = { progress, outOf ->
-                    _uiState.value = ReleaseManagerState.InDownload(initialSize + progress, outOf + initialSize)
+                    if (!skipStateUpdate)
+                        _uiState.value = ReleaseManagerState.InDownload(initialSize + progress, outOf + initialSize)
                 },
                 onResponse = { body ->
                     DownloadUtils.copyZipStreamToDirectory(
@@ -208,16 +212,20 @@ class ReleaseManager private constructor(
             )
         } catch (e: Exception) {
             sendError(e)
-            return
+            return false
         } finally {
             val tempPathClone = File(outputPath)
             runCatching {
                 if (tempPathClone.exists()) tempPathClone.deleteRecursively()
             }
         }
+
+        return true
     }
 
     private suspend fun performUpdate(release: Downloadable) {
+        skipStateUpdate = false
+
         val releaseAsset = release.getDownload()
         if (releaseAsset == null) {
             val noAssetException = Exception("missing Android download")
@@ -252,7 +260,8 @@ class ReleaseManager private constructor(
                 httpClient,
                 releaseAsset.url,
                 onProgress = { progress, outOf ->
-                    _uiState.value = ReleaseManagerState.InDownload(progress, outOf + resourcesSize)
+                    if (!skipStateUpdate)
+                        _uiState.value = ReleaseManagerState.InDownload(progress, outOf + resourcesSize)
 
                     releaseSize = max(outOf, releaseSize)
                 },
@@ -289,7 +298,9 @@ class ReleaseManager private constructor(
         }
 
         if (resourcesAsset != null) {
-            performResourceDownload(resourcesAsset, releaseSize)
+            if (!performResourceDownload(resourcesAsset, releaseSize)) {
+                return
+            }
         }
 
         // extraction performed
