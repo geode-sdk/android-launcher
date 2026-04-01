@@ -71,6 +71,7 @@ data class ApplicationIconDetails(
     val component: String,
     @param:DrawableRes val iconId: Int,
     @param:StringRes val nameId: Int,
+    val checkDate: Boolean = false,
 )
 
 object IconUtils {
@@ -103,7 +104,8 @@ object IconUtils {
             id = id.toId(),
             component = "MainActivitySapphire",
             iconId = R.mipmap.ic_launcher_sapphire,
-            nameId = R.string.application_icon_sapphire
+            nameId = R.string.application_icon_sapphire,
+            checkDate = true
         )
     }
 }

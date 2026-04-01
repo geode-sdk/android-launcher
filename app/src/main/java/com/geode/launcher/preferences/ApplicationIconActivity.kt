@@ -60,6 +60,10 @@ import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.ApplicationIconDetails
 import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.adaptiveIconPainterResource
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 class ApplicationIconActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -231,14 +235,20 @@ fun ApplicationIconScreen(
         ) {
             val selectedIcon by PreferenceUtils.useStringPreference(PreferenceUtils.Key.SELECTED_ICON)
 
+            val aprilFools = remember {
+                val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                currentDate.month == Month.APRIL && currentDate.day <= 7
+            }
+
             Column(Modifier
                 .padding(horizontal = 12.dp)
                 .clip(RoundedCornerShape(16.dp))
             ) {
                 ApplicationIcon.entries.forEach {
                     val iconData = IconUtils.getIconDetails(it)
-
-                    IconCard(iconData, selectedIcon == iconData.id)
+                    if (!iconData.checkDate || aprilFools) {
+                        IconCard(iconData, selectedIcon == iconData.id)
+                    }
                 }
 
             }
