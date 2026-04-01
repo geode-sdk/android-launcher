@@ -83,6 +83,7 @@ import com.geode.launcher.ui.theme.Theme.DARK
 import com.geode.launcher.ui.theme.Theme.LIGHT
 import com.geode.launcher.ui.theme.launcherTitleStyle
 import com.geode.launcher.updater.ReleaseManager
+import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
@@ -505,21 +506,23 @@ fun GeodeLogoAnimatedPreview() {
     CompositionLocalProvider(LocalTheme provides theme) {
         GeodeLauncherTheme(theme = theme) {
             Surface {
-                GeodeLogo(true)
+                GeodeLogo(shouldAnimate = true)
             }
         }
     }
 }
 
 @Composable
-fun AnimatedLogo(modifier: Modifier = Modifier) {
+fun AnimatedLogo(modifier: Modifier = Modifier, sapphire: Boolean = false) {
     val theme = LocalTheme.current
     val innerColorPalette = remember(theme) {
-        if (theme == LIGHT) lightInnerColorGradient else darkInnerColorGradient
+        if (theme == LIGHT) lightInnerColorGradient
+        else darkInnerColorGradient
     }
 
     val outerColorPalette = remember(theme) {
-        if (theme == LIGHT) lightOuterColorGradient else darkOuterColorGradient
+        if (theme == LIGHT) lightOuterColorGradient
+        else darkOuterColorGradient
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
@@ -549,7 +552,8 @@ fun AnimatedLogo(modifier: Modifier = Modifier) {
 
     Box(modifier = modifier) {
         Icon(
-            painter = painterResource(id = R.drawable.geode_monochrome_inner),
+            painter = if (sapphire) painterResource(R.drawable.sapphire_monochrome_inner)
+                else painterResource(id = R.drawable.geode_monochrome_inner),
             contentDescription = null,
             modifier = Modifier
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -562,7 +566,8 @@ fun AnimatedLogo(modifier: Modifier = Modifier) {
                 }
         )
         Icon(
-            painter = painterResource(id = R.drawable.geode_monochrome_outer),
+            painter = if (sapphire) painterResource(R.drawable.sapphire_monochrome_outer)
+                else painterResource(id = R.drawable.geode_monochrome_outer),
             contentDescription = null,
             modifier = Modifier
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -578,7 +583,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun GeodeLogo(shouldAnimate: Boolean = false, modifier: Modifier = Modifier) {
+fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false) {
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -586,25 +591,40 @@ fun GeodeLogo(shouldAnimate: Boolean = false, modifier: Modifier = Modifier) {
     ) {
         val theme = LocalTheme.current
 
-        Crossfade(
-            targetState = shouldAnimate,
-            animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
-            label="logo fade"
-        ) { screen ->
-            when (screen) {
-                true -> AnimatedLogo(modifier = Modifier.size(64.dp, 64.dp))
-                false -> Image(
-                    painterResource(if (theme == LIGHT)
-                        R.drawable.geode_base_light else R.drawable.geode_base
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp, 64.dp)
-                )
+        val context = LocalContext.current
+        val sapphireLogo = remember {
+            PreferenceUtils.get(context).getString(PreferenceUtils.Key.SELECTED_ICON) == ApplicationIcon.SAPPHIRE.toId()
+        }
+
+        if (sapphireLogo) {
+            Icon(
+                painterResource(R.drawable.sapphire_monochrome),
+                contentDescription = null,
+                modifier = Modifier.size(64.dp, 64.dp)
+            )
+        } else {
+            Crossfade(
+                targetState = shouldAnimate,
+                animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+                label="logo fade"
+            ) { screen ->
+                when (screen) {
+                    true -> AnimatedLogo(modifier = Modifier.size(64.dp, 64.dp))
+                    false -> Image(
+                        painterResource(if (theme == LIGHT)
+                            R.drawable.geode_base_light else R.drawable.geode_base
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp, 64.dp)
+                    )
+                }
             }
+
         }
 
         Text(
-            stringResource(R.string.launcher_title),
+            if (sapphireLogo) stringResource(R.string.application_icon_sapphire)
+                else stringResource(R.string.launcher_title),
             style = launcherTitleStyle,
             fontSize = 64.sp,
             modifier = Modifier

@@ -43,23 +43,26 @@ enum class ApplicationIcon {
     DEFAULT,
     GEODE,
     PRIDE,
-    TRANS;
+    TRANS,
+    SAPPHIRE;
 
     companion object {
         fun fromId(id: String) = when (id) {
-            "default" -> ApplicationIcon.DEFAULT
-            "geode" -> ApplicationIcon.GEODE
-            "pride" -> ApplicationIcon.PRIDE
-            "trans" -> ApplicationIcon.TRANS
-            else -> ApplicationIcon.DEFAULT
+            "default" -> DEFAULT
+            "geode" -> GEODE
+            "pride" -> PRIDE
+            "trans" -> TRANS
+            "sapphire" -> SAPPHIRE
+            else -> DEFAULT
         }
     }
 
     fun toId() = when (this) {
-        ApplicationIcon.PRIDE -> "pride"
-        ApplicationIcon.GEODE -> "geode"
-        ApplicationIcon.DEFAULT -> "default"
-        ApplicationIcon.TRANS -> "trans"
+        PRIDE -> "pride"
+        GEODE -> "geode"
+        DEFAULT -> "default"
+        TRANS -> "trans"
+        SAPPHIRE -> "sapphire"
     }
 }
 
@@ -95,6 +98,12 @@ object IconUtils {
             component = "MainActivityTrans",
             iconId = R.mipmap.ic_launcher_trans,
             nameId = R.string.application_icon_trans
+        )
+        ApplicationIcon.SAPPHIRE -> ApplicationIconDetails(
+            id = id.toId(),
+            component = "MainActivitySapphire",
+            iconId = R.mipmap.ic_launcher_sapphire,
+            nameId = R.string.application_icon_sapphire
         )
     }
 }
