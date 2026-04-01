@@ -145,7 +145,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         returnMessage: String? = null,
         returnExtendedMessage: String? = null
     ) {
-        val launchIntent = Intent(this, MainActivity::class.java).apply {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)!!.apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
 
             if (error != null && !returnMessage.isNullOrEmpty()) {
