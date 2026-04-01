@@ -497,7 +497,7 @@ fun GameplaySettingsGroup() {
             SafeModeDialog(onDismiss = {
                 showSafeModeDialog = false
             }) {
-                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)!!.apply {
                     // hardcode it, why not
                     action = Intent.ACTION_VIEW
                     data = "geode-launcher://main/launch?safe-mode=true".toUri()
