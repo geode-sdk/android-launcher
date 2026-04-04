@@ -779,7 +779,7 @@ fun AltMainScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 val sapphireLogo = remember {
-                    checkIconDate() || PreferenceUtils.get(context)
+                    PreferenceUtils.get(context)
                         .getString(PreferenceUtils.Key.SELECTED_ICON) == ApplicationIcon.SAPPHIRE.toId()
                 }
 
