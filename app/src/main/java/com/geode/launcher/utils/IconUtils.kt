@@ -70,17 +70,11 @@ enum class ApplicationIcon {
     }
 }
 
-fun checkIconDate(): Boolean {
-    val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    return currentDate.month == Month.APRIL && currentDate.day <= 7
-}
-
 data class ApplicationIconDetails(
     val id: String,
     val component: String,
     @param:DrawableRes val iconId: Int,
     @param:StringRes val nameId: Int,
-    val checkDate: Boolean = false,
 )
 
 object IconUtils {
@@ -114,7 +108,6 @@ object IconUtils {
             component = "MainActivitySapphire",
             iconId = R.mipmap.ic_launcher_sapphire,
             nameId = R.string.application_icon_sapphire,
-            checkDate = true
         )
     }
 }

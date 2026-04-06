@@ -92,7 +92,6 @@ import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
-import com.geode.launcher.utils.checkIconDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.net.ConnectException

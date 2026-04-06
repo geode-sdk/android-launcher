@@ -60,7 +60,6 @@ import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.ApplicationIconDetails
 import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.adaptiveIconPainterResource
-import com.geode.launcher.utils.checkIconDate
 
 class ApplicationIconActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -232,17 +231,13 @@ fun ApplicationIconScreen(
         ) {
             val selectedIcon by PreferenceUtils.useStringPreference(PreferenceUtils.Key.SELECTED_ICON)
 
-            val aprilFools = remember { checkIconDate() }
-
             Column(Modifier
                 .padding(horizontal = 12.dp)
                 .clip(RoundedCornerShape(16.dp))
             ) {
                 ApplicationIcon.entries.forEach {
                     val iconData = IconUtils.getIconDetails(it)
-                    if (!iconData.checkDate || aprilFools) {
-                        IconCard(iconData, selectedIcon == iconData.id)
-                    }
+                    IconCard(iconData, selectedIcon == iconData.id)
                 }
 
             }
