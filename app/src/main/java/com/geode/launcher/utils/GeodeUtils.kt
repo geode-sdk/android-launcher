@@ -557,6 +557,7 @@ object GeodeUtils {
     const val CAPABILITY_EXTENDED_INPUT = "extended_input"
     const val CAPABILITY_TIMESTAMP_INPUT = "timestamp_inputs"
     const val CAPABILITY_RICH_INPUT = "internal_callbacks_v2"
+    const val CAPABILITY_RESIZE_CALLBACK = "resize_callbacks"
 
     private var capabilityListener: WeakReference<CapabilityListener?> = WeakReference(null)
 

@@ -63,6 +63,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     var manualBackEvents = false
     var controllerEventsEnabled = false
         private set
+    var supportsResizeEvents = false
 
     var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
@@ -287,6 +288,12 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     ) {
         if (!isInEditMode) {
             cocos2dxRenderer.setScreenWidthAndHeight(newSurfaceWidth, newSurfaceHeight)
+        }
+
+        if (supportsResizeEvents) {
+            queueEvent {
+                GeodeUtils.resizeSurface(newSurfaceWidth, newSurfaceHeight)
+            }
         }
     }
 

@@ -623,6 +623,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                 mGLSurfaceView?.enableControllerEvents()
                 true
             }
+            GeodeUtils.CAPABILITY_RESIZE_CALLBACK -> {
+                mGLSurfaceView?.supportsResizeEvents = true
+                true
+            }
             else -> false
         }
     }
