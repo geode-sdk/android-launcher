@@ -182,17 +182,6 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return
         }
 
-        // last launch crashed, so cancel
-        if (loadFailure != null) {
-            // show a different message if this is the first thing users see
-            val cancelType = if (_uiState.value == LaunchUIState.Initial) {
-                LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC
-            } else LaunchCancelReason.LAST_LAUNCH_CRASHED
-
-            _uiState.tryEmit(LaunchUIState.Cancelled(cancelType))
-            return
-        }
-
         if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN) {
             _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
             return
@@ -205,6 +194,18 @@ class LaunchViewModel(private val application: Application): ViewModel() {
 
         // if forcing immediate launch, then act as if it's manually started (skips timers)
         val forceImmediate = launchArguments?.forceLaunch == true
+
+        // last launch crashed, so cancel
+        if (!forceImmediate && loadFailure != null) {
+            // show a different message if this is the first thing users see
+            val cancelType = if (_uiState.value == LaunchUIState.Initial) {
+                LaunchCancelReason.LAST_LAUNCH_CRASHED_AUTOMATIC
+            } else LaunchCancelReason.LAST_LAUNCH_CRASHED
+
+            _uiState.tryEmit(LaunchUIState.Cancelled(cancelType))
+            return
+        }
+
         if (forceImmediate) {
             hasManuallyStarted = true
         }
