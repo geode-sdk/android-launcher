@@ -160,6 +160,13 @@ object DownloadUtils {
             }}
         }
     }
+
+    suspend fun copyDirectory(sourceFile: File, outputFile: File) = withContext(Dispatchers.IO) {
+        sourceFile.copyRecursively(
+            outputFile,
+            overwrite = true
+        )
+    }
 }
 
 // based on <https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/Progress.java>

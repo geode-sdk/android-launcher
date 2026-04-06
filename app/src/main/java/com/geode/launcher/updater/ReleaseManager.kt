@@ -206,7 +206,8 @@ class ReleaseManager private constructor(
                     }
 
                     if (!outputDir.renameTo(finalDir)) {
-                        throw IOException("failed to rename resources output directory")
+                        println("Failed to rename temporary directory!")
+                        DownloadUtils.copyDirectory(outputDir, finalDir)
                     }
                 }
             )
