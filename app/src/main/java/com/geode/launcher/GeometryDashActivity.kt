@@ -200,6 +200,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                         right = displayInsets.safeInsetRight,
                         bottom = displayInsets.safeInsetBottom
                     )
+                } else {
+                    v.updatePadding(
+                        left = 0, top = 0, right = 0, bottom = 0
+                    )
                 }
                 WindowInsets.CONSUMED
             }
