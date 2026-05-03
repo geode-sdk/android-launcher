@@ -149,12 +149,14 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LAST_UPDATE_CHECK_TIME,
         LAST_LAUNCHER_UPDATE,
         DISABLE_UPDATE_CACHE,
+        FULLSCREEN_KEYBOARD,
     }
 
     private fun defaultValueForBooleanKey(key: Key): Boolean {
         return when (key) {
             Key.UPDATE_AUTOMATICALLY -> true
             Key.DEVELOPER_MODE -> BuildConfig.DEBUG
+            Key.FULLSCREEN_KEYBOARD -> true
             else -> false
         }
     }
@@ -199,6 +201,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LAST_UPDATE_CHECK_TIME -> "PreferenceLastUpdateCheckTime"
             Key.LAST_LAUNCHER_UPDATE -> "PreferenceLastLauncherUpdate"
             Key.DISABLE_UPDATE_CACHE -> "PreferenceDisableUpdateCache"
+            Key.FULLSCREEN_KEYBOARD -> "PreferenceFullscreenKeyboard"
             // Key.RELEASE_CHANNEL -> "PreferenceReleaseChannel"
             // Key.LAST_DISMISSED_UPDATE -> "PreferenceLastDismissedUpdate"
             // Key.FORCE_HRR -> "PreferenceForceHighRefreshRate"

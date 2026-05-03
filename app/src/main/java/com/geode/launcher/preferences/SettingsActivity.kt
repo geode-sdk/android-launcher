@@ -479,6 +479,11 @@ fun GameplaySettingsGroup() {
             maxFrameRate = maxFrameRate
         )
 
+        SettingsCard(
+            title = stringResource(R.string.preference_fullscreen_keyboard_name),
+            preferenceKey = PreferenceUtils.Key.FULLSCREEN_KEYBOARD
+        )
+
         var showSafeModeDialog by remember { mutableStateOf(false) }
 
         OptionsButton(

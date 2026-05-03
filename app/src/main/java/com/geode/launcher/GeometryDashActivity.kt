@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -475,6 +476,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        if (!PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.FULLSCREEN_KEYBOARD)) {
+            editText.imeOptions = editText.imeOptions or EditorInfo.IME_FLAG_NO_FULLSCREEN
+        }
+
         glSurfaceView.cocos2dxEditText = editText
 
         return frameLayout

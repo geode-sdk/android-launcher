@@ -142,6 +142,7 @@
     <string name="preference_category_testing">General</string>
     <string name="preference_load_automatically_name">Automatically launch</string>
     <string name="preference_load_automatically_description">Launches the game after a short delay.</string>
+    <string name="preference_fullscreen_keyboard_name">Fullscreen Keyboard</string>
     <string name="preferences_copy_external_button">Copy external files directory</string>
     <string name="preferences_open_file_manager">Open file manager</string>
     <string name="preferences_view_logs">View application logs</string>
