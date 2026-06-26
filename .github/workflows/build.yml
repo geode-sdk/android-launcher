@@ -12,9 +12,15 @@ jobs:
         config:
         - name: Release
           lower: release
+          flavor: standard
           
         - name: Debug
           lower: debug
+          flavor: standard
+
+        - name: Release
+          lower: release
+          flavor: googlePlay
           
     runs-on: ubuntu-latest
 
@@ -34,9 +40,19 @@ jobs:
     - name: Fix gradle permissions
       run: chmod +x ./gradlew
 
-    - name: Build project
+    - name: Build project (standard)
+      if: ${{ matrix.config.flavor == 'standard' }}
       run: |
-        ./gradlew app:assemble${{ matrix.config.name }} \
+        ./gradlew app:assembleStandard${{ matrix.config.name }} \
+          -Pandroid.injected.signing.store.file="$HOME/release.keystore" \
+          -Pandroid.injected.signing.store.password="${{secrets.KEYSTORE_PASSWORD}}" \
+          -Pandroid.injected.signing.key.alias="${{secrets.KEY_ALIAS}}" \
+          -Pandroid.injected.signing.key.password="${{secrets.KEY_PASSWORD}}"
+
+    - name: Build project (Google Play)
+      if: ${{ matrix.config.flavor == 'googlePlay' }}
+      run: |
+        ./gradlew app:bundleGooglePlayRelease -PdisableAbiSplits \
           -Pandroid.injected.signing.store.file="$HOME/release.keystore" \
           -Pandroid.injected.signing.store.password="${{secrets.KEYSTORE_PASSWORD}}" \
           -Pandroid.injected.signing.key.alias="${{secrets.KEY_ALIAS}}" \
@@ -44,35 +60,57 @@ jobs:
 
     - name: Rename universal apk
       id: rename_apk_universal
+      if: ${{ matrix.config.flavor == 'standard' }}
       run: |
         SHORT_SHA=${GITHUB_SHA::7}
-        APK_PATH=${{github.workspace}}/app/build/outputs/apk/${{ matrix.config.lower }}/app-universal-${{ matrix.config.lower }}.apk
+        APK_PATH=${{github.workspace}}/app/build/outputs/apk/standard/${{ matrix.config.lower }}/app-standard-universal-${{ matrix.config.lower }}.apk
         OUT_PATH=${{github.workspace}}/geode-launcher-${{ matrix.config.lower }}-$SHORT_SHA.apk
         mv $APK_PATH $OUT_PATH
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
     - name: Rename apk
       id: rename_apk
+      if: ${{ matrix.config.flavor == 'standard' }}
       run: |
         SHORT_SHA=${GITHUB_SHA::7}
-        APK_PATH=${{github.workspace}}/app/build/outputs/apk/${{ matrix.config.lower }}/app-armeabi-v7a-${{ matrix.config.lower }}.apk
+        APK_PATH=${{github.workspace}}/app/build/outputs/apk/standard/${{ matrix.config.lower }}/app-standard-armeabi-v7a-${{ matrix.config.lower }}.apk
         OUT_PATH=${{github.workspace}}/geode-launcher-${{ matrix.config.lower }}-android32-$SHORT_SHA.apk
         mv $APK_PATH $OUT_PATH
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
     - name: Rename mappings
       id: rename_mappings
-      if: ${{ matrix.config.lower == 'release' }}
+      if: ${{ matrix.config.flavor == 'standard' && matrix.config.lower == 'release' }}
       run: |
         SHORT_SHA=${GITHUB_SHA::7}
-        MAPPING_PATH=${{github.workspace}}/app/build/outputs/mapping/${{ matrix.config.lower }}/mapping.txt
+        MAPPING_PATH=${{github.workspace}}/app/build/outputs/mapping/standardRelease/mapping.txt
+        OUT_PATH=${{github.workspace}}/mapping-${{ matrix.config.lower }}-$SHORT_SHA.txt
+        mv $MAPPING_PATH $OUT_PATH
+        echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
+
+    - name: Rename AAB
+      id: rename_aab
+      if: ${{ matrix.config.flavor == 'googlePlay' }}
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        AAB_PATH=${{github.workspace}}/app/build/outputs/bundle/googlePlayRelease/app-googlePlay-release.aab
+        OUT_PATH=${{github.workspace}}/geode-launcher-${{ matrix.config.lower }}-$SHORT_SHA.aab
+        mv $AAB_PATH $OUT_PATH
+        echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
+
+    - name: Rename AAB mappings
+      id: rename_aab_mappings
+      if: ${{ matrix.config.flavor == 'googlePlay' }}
+      run: |
+        SHORT_SHA=${GITHUB_SHA::7}
+        MAPPING_PATH=${{github.workspace}}/app/build/outputs/mapping/googlePlayRelease/mapping.txt
         OUT_PATH=${{github.workspace}}/mapping-${{ matrix.config.lower }}-$SHORT_SHA.txt
         mv $MAPPING_PATH $OUT_PATH
         echo "path=$OUT_PATH" >> $GITHUB_OUTPUT
 
     - name: Upload release build
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      if: ${{ matrix.config.lower == 'release' }}
+      if: ${{ matrix.config.flavor == 'standard' && matrix.config.lower == 'release' }}
       with:
         name: geode-launcher-${{ matrix.config.lower }}
         path: |
@@ -82,9 +120,18 @@ jobs:
 
     - name: Upload debug build
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      if: ${{ matrix.config.lower == 'debug' }}
+      if: ${{ matrix.config.flavor == 'standard' && matrix.config.lower == 'debug' }}
       with:
         name: geode-launcher-${{ matrix.config.lower }}
         path: |
           ${{ steps.rename_apk_universal.outputs.path }}
           ${{ steps.rename_apk.outputs.path }}
+
+    - name: Upload Google Play build
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      if: ${{ matrix.config.flavor == 'googlePlay' }}
+      with:
+        name: geode-launcher-google-play
+        path: |
+          ${{ steps.rename_aab.outputs.path }}
+          ${{ steps.rename_aab_mappings.outputs.path }}

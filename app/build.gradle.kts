@@ -39,13 +39,28 @@ android {
 
     splits {
         abi {
-            isEnable = true
+            isEnable = !project.hasProperty("disableAbiSplits")
             reset()
 
             //noinspection ChromeOsAbiSupport. i'm sorry!
             include("arm64-v8a", "armeabi-v7a")
 
             isUniversalApk = true
+        }
+    }
+
+    flavorDimensions += "distribution"
+
+    productFlavors {
+        create("standard") {
+            dimension = "distribution"
+            isDefault = true
+            buildConfigField("boolean", "GOOGLE_PLAY_BUILD", "false")
+        }
+
+        create("googlePlay") {
+            dimension = "distribution"
+            buildConfigField("boolean", "GOOGLE_PLAY_BUILD", "true")
         }
     }
 

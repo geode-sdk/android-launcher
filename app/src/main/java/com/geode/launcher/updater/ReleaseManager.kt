@@ -331,6 +331,11 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun getLatestLauncherUpdate(): DownloadableLauncherRelease? {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            // don't check for updates on Google Play builds
+            return null
+        }
+
         return try {
             releaseRepository.getLatestLauncherRelease()
         } catch (e: Exception) {
@@ -340,6 +345,8 @@ class ReleaseManager private constructor(
     }
 
     suspend fun checkLauncherUpdate() {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) return
+
         val launcherRelease = getLatestLauncherUpdate() ?: return
 
         // unconditionally track it, we're not using it for checks and it might be good to have
@@ -356,6 +363,8 @@ class ReleaseManager private constructor(
     }
 
     fun checkCachedLauncherUpdate() {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) return
+
         val lastUpdate = PreferenceUtils.get(applicationContext)
             .getString(PreferenceUtils.Key.LAST_LAUNCHER_UPDATE) ?: return
 
@@ -365,6 +374,12 @@ class ReleaseManager private constructor(
     }
 
     suspend fun downloadLatestLauncherUpdate(): Result<File> {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            return Result.failure(UnsupportedOperationException(
+                "Launcher updates are not supported on Google Play builds"
+            ))
+        }
+
         val update = _availableLauncherUpdateDetails.value
             ?: getLatestLauncherUpdate()
             ?: return Result.failure(FileNotFoundException())
