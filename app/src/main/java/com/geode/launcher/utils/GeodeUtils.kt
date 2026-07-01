@@ -215,7 +215,11 @@ object GeodeUtils {
             val relativePath = pathFile.relativeTo(baseDirectory)
             val uri = DocumentsContract.buildDocumentUri(
                 "com.android.externalstorage.documents",
-                "primary:Android/media/${context.packageName}/$relativePath"
+                if (BuildConfig.GOOGLE_PLAY_BUILD) {
+                    "primary:Android/data/${context.packageName}/$relativePath"
+                } else {
+                    "primary:Android/media/${context.packageName}/$relativePath"
+                }
             )
 
             Intent(Intent.ACTION_VIEW).apply {
@@ -409,7 +413,7 @@ object GeodeUtils {
     }
 
     fun isGeodeUri(uri: Uri): Boolean {
-        return "com.geode.launcher.user" == uri.authority
+        return "${BuildConfig.APPLICATION_ID}.user" == uri.authority
     }
 
     private const val INTERNAL_PERMISSION_PREFIX = "geode.permission_internal"

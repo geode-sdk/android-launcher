@@ -60,6 +60,7 @@ android {
 
         create("googlePlay") {
             dimension = "distribution"
+            applicationId = "com.geode.launcher.play"
             buildConfigField("boolean", "GOOGLE_PLAY_BUILD", "true")
         }
     }

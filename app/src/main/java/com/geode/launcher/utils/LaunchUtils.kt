@@ -2,6 +2,7 @@ package com.geode.launcher.utils
 
 import android.content.Context
 import android.os.Build
+import com.geode.launcher.BuildConfig
 import java.io.File
 import java.io.Serializable
 
@@ -48,10 +49,14 @@ object LaunchUtils {
      * Returns the directory that Geode/the game should base itself off of.
      */
     fun getBaseDirectory(context: Context, ignoreProfile: Boolean = false): File {
-        // deprecated, but seems to be the best choice of directory (i forced mat to test it)
-        // also, is getting the first item the correct choice here?? what do they mean
-        @Suppress("DEPRECATION")
-        val dir = context.externalMediaDirs.first()
+        val dir = if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            context.getExternalFilesDir(null)!!.parentFile!!
+        } else {
+            // deprecated, but seems to be the best choice of directory (i forced mat to test it)
+            // also, is getting the first item the correct choice here?? what do they mean
+            @Suppress("DEPRECATION")
+            context.externalMediaDirs.first()
+        }
 
         // prevent having resources added to system gallery
         // accessing this file every time the directory is read may be a little wasteful...
