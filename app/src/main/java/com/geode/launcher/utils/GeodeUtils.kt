@@ -224,8 +224,6 @@ object GeodeUtils {
 
             Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, DocumentsContract.Document.MIME_TYPE_DIR)
-
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         } else {
             Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
