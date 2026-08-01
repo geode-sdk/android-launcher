@@ -129,7 +129,7 @@ fun onSelectIcon(context: Context, selectedIcon: ApplicationIconDetails) {
             val iconData = IconUtils.getIconDetails(it)
 
             packageManager.setComponentEnabledSetting(
-                ComponentName(context, "${context.packageName}.${iconData.component}"),
+                ComponentName(context, "${context.packageName.removeSuffix(".play")}.${iconData.component}"),
                 if (iconData.id == selectedIcon.id)
                     PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                 else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
