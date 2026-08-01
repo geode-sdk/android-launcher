@@ -665,7 +665,13 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
             stringResource(R.string.preference_loader_version_name),
             stringResource(
                 R.string.preference_loader_version_description,
-                currentRelease ?: "unknown"
+                currentRelease
+                    ?: "${BuildConfig.PREBUNDLED_GEODE}*"
+                        .takeIf {
+                            @Suppress("SENSELESS_COMPARISON")
+                            BuildConfig.PREBUNDLED_GEODE != null
+                        }
+                    ?: "unknown"
             ),
             displayInline = true
         )

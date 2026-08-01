@@ -203,6 +203,7 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val currentRelease = remember {
         PreferenceUtils.get(context).getString(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+            ?: BuildConfig.PREBUNDLED_GEODE
     }
 
     val gameVersion = remember {
