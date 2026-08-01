@@ -388,6 +388,10 @@ class ReleaseManager private constructor(
     }
 
     fun shouldUseCache(): Boolean {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            return true
+        }
+
         val sharedPreferences = PreferenceUtils.get(applicationContext)
         if (sharedPreferences.getBoolean(PreferenceUtils.Key.DISABLE_UPDATE_CACHE)) {
             return false
@@ -406,6 +410,11 @@ class ReleaseManager private constructor(
     }
 
     private suspend fun checkForNewRelease(isManual: Boolean = false) {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            _uiState.value = ReleaseManagerState.Finished()
+            return
+        }
+
         val sharedPreferences = PreferenceUtils.get(applicationContext)
 
         if (!isManual && shouldUseCache()) {

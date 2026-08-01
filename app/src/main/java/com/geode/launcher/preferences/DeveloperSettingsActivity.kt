@@ -40,6 +40,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
 import com.geode.launcher.preferences.components.OptionsButton
 import com.geode.launcher.preferences.components.OptionsGroup
@@ -204,28 +205,30 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                     )
                 }
 
-                OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
-                    val context = LocalContext.current
+                if (!BuildConfig.GOOGLE_PLAY_BUILD) {
+                    OptionsGroup(title = stringResource(R.string.preference_category_updater)) {
+                        val context = LocalContext.current
 
-                    SettingsSelectCard(
-                        title = stringResource(R.string.preference_release_channel_tag_name),
-                        dialogTitle = stringResource(R.string.preference_release_channel_select),
-                        preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL_TAG,
-                        options = linkedMapOf(
-                            0 to stringResource(R.string.preference_release_channel_stable),
-                            1 to stringResource(R.string.preference_release_channel_beta),
-                            2 to stringResource(R.string.preference_release_channel_nightly),
-                        ),
-                        extraSelectBehavior = {
-                            PreferenceUtils.get(context)
-                                .setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, 0L)
-                        }
-                    )
+                        SettingsSelectCard(
+                            title = stringResource(R.string.preference_release_channel_tag_name),
+                            dialogTitle = stringResource(R.string.preference_release_channel_select),
+                            preferenceKey = PreferenceUtils.Key.RELEASE_CHANNEL_TAG,
+                            options = linkedMapOf(
+                                0 to stringResource(R.string.preference_release_channel_stable),
+                                1 to stringResource(R.string.preference_release_channel_beta),
+                                2 to stringResource(R.string.preference_release_channel_nightly),
+                            ),
+                            extraSelectBehavior = {
+                                PreferenceUtils.get(context)
+                                    .setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, 0L)
+                            }
+                        )
 
-                    SettingsCard(
-                        title = stringResource(R.string.preference_disable_update_cache),
-                        preferenceKey = PreferenceUtils.Key.DISABLE_UPDATE_CACHE
-                    )
+                        SettingsCard(
+                            title = stringResource(R.string.preference_disable_update_cache),
+                            preferenceKey = PreferenceUtils.Key.DISABLE_UPDATE_CACHE
+                        )
+                    }
                 }
 
                 OptionsGroup(title = stringResource(R.string.preference_category_testing)) {
