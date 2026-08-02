@@ -245,7 +245,7 @@ object Cocos2dxBitmap {
         maxHeight: Int,
         paint: Paint
     ): Array<String?> {
-        val lines: Array<String?> = string.split("\\n").toTypedArray()
+        val lines: Array<String?> = string.split("\n").toTypedArray()
         val fm = paint.fontMetricsInt
         val maxLines = maxHeight / ceil((fm.bottom - fm.top).toDouble()).toInt()
         return if (maxWidth != 0) {
