@@ -1,15 +1,14 @@
 package org.cocos2dx.lib
 
-import android.opengl.GLSurfaceView
+import android.opengl.EGLConfig
 import android.os.Build
-import javax.microedition.khronos.egl.EGLConfig
-import javax.microedition.khronos.opengles.GL10
+import com.geode.launcher.ExplicitGLSurfaceView
 
 private const val NANOSECONDS_PER_SECOND = 1000000000L
 private const val NANOSECONDS_PER_MICROSECOND = 1000000L
 
 @Suppress("unused", "KotlinJniMissingFunction")
-class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceView.Renderer {
+class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : ExplicitGLSurfaceView.Renderer {
     companion object {
         @JvmStatic
         fun setAnimationInterval(@Suppress("UNUSED_PARAMETER") animationInterval: Double) {
@@ -80,12 +79,12 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         screenHeight = surfaceHeight
     }
 
-    override fun onSurfaceCreated(gl10: GL10?, eglConfig: EGLConfig?) {
+    override fun onSurfaceCreated(eglConfig: EGLConfig?) {
         nativeInit(screenWidth, screenHeight)
         lastTickInNanoSeconds = System.nanoTime()
     }
 
-    override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {
+    override fun onSurfaceChanged(width: Int, height: Int) {
         if (setFrameRate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             handler.updateRefreshRate()
         }
@@ -93,7 +92,7 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         println("renderer surfaceChanged: ${width}x${height}@${handler.display.refreshRate}fps")
     }
 
-    override fun onDrawFrame(gl: GL10?) {
+    override fun onDrawFrame() {
         val animationInterval = mAnimationInterval
         if (animationInterval == null) {
             nativeRender()

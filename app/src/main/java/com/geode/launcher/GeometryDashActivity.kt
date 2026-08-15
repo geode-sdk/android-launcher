@@ -5,7 +5,9 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import android.opengl.GLSurfaceView
+import android.opengl.EGL14
+import android.opengl.EGLConfig
+import android.opengl.EGLDisplay
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -43,9 +45,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import javax.microedition.khronos.egl.EGL10
-import javax.microedition.khronos.egl.EGLConfig
-import javax.microedition.khronos.egl.EGLDisplay
 
 enum class DisplayMode {
     DEFAULT, LIMITED, FULLSCREEN;
@@ -131,6 +130,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
         })
         mGLSurfaceView?.manualBackEvents = true
+
+        LauncherFix.initFramePacing(this)
     }
 
     private fun createVersionFile() {
@@ -474,7 +475,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         val frameRate = mLimitedRefreshRate
         if (frameRate != null) {
-            renderer.limitFrameRate(frameRate)
+            glSurfaceView.setMaxFramerate(frameRate)
+            // renderer.limitFrameRate(frameRate)
         }
 
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
@@ -545,6 +547,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     override fun onDestroy() {
         super.onDestroy()
         FMOD.close()
+
+        LauncherFix.destroyFramePacing()
     }
 
     private fun resumeGame() {
@@ -666,11 +670,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
     }
 
-    class EGLConfigChooser : GLSurfaceView.EGLConfigChooser {
-        // this comes from EGL14, but is unavailable on EGL10
-        // also EGL14 is incompatible with EGL10. so whatever
-        private var EGL_OPENGL_ES2_BIT: Int = 0x04
-
+    class EGLConfigChooser : ExplicitGLSurfaceView.EGLConfigChooser {
         private data class ConfigValues(
             val redSize: Int,
             val greenSize: Int,
@@ -680,29 +680,29 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             val stencilSize: Int,
         )
 
-        private fun getAttribValue(egl: EGL10, display: EGLDisplay, config: EGLConfig, attrib: Int): Int {
+        private fun getAttribValue(display: EGLDisplay, config: EGLConfig, attrib: Int): Int {
             val value = IntArray(1)
-            egl.eglGetConfigAttrib(display, config, attrib, value)
+            EGL14.eglGetConfigAttrib(display, config, attrib, value, 0)
 
             return value[0]
         }
 
-        private fun testConfig(egl: EGL10, display: EGLDisplay, attrib: ConfigValues): EGLConfig? {
+        private fun testConfig(display: EGLDisplay, attrib: ConfigValues): EGLConfig? {
             val attribList = intArrayOf(
-                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL10.EGL_RED_SIZE, attrib.redSize,
-                EGL10.EGL_GREEN_SIZE, attrib.greenSize,
-                EGL10.EGL_BLUE_SIZE, attrib.blueSize,
-                EGL10.EGL_ALPHA_SIZE, attrib.alphaSize,
-                EGL10.EGL_DEPTH_SIZE, attrib.depthSize,
-                EGL10.EGL_STENCIL_SIZE, attrib.stencilSize,
-                EGL10.EGL_NONE
+                EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+                EGL14.EGL_RED_SIZE, attrib.redSize,
+                EGL14.EGL_GREEN_SIZE, attrib.greenSize,
+                EGL14.EGL_BLUE_SIZE, attrib.blueSize,
+                EGL14.EGL_ALPHA_SIZE, attrib.alphaSize,
+                EGL14.EGL_DEPTH_SIZE, attrib.depthSize,
+                EGL14.EGL_STENCIL_SIZE, attrib.stencilSize,
+                EGL14.EGL_NONE
             )
 
             val configs = arrayOfNulls<EGLConfig>(1)
             val numConfigs = IntArray(1)
 
-            val res = egl.eglChooseConfig(display, attribList, configs, configs.size, numConfigs)
+            val res = EGL14.eglChooseConfig(display, attribList, 0, configs, 0, configs.size, numConfigs, 0)
             if (res && numConfigs[0] > 0 && configs[0] != null) {
                 return configs[0]
             }
@@ -710,18 +710,18 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             return null
         }
 
-        private fun printConfig(egl: EGL10, display: EGLDisplay, config: EGLConfig) {
-            val id = getAttribValue(egl, display, config, EGL10.EGL_CONFIG_ID)
-            val red = getAttribValue(egl, display, config, EGL10.EGL_RED_SIZE)
-            val green = getAttribValue(egl, display, config, EGL10.EGL_GREEN_SIZE)
-            val blue = getAttribValue(egl, display, config, EGL10.EGL_BLUE_SIZE)
-            val alpha = getAttribValue(egl, display, config, EGL10.EGL_ALPHA_SIZE)
-            val depth = getAttribValue(egl, display, config, EGL10.EGL_DEPTH_SIZE)
-            val stencil = getAttribValue(egl, display, config, EGL10.EGL_STENCIL_SIZE)
+        private fun printConfig(display: EGLDisplay, config: EGLConfig) {
+            val id = getAttribValue(display, config, EGL14.EGL_CONFIG_ID)
+            val red = getAttribValue(display, config, EGL14.EGL_RED_SIZE)
+            val green = getAttribValue(display, config, EGL14.EGL_GREEN_SIZE)
+            val blue = getAttribValue(display, config, EGL14.EGL_BLUE_SIZE)
+            val alpha = getAttribValue(display, config, EGL14.EGL_ALPHA_SIZE)
+            val depth = getAttribValue(display, config, EGL14.EGL_DEPTH_SIZE)
+            val stencil = getAttribValue(display, config, EGL14.EGL_STENCIL_SIZE)
             println("EGLConfig $id: (red = $red, green = $green, blue = $blue, alpha = $alpha, depth = $depth, stencil = $stencil)")
         }
 
-        override fun chooseConfig(egl: EGL10, display: EGLDisplay): EGLConfig {
+        override fun chooseConfig(display: EGLDisplay): EGLConfig {
             val configs = listOf(
                 ConfigValues(8, 8, 8, 8, 16, 8),
                 ConfigValues(8, 8, 8, 0, 16, 8),
@@ -730,9 +730,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             )
 
             return configs.firstNotNullOf {
-                val config = testConfig(egl, display, it)
+                val config = testConfig(display, it)
                 if (config != null) {
-                    printConfig(egl, display, config)
+                    printConfig(display, config)
                 }
 
                 config

@@ -1,5 +1,7 @@
 package com.geode.launcher
 
+import android.app.Activity
+import android.view.Surface
 import androidx.annotation.Keep
 import com.geode.launcher.utils.Constants
 
@@ -16,4 +18,10 @@ object LauncherFix {
     external fun enableExceptionsRenaming()
 
     external fun performPatches()
+
+    external fun initFramePacing(activity: Activity)
+    external fun destroyFramePacing()
+    external fun swapFrame(display: Long, surface: Long): Boolean
+    external fun setSurface(surface: Surface?)
+    external fun setSwapInterval(intervalNs: Long)
 }

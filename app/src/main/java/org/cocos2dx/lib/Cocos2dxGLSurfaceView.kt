@@ -17,15 +17,18 @@ import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatEditText
 import com.customRobTop.BaseRobTopActivity
+import com.geode.launcher.ExplicitGLSurfaceView
+import com.geode.launcher.LauncherFix
 import com.geode.launcher.utils.GeodeUtils
 import kotlin.math.abs
+import kotlin.math.roundToLong
 
 private const val HANDLER_OPEN_IME_KEYBOARD = 2
 private const val HANDLER_CLOSE_IME_KEYBOARD = 3
 private const val MS_TO_NS = 1_000_000
 private const val SEC_TO_NS = 1_000_000_000.0
 
-class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
+class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
     companion object {
         lateinit var cocos2dxGLSurfaceView: Cocos2dxGLSurfaceView
         private lateinit var handler: Handler
@@ -64,6 +67,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     var controllerEventsEnabled = false
         private set
     var supportsResizeEvents = false
+    var maxFrameRate: Int? = null
 
     var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
@@ -139,6 +143,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         println("updateRefreshRate: selecting refresh rate of ${chosenDisplay.refreshRate} (display ${chosenDisplay.modeId})")
 
+        LauncherFix.setSwapInterval((1_000_000_000L / chosenRefreshRate).roundToLong())
+
         holder.surface.setFrameRate(chosenRefreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
         if (isAttachedToWindow) {
             (context as Activity).window.attributes.preferredRefreshRate = chosenRefreshRate
@@ -153,7 +159,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
     override fun onResume() {
         super.onResume()
-        renderMode = RENDERMODE_CONTINUOUSLY
+        renderMode = RENDERMODE_WHEN_DIRTY
+        // renderMode = RENDERMODE_CONTINUOUSLY
         queueEvent { cocos2dxRenderer.handleOnResume() }
     }
 
@@ -531,6 +538,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     fun setCocos2dxRenderer(renderer: Cocos2dxRenderer) {
         this.cocos2dxRenderer = renderer
         setRenderer(this.cocos2dxRenderer)
+        renderMode = RENDERMODE_WHEN_DIRTY
     }
 
     private fun getContentText(): String {
@@ -565,6 +573,12 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         val inputManager = context.getSystemService(Context.INPUT_SERVICE) as InputManager
         inputManager.unregisterInputDeviceListener(InputListener)
+    }
+
+    fun setMaxFramerate(rate: Int) {
+        // maxFrameRate = rate
+        cocos2dxRenderer.limitFrameRate(rate)
+        // LauncherFix.setSwapInterval((1_000_000_000.0 / rate).roundToLong())
     }
 
     object InputListener : InputManager.InputDeviceListener {

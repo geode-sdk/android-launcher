@@ -84,6 +84,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        prefab = true
     }
     packaging {
         resources {
@@ -112,6 +113,7 @@ dependencies {
     implementation ("androidx.activity:activity-ktx:1.13.0")
     implementation ("androidx.appcompat:appcompat:1.8.0")
     implementation ("androidx.documentfile:documentfile:1.1.0")
+    implementation ("androidx.games:games-frame-pacing:2.1.3")
 
     implementation ("com.squareup.okio:okio:3.18.2")
     implementation ("com.squareup.okhttp3:okhttp:5.5.0")
