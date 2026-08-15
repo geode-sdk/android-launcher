@@ -716,6 +716,9 @@ fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Un
                 ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
                     R.string.release_fetch_external_in_use_short
                 )
+                ReleaseManager.UpdateException.Reason.HASH_VALIDATION_FAILED -> stringResource(
+                    R.string.release_fetch_hash_validation_failed_short
+                )
                 else -> stringResource(R.string.release_fetch_generic_short)
             }
         }

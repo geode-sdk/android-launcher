@@ -17,10 +17,12 @@ import okio.BufferedSource
 import okio.FileSystem
 import okio.ForwardingSink
 import okio.ForwardingSource
+import okio.HashingSink
 import okio.Path.Companion.toOkioPath
 import okio.Sink
 import okio.Source
 import okio.buffer
+import okio.sink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -32,12 +34,31 @@ import java.util.zip.ZipInputStream
 typealias ProgressCallback = (progress: Long, outOf: Long) -> Unit
 
 object DownloadUtils {
+    suspend fun downloadFile(
+        httpClient: OkHttpClient,
+        url: String,
+        outputFile: File,
+        onProgress: ProgressCallback? = null,
+    ): String = downloadStream(
+            httpClient,
+            url,
+            onProgress = onProgress
+    ).use { body ->
+        val hashingSink = HashingSink.sha256(outputFile.sink().buffer())
+        hashingSink.use { sink ->
+            body.source().use { source ->
+                source.readAll(sink)
+            }
+        }
+
+        hashingSink.hash.hex()
+    }
+
     suspend fun downloadStream(
         httpClient: OkHttpClient,
         url: String,
         onProgress: ProgressCallback? = null,
-        onResponse: suspend (ResponseBody) -> Unit,
-    ) {
+    ): ResponseBody {
         val request = Request.Builder()
             .url(url)
             .build()
@@ -64,12 +85,15 @@ object DownloadUtils {
         val progressClient = progressClientBuilder.build()
 
         val call = progressClient.newCall(request)
-        call.executeAsync().use { response ->
-            when (response.code) {
-                200 -> onResponse(response.body)
-                else -> throw IOException("unexpected response ${response.code}")
-            }
+        val response = call.executeAsync()
+
+        val responseCode = response.code
+        if (responseCode != 200) {
+            response.close()
+            throw IOException("unexpected response ${response.code}")
         }
+
+        return response.body
     }
 
     suspend fun copyZipStreamToDirectory(inputStream: InputStream, output: File) = runInterruptible {
