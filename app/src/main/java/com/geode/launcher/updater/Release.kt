@@ -33,7 +33,7 @@ data class Release(
 @Serializable
 data class LoaderPlatformDownload(
     val url: String,
-    val hash: String, // blank if hash is not present
+    val hash: String?,
 )
 
 @Serializable
@@ -197,7 +197,7 @@ class DownloadableLoaderRelease(private val version: LoaderVersion) : Downloadab
         return DownloadableAsset(
             url = data.url,
             filename = filename,
-            hash = data.hash.takeUnless { it.isEmpty() }
+            hash = data.hash,
         )
     }
 
@@ -207,7 +207,7 @@ class DownloadableLoaderRelease(private val version: LoaderVersion) : Downloadab
         return DownloadableAsset(
             url = data.url,
             filename = filename,
-            hash = data.hash.takeUnless { it.isEmpty() },
+            hash = data.hash,
         )
     }
 }
