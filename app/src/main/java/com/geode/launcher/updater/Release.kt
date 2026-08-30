@@ -3,10 +3,9 @@ package com.geode.launcher.updater
 import com.geode.launcher.utils.LaunchUtils
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
-import kotlin.time.ExperimentalTime
 
 @Serializable
-data class Asset @OptIn(ExperimentalTime::class) constructor(
+data class Asset(
     val url: String,
     val id: Int,
     val name: String,
@@ -14,10 +13,11 @@ data class Asset @OptIn(ExperimentalTime::class) constructor(
     val createdAt: Instant,
     val updatedAt: Instant,
     val browserDownloadUrl: String,
+    val digest: String?,
 )
 
 @Serializable
-data class Release @OptIn(ExperimentalTime::class) constructor(
+data class Release(
     val url: String,
     val id: Int,
     val targetCommitish: String,
@@ -31,12 +31,29 @@ data class Release @OptIn(ExperimentalTime::class) constructor(
 )
 
 @Serializable
-data class LoaderVersion @OptIn(ExperimentalTime::class) constructor(
+data class LoaderPlatformDownload(
+    val url: String,
+    val hash: String?,
+)
+
+@Serializable
+data class LoaderDownload(
+    val win: LoaderPlatformDownload,
+    val mac: LoaderPlatformDownload,
+    val android32: LoaderPlatformDownload,
+    val android64: LoaderPlatformDownload,
+    val ios: LoaderPlatformDownload,
+    val resources: LoaderPlatformDownload,
+)
+
+@Serializable
+data class LoaderVersion(
     val tag: String,
     val version: String,
     val createdAt: Instant,
     val commitHash: String,
-    val prerelease: Boolean
+    val prerelease: Boolean,
+    val downloads: LoaderDownload,
 )
 
 @Serializable
@@ -45,7 +62,25 @@ data class LoaderPayload<T>(
     val error: String
 )
 
-data class DownloadableAsset(val url: String, val filename: String, val size: Long? = null)
+data class DownloadableAsset(
+    val url: String,
+    val filename: String,
+    val size: Long? = null,
+    val hash: String? = null,
+)
+
+private fun mapDownload(download: Asset): DownloadableAsset {
+    val hash = if (download.digest?.startsWith("sha256:") == true)
+        download.digest.removePrefix("sha256:")
+    else null
+
+    return DownloadableAsset(
+        url = download.browserDownloadUrl,
+        filename = download.name,
+        size = download.size.toLong(),
+        hash = hash,
+    )
+}
 
 abstract class Downloadable {
     /**
@@ -83,7 +118,6 @@ class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadab
         return release.tagName
     }
 
-    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return release.createdAt.epochSeconds
     }
@@ -100,11 +134,7 @@ class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadab
 
     override fun getDownload(): DownloadableAsset? {
         val download = getGitHubDownload() ?: return null
-        return DownloadableAsset(
-            url = download.browserDownloadUrl,
-            filename = download.name,
-            size = download.size.toLong()
-        )
+        return mapDownload(download)
     }
 
     override fun getResourcesDownload(): DownloadableAsset? {
@@ -112,11 +142,7 @@ class DownloadableGitHubLoaderRelease(private val release: Release) : Downloadab
             it.name == "resources.zip"
         } ?: return null
 
-        return DownloadableAsset(
-            url = download.browserDownloadUrl,
-            filename = download.name,
-            size = download.size.toLong()
-        )
+        return mapDownload(download)
     }
 }
 
@@ -125,7 +151,6 @@ class DownloadableLauncherRelease(val release: Release) : Downloadable() {
         return release.tagName
     }
 
-    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return release.createdAt.epochSeconds
     }
@@ -149,11 +174,7 @@ class DownloadableLauncherRelease(val release: Release) : Downloadable() {
 
     override fun getDownload(): DownloadableAsset? {
         val download = getGitHubDownload() ?: return null
-        return DownloadableAsset(
-            url = download.browserDownloadUrl,
-            filename = download.name,
-            size = download.size.toLong()
-        )
+        return mapDownload(download)
     }
 
     override fun getResourcesDownload(): DownloadableAsset? {
@@ -166,24 +187,27 @@ class DownloadableLoaderRelease(private val version: LoaderVersion) : Downloadab
         return version.tag
     }
 
-    @OptIn(ExperimentalTime::class)
     override fun getDescriptor(): Long {
         return version.createdAt.epochSeconds
     }
 
     override fun getDownload(): DownloadableAsset {
+        val data = if (LaunchUtils.is64bit) version.downloads.android64 else version.downloads.android32
         val filename = "geode-${version.tag}-${LaunchUtils.platformName}.zip"
         return DownloadableAsset(
-            url = "https://github.com/geode-sdk/geode/releases/download/${version.tag}/$filename",
-            filename = filename
+            url = data.url,
+            filename = filename,
+            hash = data.hash,
         )
     }
 
     override fun getResourcesDownload(): DownloadableAsset {
+        val data = version.downloads.resources
         val filename = "resources.zip"
         return DownloadableAsset(
-            url = "https://github.com/geode-sdk/geode/releases/download/${version.tag}/resources.zip",
-            filename = filename
+            url = data.url,
+            filename = filename,
+            hash = data.hash,
         )
     }
 }
