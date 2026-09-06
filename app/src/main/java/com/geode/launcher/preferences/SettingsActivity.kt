@@ -664,17 +664,14 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
             )
         }
 
+        @Suppress("SENSELESS_COMPARISON")
         OptionsLabel(
             stringResource(R.string.preference_loader_version_name),
             stringResource(
                 R.string.preference_loader_version_description,
-                currentRelease
-                    ?: "${BuildConfig.PREBUNDLED_GEODE}*"
-                        .takeIf {
-                            @Suppress("SENSELESS_COMPARISON")
-                            BuildConfig.PREBUNDLED_GEODE != null
-                        }
-                    ?: "unknown"
+                if (BuildConfig.PREBUNDLED_GEODE != null)
+                        "${BuildConfig.PREBUNDLED_GEODE}*"
+                else (currentRelease ?: "unknown")
             ),
             displayInline = true
         )

@@ -111,6 +111,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         clearDownloadedApks(this)
 
+        // remove old Geode for the like 4 people that downloaded the Play Store build
+        @Suppress("SENSELESS_COMPARISON")
+        if (BuildConfig.PREBUNDLED_GEODE != null) {
+            val preferences = PreferenceUtils.get(this)
+            if (!preferences.getBoolean(PreferenceUtils.Key.PREBUNDLED_GEODE_MIGRATION_PERFORMED)) {
+                LaunchUtils.getInstalledGeodePath(this)?.delete()
+                preferences.setBoolean(PreferenceUtils.Key.PREBUNDLED_GEODE_MIGRATION_PERFORMED, true)
+            }
+        }
+
         val returnMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_MESSAGE)
         val returnExtendedMessage = intent.extras?.getString(LaunchUtils.LAUNCHER_KEY_RETURN_EXTENDED_MESSAGE)
 
