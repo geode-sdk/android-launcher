@@ -256,7 +256,7 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
             )
         }
         is LaunchViewModel.LaunchUIState.Cancelled -> {
-            return mapCancelReasonToInfo(state.reason)
+            mapCancelReasonToInfo(state.reason)
         }
     }
 }

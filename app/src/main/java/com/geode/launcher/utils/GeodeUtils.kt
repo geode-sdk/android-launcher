@@ -32,7 +32,6 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
-import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.activityresult.GeodeOpenFileActivityResult
 import com.geode.launcher.activityresult.GeodeOpenFilesActivityResult
 import com.geode.launcher.activityresult.GeodeSaveFileActivityResult
@@ -430,7 +429,7 @@ object GeodeUtils {
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
 
-                return permissions.all {
+                permissions.all {
                     ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
                 }
             }
