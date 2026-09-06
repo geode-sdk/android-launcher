@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 import java.net.URI
 import java.util.zip.ZipInputStream
 
@@ -15,7 +16,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val currentGeodeVersion = "5.8.2"
+val currentGeodeVersion = "5.10.1"
 
 abstract class DownloadAndUnzipGeodeTask : DefaultTask() {
     @get:Input
@@ -27,16 +28,33 @@ abstract class DownloadAndUnzipGeodeTask : DefaultTask() {
     @get:OutputFile
     abstract val targetFile: RegularFileProperty
 
+    private fun getGeodeDownload(): String? {
+        val downloadGeodeVersion = geodeVersion.get()
+
+        val downloadPlatform = platform.get()
+
+        val releaseUrl = "https://api.geode-sdk.org/v1/loader/versions/$downloadGeodeVersion"
+        URI.create(releaseUrl).toURL().openStream().use { response ->
+            val json = JsonSlurper().parse(response) as Map<*, *>
+
+            val downloads = json["downloads"] as? Map<*, *>
+            val platformInfo = downloads?.get(downloadPlatform) as? Map<*, *>
+            return platformInfo?.get("url") as? String
+        }
+    }
+
     @TaskAction
     fun execute() {
+        val releaseUrl = getGeodeDownload()
+
         val downloadGeodeVersion = geodeVersion.get()
         val downloadPlatform = platform.get()
-        val url = "https://github.com/geode-sdk/geode/releases/download/v$downloadGeodeVersion/geode-v$downloadGeodeVersion-$downloadPlatform.zip"
+        val url = releaseUrl ?: "https://github.com/geode-sdk/geode/releases/download/v$downloadGeodeVersion/geode-v$downloadGeodeVersion-$downloadPlatform.zip"
         val destinationFile = targetFile.get().asFile
 
         val expectedFile = "Geode.$downloadPlatform.so"
 
-        logger.info("Downloading Geode v$downloadGeodeVersion for platform $downloadPlatform")
+        logger.info("Downloading Geode v$downloadGeodeVersion for platform $downloadPlatform from $releaseUrl")
 
         ZipInputStream(URI.create(url).toURL().openStream()).use { zip ->
             var entry = zip.nextEntry
