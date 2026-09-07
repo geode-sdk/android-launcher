@@ -217,7 +217,7 @@ fun mapCancelReasonToInfo(cancelReason: LaunchViewModel.LaunchCancelReason): Lau
         )
         LaunchViewModel.LaunchCancelReason.GAME_OUTDATED -> LaunchStatusInfo(
             title = stringResource(R.string.launcher_cancelled_error),
-            details = stringResource(R.string.launcher_cancelled_outdated)
+            details = stringResource(R.string.launcher_cancelled_outdated, GamePackageUtils.getSupportedUnifiedVersion())
         )
         LaunchViewModel.LaunchCancelReason.AUTOMATIC,
         LaunchViewModel.LaunchCancelReason.MANUAL-> LaunchStatusInfo(
@@ -838,10 +838,11 @@ fun AltMainScreen(
                     )
 
                     // only show launcher update in a case where a user won't see it ingame
-                    if (launchUIState is LaunchViewModel.LaunchUIState.Cancelled) {
+                    val currentUIState = launchUIState
+                    if (currentUIState is LaunchViewModel.LaunchUIState.Cancelled) {
                         val gameVersion = remember { GamePackageUtils.getGameVersionCodeOrNull(context.packageManager) }
 
-                        if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING) {
+                        if (gameVersion != null && gameVersion < Constants.SUPPORTED_VERSION_CODE_MIN_WARNING && currentUIState.reason != LaunchViewModel.LaunchCancelReason.GAME_OUTDATED) {
                             UnsupportedVersionWarning()
                         }
 

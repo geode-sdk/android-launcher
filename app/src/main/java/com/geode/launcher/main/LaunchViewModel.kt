@@ -183,7 +183,9 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return
         }
 
-        if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN) {
+        // play store build only comes with the one build of geode
+        val minVersionCode = if (BuildConfig.GOOGLE_PLAY_BUILD) Constants.SUPPORTED_VERSION_CODE else Constants.SUPPORTED_VERSION_CODE_MIN
+        if (GamePackageUtils.getGameVersionCode(packageManager) < minVersionCode) {
             _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
             return
         }
