@@ -340,7 +340,6 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
      * not normally called or subclassed by clients of GLSurfaceView.
      */
     public void surfaceCreated(SurfaceHolder holder) {
-        LauncherFix.INSTANCE.setSurface(holder.getSurface());
         mGLThread.surfaceCreated();
     }
     /**
@@ -348,7 +347,6 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
      * not normally called or subclassed by clients of GLSurfaceView.
      */
     public void surfaceDestroyed(SurfaceHolder holder) {
-        LauncherFix.INSTANCE.setSurface(null);
         // Surface will be destroyed when we return
         mGLThread.surfaceDestroyed();
     }
@@ -357,7 +355,6 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
      * not normally called or subclassed by clients of GLSurfaceView.
      */
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        LauncherFix.INSTANCE.setSurface(holder.getSurface());
         mGLThread.onWindowResize(w, h);
     }
     /**
@@ -817,8 +814,12 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
             if (view != null) {
                 mEglSurface = view.mEGLWindowSurfaceFactory.createWindowSurface(
                         mEglDisplay, mEglConfig, view.getHolder());
+                // NOTE: this diverges from GLSurfaceView
+                LauncherFix.INSTANCE.setSurface(view.getHolder().getSurface());
             } else {
                 mEglSurface = null;
+                // NOTE: this diverges from GLSurfaceView
+                LauncherFix.INSTANCE.setSurface(null);
             }
             if (mEglSurface == null || mEglSurface == EGL14.EGL_NO_SURFACE) {
                 int error = EGL14.eglGetError();
@@ -847,6 +848,7 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
          * @return the EGL error code from eglSwapBuffers.
          */
         public int swap() {
+            // NOTE: this diverges from GLSurfaceView
             // if (! EGL14.eglSwapBuffers(mEglDisplay, mEglSurface)) {
             if (!LauncherFix.INSTANCE.swapFrame(mEglDisplay.getNativeHandle(), mEglSurface.getNativeHandle())) {
                 return EGL14.eglGetError();
@@ -1216,6 +1218,7 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
                                     finishDrawingRunnable.run();
                                     finishDrawingRunnable = null;
                                 }
+                                // NOTE: this diverges from GLSurfaceView
                                 requestRender();
                             } finally {
                                 // Trace.traceEnd(Trace.TRACE_TAG_VIEW);
