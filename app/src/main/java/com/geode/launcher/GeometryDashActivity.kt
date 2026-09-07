@@ -384,6 +384,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         if (BuildConfig.PREBUNDLED_GEODE != null) {
             // attempt to load an externally provided Geode first
             if (!loadExternalGeode()) {
+                copyGeodeResources()
                 System.loadLibrary("geode")
             }
         } else {
@@ -678,6 +679,52 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
                 println("Copied internal mod $fileName")
             }
+        }
+    }
+
+    private fun copyGeodeResources() {
+        @Suppress("SENSELESS_COMPARISON")
+        if (BuildConfig.PREBUNDLED_GEODE == null) {
+            return
+        }
+
+        val resourcesDirectory = LaunchUtils.getGeodeResourcesDirectory(this)
+        resourcesDirectory.mkdirs()
+
+        val pathBase = "geode.loader"
+        val versionFilename = "version"
+
+        val bundledVersion = try {
+            assets.open("$pathBase/$versionFilename").bufferedReader().use {
+                it.readText()
+            }.trimEnd()
+        } catch (_: IOException) {
+            return
+        }
+
+        val versionFile = File(resourcesDirectory, versionFilename)
+        val resourcesVersion = if (versionFile.exists()) {
+            versionFile.readText().trimEnd()
+        } else null
+
+        if (bundledVersion == resourcesVersion) {
+            println("copyGeodeResources: found $resourcesVersion, expected $bundledVersion. No work needs to be done!")
+            return
+        }
+
+        println("copyGeodeResources: found $resourcesVersion, expected $bundledVersion. Copying assets")
+
+        val fileListing = try {
+            assets.list(pathBase)
+        } catch (_: IOException) {
+            return
+        }
+
+        fileListing?.forEach { fileName ->
+            val resourceOutput = File(resourcesDirectory, fileName)
+
+            val resource = assets.open("$pathBase/$fileName")
+            DownloadUtils.copyFile(resource, resourceOutput.outputStream())
         }
     }
 

@@ -1,5 +1,7 @@
 import groovy.json.JsonSlurper
+import java.io.IOException
 import java.net.URI
+import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 kotlin {
@@ -16,45 +18,98 @@ plugins {
 
 val currentGeodeVersion = "5.10.1"
 
-abstract class DownloadAndUnzipGeodeTask : DefaultTask() {
+abstract class DownloadVersionMetadataTask : DefaultTask() {
     @get:Input
     abstract val geodeVersion: Property<String>
-
-    @get:Input
-    abstract val platform: Property<String>
 
     @get:OutputFile
     abstract val targetFile: RegularFileProperty
 
-    private fun getGeodeDownload(): String? {
+    @TaskAction
+    fun execute() {
         val downloadGeodeVersion = geodeVersion.get()
-
-        val downloadPlatform = platform.get()
+        val destinationFile = targetFile.get().asFile
 
         val releaseUrl = "https://api.geode-sdk.org/v1/loader/versions/$downloadGeodeVersion"
         URI.create(releaseUrl).toURL().openStream().use { response ->
-            val json = JsonSlurper().parse(response) as Map<*, *>
-
-            val downloads = json["downloads"] as? Map<*, *>
-            val platformInfo = downloads?.get(downloadPlatform) as? Map<*, *>
-            return platformInfo?.get("url") as? String
+            destinationFile.outputStream().use { destination ->
+                response.copyTo(destination)
+            }
         }
     }
+}
+
+abstract class DownloadGeodeFileTask : DefaultTask() {
+    @get:Input
+    abstract val platform: Property<String>
+
+    @get:InputFile
+    abstract val metadata: RegularFileProperty
+
+    private fun downloadAndVerifyFile(filename: String, url: String, hash: String?): File {
+        logger.info("Downloading $filename from $url")
+
+        val tempFile = File(temporaryDir, filename)
+
+        URI.create(url).toURL().openStream().use { response ->
+            tempFile.outputStream().use { output ->
+                response.copyTo(output)
+            }
+        }
+
+        if (hash != null) {
+            val downloadedHash = MessageDigest.getInstance("SHA-256")
+                .digest(tempFile.readBytes())
+                .toHexString()
+
+            if (downloadedHash != hash) {
+                throw GradleException("Hash check failed for file $filename, expected $hash but found $downloadedHash.")
+            }
+        }
+
+        return tempFile
+    }
+
+    fun downloadZip(fallbackUrl: String?): File {
+        val downloadPlatform = platform.get()
+
+        val metadataFile = metadata.get().asFile
+        val json = JsonSlurper().parse(metadataFile) as Map<*, *>
+
+        val payload = json["payload"] as? Map<*, *>
+
+        val downloads = payload?.get("downloads") as? Map<*, *>
+        val platformInfo = downloads?.get(downloadPlatform) as? Map<*, *>
+
+        val downloadUrl = platformInfo?.get("url") as? String ?: fallbackUrl
+        if (downloadUrl == null) {
+            throw GradleException("Failed to fetch download url for platform $platform.")
+        }
+
+        val expectedHash = platformInfo?.get("hash") as? String
+
+        return downloadAndVerifyFile("$downloadPlatform.zip", downloadUrl, expectedHash)
+    }
+}
+
+abstract class DownloadAndUnzipGeodeTask : DownloadGeodeFileTask() {
+    @get:Input
+    abstract val geodeVersion: Property<String>
+
+    @get:OutputFile
+    abstract val targetFile: RegularFileProperty
 
     @TaskAction
     fun execute() {
-        val releaseUrl = getGeodeDownload()
-
         val downloadGeodeVersion = geodeVersion.get()
         val downloadPlatform = platform.get()
-        val url = releaseUrl ?: "https://github.com/geode-sdk/geode/releases/download/v$downloadGeodeVersion/geode-v$downloadGeodeVersion-$downloadPlatform.zip"
         val destinationFile = targetFile.get().asFile
+
+        val tempOutput = this.downloadZip("https://github.com/geode-sdk/geode/releases/download/v$downloadGeodeVersion/geode-v$downloadGeodeVersion-$downloadPlatform.zip")
 
         val expectedFile = "Geode.$downloadPlatform.so"
 
-        logger.info("Downloading Geode v$downloadGeodeVersion for platform $downloadPlatform from $releaseUrl")
-
-        ZipInputStream(URI.create(url).toURL().openStream()).use { zip ->
+        ZipInputStream(tempOutput.inputStream()).use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
                 if (entry.name == expectedFile) {
@@ -72,12 +127,70 @@ abstract class DownloadAndUnzipGeodeTask : DefaultTask() {
     }
 }
 
+abstract class DownloadAndUnzipGeodeResourcesTask : DownloadGeodeFileTask() {
+    init {
+        platform.set("resources")
+    }
+
+    @get:Input
+    abstract val geodeVersion: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun execute() {
+        val downloadGeodeVersion = geodeVersion.get()
+
+        val tempOutput = this.downloadZip("https://github.com/geode-sdk/geode/releases/download/v$downloadGeodeVersion/resources.zip")
+
+        val baseOutput = outputDir.get().asFile
+        if (baseOutput.exists()) baseOutput.deleteRecursively()
+
+        val output = File(baseOutput, "geode.loader")
+        output.mkdirs()
+
+        val canonicalOutput = output.canonicalPath
+
+        ZipInputStream(tempOutput.inputStream()).use { zipStream ->
+            var entry = zipStream.nextEntry
+            while (entry != null) {
+                val destination = File(output, entry.name)
+                if (!destination.canonicalPath.startsWith(canonicalOutput)) {
+                    throw GradleException("attempted copy to outside of output directory: ${entry.name}")
+                }
+
+                if (destination.isDirectory) {
+                    destination.mkdirs()
+                } else {
+                    destination.parentFile?.mkdirs()
+
+                    destination.outputStream().use { destinationStream ->
+                        zipStream.copyTo(destinationStream)
+                    }
+                }
+
+                entry = zipStream.nextEntry
+            }
+        }
+    }
+}
+
+val fetchGeodeMetadataTask = tasks.register<DownloadVersionMetadataTask>("fetchGeodeMetadata") {
+    description = "Fetches and saves a Geode version's metadata"
+    inputs.property("geodeVersion", currentGeodeVersion)
+
+    geodeVersion = currentGeodeVersion
+    targetFile = temporaryDir.resolve("metadata.json")
+}
+
 val downloadGeode32Task = tasks.register<DownloadAndUnzipGeodeTask>("downloadGeode32Binary") {
     description = "Downloads the 32bit Geode release archive"
     inputs.property("geodeVersion", currentGeodeVersion)
 
     geodeVersion = currentGeodeVersion
     platform = "android32"
+    metadata = fetchGeodeMetadataTask.flatMap { it.targetFile }
     targetFile = temporaryDir.resolve("libgeode.so")
 }
 
@@ -87,7 +200,17 @@ val downloadGeode64Task = tasks.register<DownloadAndUnzipGeodeTask>("downloadGeo
 
     geodeVersion = currentGeodeVersion
     platform = "android64"
+    metadata = fetchGeodeMetadataTask.flatMap { it.targetFile }
     targetFile = temporaryDir.resolve("libgeode.so")
+}
+
+val downloadGeodeResourcesTask = tasks.register<DownloadAndUnzipGeodeResourcesTask>("downloadGeodeResources") {
+    description = "Downloads Geode resources"
+    inputs.property("geodeVersion", currentGeodeVersion)
+
+    geodeVersion = currentGeodeVersion
+    metadata = fetchGeodeMetadataTask.flatMap { it.targetFile }
+    outputDir = layout.buildDirectory.dir("geode-resources")
 }
 
 abstract class MergeGeodeFilesTask : DefaultTask() {
@@ -216,6 +339,10 @@ androidComponents {
         variant.sources.jniLibs?.addGeneratedSourceDirectory(
             fullDownloadTask,
             MergeGeodeFilesTask::outputDir
+        )
+        variant.sources.assets?.addGeneratedSourceDirectory(
+            downloadGeodeResourcesTask,
+            DownloadAndUnzipGeodeResourcesTask::outputDir
         )
     }
 }
