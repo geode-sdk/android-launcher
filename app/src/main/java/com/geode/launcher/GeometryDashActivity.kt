@@ -77,6 +77,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
     private var mAspectRatio = 0.0f
     private var mScreenZoom = 1.0f
     private var mScreenZoomFit = false
+    private var mNativeFramePacing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setupUIState()
@@ -131,7 +132,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         })
         mGLSurfaceView?.manualBackEvents = true
 
-        LauncherFix.initFramePacing(this)
+        if (mNativeFramePacing) {
+            LauncherFix.initFramePacing(this)
+        }
     }
 
     private fun createVersionFile() {
@@ -475,8 +478,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         val frameRate = mLimitedRefreshRate
         if (frameRate != null) {
-            glSurfaceView.setMaxFramerate(frameRate)
+            glSurfaceView.setMaxFrameRate(frameRate)
         }
+
+        glSurfaceView.nativeFramePacing = mNativeFramePacing
 
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         glSurfaceView.cocos2dxEditText = editText
@@ -513,6 +518,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             }
         }
 
+        mNativeFramePacing = preferenceUtils.getBoolean(PreferenceUtils.Key.NATIVE_FRAME_PACING)
+
         if (displayMode == DisplayMode.FULLSCREEN && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             GeodeUtils.handleSafeArea = true
@@ -547,7 +554,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         super.onDestroy()
         FMOD.close()
 
-        LauncherFix.destroyFramePacing()
+        if (mNativeFramePacing) {
+            LauncherFix.destroyFramePacing()
+        }
     }
 
     private fun resumeGame() {

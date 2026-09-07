@@ -325,6 +325,9 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
     public int getRenderMode() {
         return mGLThread.getRenderMode();
     }
+
+    public void setNativeFramePacing(boolean nativeFramePacing) { mGLThread.setNativeFramePacing(nativeFramePacing); }
+    public boolean getNativeFramePacing() { return mGLThread.getNativeFramePacing(); }
     /**
      * Request that the renderer render a frame.
      * This method is typically used when the render mode has been set to
@@ -739,6 +742,7 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
     private static class EglHelper {
         public EglHelper(WeakReference<ExplicitGLSurfaceView> glSurfaceViewWeakRef) {
             mGLSurfaceViewWeakRef = glSurfaceViewWeakRef;
+            mNativeFramePacing = false;
         }
         /**
          * Initialize EGL for a given configuration spec.
@@ -814,12 +818,16 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
             if (view != null) {
                 mEglSurface = view.mEGLWindowSurfaceFactory.createWindowSurface(
                         mEglDisplay, mEglConfig, view.getHolder());
-                // NOTE: this diverges from GLSurfaceView
-                LauncherFix.INSTANCE.setSurface(view.getHolder().getSurface());
+
+                if (mNativeFramePacing) {
+                    LauncherFix.INSTANCE.setSurface(view.getHolder().getSurface());
+                }
             } else {
                 mEglSurface = null;
-                // NOTE: this diverges from GLSurfaceView
-                LauncherFix.INSTANCE.setSurface(null);
+
+                if (mNativeFramePacing) {
+                    LauncherFix.INSTANCE.setSurface(null);
+                }
             }
             if (mEglSurface == null || mEglSurface == EGL14.EGL_NO_SURFACE) {
                 int error = EGL14.eglGetError();
@@ -848,11 +856,16 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
          * @return the EGL error code from eglSwapBuffers.
          */
         public int swap() {
-            // NOTE: this diverges from GLSurfaceView
-            // if (! EGL14.eglSwapBuffers(mEglDisplay, mEglSurface)) {
-            if (!LauncherFix.INSTANCE.swapFrame(mEglDisplay.getNativeHandle(), mEglSurface.getNativeHandle())) {
-                return EGL14.eglGetError();
+            if (mNativeFramePacing) {
+                if (!LauncherFix.INSTANCE.swapFrame(mEglDisplay.getNativeHandle(), mEglSurface.getNativeHandle())) {
+                    return EGL14.eglGetError();
+                }
+            } else {
+                if (!EGL14.eglSwapBuffers(mEglDisplay, mEglSurface)) {
+                    return EGL14.eglGetError();
+                }
             }
+
             return EGL14.EGL_SUCCESS;
         }
         public void destroySurface() {
@@ -871,6 +884,10 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
                     view.mEGLWindowSurfaceFactory.destroySurface(mEglDisplay, mEglSurface);
                 }
                 mEglSurface = null;
+
+                if (mNativeFramePacing) {
+                    LauncherFix.INSTANCE.setSurface(null);
+                }
             }
         }
         public void finish() {
@@ -911,6 +928,8 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
         EGLSurface mEglSurface;
         EGLConfig mEglConfig;
         EGLContext mEglContext;
+
+        boolean mNativeFramePacing;
     }
     /**
      * A generic GL Thread. Takes care of initializing EGL and GL. Delegates
@@ -930,6 +949,7 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
             mRenderMode = RENDERMODE_CONTINUOUSLY;
             mWantRenderNotification = false;
             mGLSurfaceViewWeakRef = glSurfaceViewWeakRef;
+            mNativeFramePacing = false;
         }
         @Override
         public void run() {
@@ -968,6 +988,7 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
         private void guardedRun() throws InterruptedException {
             mEglHelper = new EglHelper(mGLSurfaceViewWeakRef);
+            mEglHelper.mNativeFramePacing = mNativeFramePacing;
             mHaveEglContext = false;
             mHaveEglSurface = false;
             mWantRenderNotification = false;
@@ -1218,8 +1239,6 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
                                     finishDrawingRunnable.run();
                                     finishDrawingRunnable = null;
                                 }
-                                // NOTE: this diverges from GLSurfaceView
-                                requestRender();
                             } finally {
                                 // Trace.traceEnd(Trace.TRACE_TAG_VIEW);
                             }
@@ -1251,6 +1270,11 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
                         doRenderNotification = true;
                         wantRenderNotification = false;
                     }
+
+                    // request new frame prior to swap
+                    if (mNativeFramePacing) {
+                        requestRender();
+                    }
                 }
             } finally {
                 /*
@@ -1277,6 +1301,21 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
             synchronized(sGLThreadManager) {
                 mRenderMode = renderMode;
                 sGLThreadManager.notifyAll();
+            }
+        }
+        public void setNativeFramePacing(boolean nativeFramePacing) {
+            synchronized(sGLThreadManager) {
+                if (mEglHelper != null) {
+                    mEglHelper.mNativeFramePacing = nativeFramePacing;
+                }
+
+                mNativeFramePacing = nativeFramePacing;
+                sGLThreadManager.notifyAll();
+            }
+        }
+        public boolean getNativeFramePacing() {
+            synchronized(sGLThreadManager) {
+                return mNativeFramePacing;
             }
         }
         public int getRenderMode() {
@@ -1475,6 +1514,8 @@ public class ExplicitGLSurfaceView extends SurfaceView implements SurfaceHolder.
         private Runnable mFinishDrawingRunnable = null;
         // End of member variables protected by the sGLThreadManager monitor.
         private EglHelper mEglHelper;
+
+        private boolean mNativeFramePacing;
         /**
          * Set once at thread construction time, nulled out when the parent view is garbage
          * called. This weak reference allows the GLSurfaceView to be garbage collected while

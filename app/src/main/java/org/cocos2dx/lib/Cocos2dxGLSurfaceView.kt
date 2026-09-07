@@ -67,6 +67,7 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
     var controllerEventsEnabled = false
         private set
     var supportsResizeEvents = false
+    var saveNativeFramePacing = false
 
     var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
@@ -142,7 +143,9 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
 
         println("updateRefreshRate: selecting refresh rate of ${chosenDisplay.refreshRate} (display ${chosenDisplay.modeId})")
 
-        LauncherFix.setSwapInterval((1_000_000_000L / chosenRefreshRate).roundToLong())
+        if (saveNativeFramePacing) {
+            LauncherFix.setSwapInterval((1_000_000_000L / chosenRefreshRate).roundToLong())
+        }
 
         holder.surface.setFrameRate(chosenRefreshRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
         if (isAttachedToWindow) {
@@ -158,8 +161,8 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
 
     override fun onResume() {
         super.onResume()
-        renderMode = RENDERMODE_WHEN_DIRTY
-        // renderMode = RENDERMODE_CONTINUOUSLY
+
+        renderMode = RENDERMODE_CONTINUOUSLY
         queueEvent { cocos2dxRenderer.handleOnResume() }
     }
 
@@ -537,7 +540,11 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
     fun setCocos2dxRenderer(renderer: Cocos2dxRenderer) {
         this.cocos2dxRenderer = renderer
         setRenderer(this.cocos2dxRenderer)
-        renderMode = RENDERMODE_WHEN_DIRTY
+    }
+
+    override fun setNativeFramePacing(nativeFramePacing: Boolean) {
+        super.setNativeFramePacing(nativeFramePacing)
+        saveNativeFramePacing = nativeFramePacing
     }
 
     private fun getContentText(): String {
@@ -574,7 +581,7 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
         inputManager.unregisterInputDeviceListener(InputListener)
     }
 
-    fun setMaxFramerate(rate: Int) {
+    fun setMaxFrameRate(rate: Int) {
         cocos2dxRenderer.limitFrameRate(rate)
     }
 

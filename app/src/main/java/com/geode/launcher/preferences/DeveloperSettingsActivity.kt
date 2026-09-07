@@ -168,6 +168,12 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         }
                     )
 
+                    SettingsCard(
+                        title = stringResource(R.string.preference_native_pacing),
+                        description = stringResource(R.string.preference_native_pacing_description),
+                        preferenceKey = PreferenceUtils.Key.NATIVE_FRAME_PACING,
+                    )
+
                     /*
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         SettingsCard(

@@ -298,6 +298,9 @@
     <string name="preference_profiles_delete_alt">Delete</string>
     <string name="preference_profiles_delete_undo_alt">Undo</string>
 
+    <string name="preference_native_pacing">Native frame pacing</string>
+    <string name="preference_native_pacing_description">Reduces latency, but may worsen frame drops.</string>
+
     <!-- ApplicationLogsActivity strings -->
     <string name="title_activity_application_logs">Application logs</string>
     <string name="application_logs_no_logs">No logs available.</string>
