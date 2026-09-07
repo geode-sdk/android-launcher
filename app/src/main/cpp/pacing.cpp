@@ -1,4 +1,5 @@
 #include <swappy/swappyGL.h>
+#include <swappy/swappyGL_extra.h>
 #include <android/native_window_jni.h>
 #include <memory>
 
@@ -59,5 +60,6 @@ JNIEXPORT void JNICALL Java_com_geode_launcher_LauncherFix_setSwapInterval(
         jobject,
         jlong interval_ns
 ) {
+    SwappyGL_setAutoSwapInterval(false);
     SwappyGL_setSwapIntervalNS(interval_ns);
 }

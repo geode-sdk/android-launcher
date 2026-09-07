@@ -67,7 +67,6 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
     var controllerEventsEnabled = false
         private set
     var supportsResizeEvents = false
-    var maxFrameRate: Int? = null
 
     var cocos2dxEditText: AppCompatEditText? = null
         set(value) {
@@ -576,9 +575,7 @@ class Cocos2dxGLSurfaceView(context: Context) : ExplicitGLSurfaceView(context) {
     }
 
     fun setMaxFramerate(rate: Int) {
-        // maxFrameRate = rate
         cocos2dxRenderer.limitFrameRate(rate)
-        // LauncherFix.setSwapInterval((1_000_000_000.0 / rate).roundToLong())
     }
 
     object InputListener : InputManager.InputDeviceListener {
