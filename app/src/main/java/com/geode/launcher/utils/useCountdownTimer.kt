@@ -6,17 +6,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.delay
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 const val MS_TO_SEC = 1000L
 
 @Composable
 fun useCountdownTimer(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    time: Long,
+    time: Duration,
     onCountdownFinish: () -> Unit
 ): Long {
     var millisUntilFinished by remember {
-        mutableLongStateOf(time)
+        mutableStateOf(time)
     }
 
     var shouldBeCounting by remember {
@@ -28,9 +30,9 @@ fun useCountdownTimer(
             return@LaunchedEffect
         }
 
-        if (millisUntilFinished > 0) {
-            delay(MS_TO_SEC)
-            millisUntilFinished -= MS_TO_SEC
+        if (millisUntilFinished > Duration.ZERO) {
+            delay(1.seconds)
+            millisUntilFinished -= 1.seconds
         } else {
             onCountdownFinish()
         }
@@ -58,5 +60,5 @@ fun useCountdownTimer(
         }
     }
 
-    return millisUntilFinished / MS_TO_SEC
+    return millisUntilFinished.inWholeSeconds
 }

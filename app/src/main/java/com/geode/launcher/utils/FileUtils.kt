@@ -8,6 +8,7 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import java.io.File
+import androidx.core.net.toUri
 
 class FileUtils {
     // copied from https://stackoverflow.com/questions/17546101/get-real-path-for-uri-android
@@ -86,7 +87,7 @@ class FileUtils {
                 val file = File(id)
                 if (file.exists()) return id
             }
-            val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+            val contentUri = ContentUris.withAppendedId("content://downloads/public_downloads".toUri(), java.lang.Long.valueOf(id))
             return getDataColumn(context, contentUri, null, null)
         }
 

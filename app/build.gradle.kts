@@ -2,8 +2,6 @@ import groovy.json.JsonSlurper
 import java.net.URI
 import java.util.zip.ZipInputStream
 
-val composeBOM: String by rootProject.extra
-
 kotlin {
     compilerOptions {
         extraWarnings.set(true)
@@ -122,13 +120,13 @@ val fullDownloadTask = tasks.register<MergeGeodeFilesTask>("downloadGeodeFull") 
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 29
+        versionCode = 30
         versionName = "1.8.0"
 
         vectorDrawables {
@@ -191,8 +189,8 @@ android {
         // enables a polyfill for java Instant on api levels < 26 (used for updater)
         isCoreLibraryDesugaringEnabled = true
 
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
@@ -223,28 +221,28 @@ androidComponents {
 }
 
 dependencies {
-    implementation (platform("androidx.compose:compose-bom:$composeBOM"))
-    implementation ("androidx.core:core-ktx:1.18.0")
+    implementation (platform("androidx.compose:compose-bom:2026.08.00"))
+    implementation ("androidx.core:core-ktx:1.19.0")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation ("androidx.activity:activity-compose:1.13.0")
     implementation ("androidx.activity:activity-ktx:1.13.0")
-    implementation ("androidx.appcompat:appcompat:1.7.1")
+    implementation ("androidx.appcompat:appcompat:1.8.0")
     implementation ("androidx.documentfile:documentfile:1.1.0")
 
-    implementation ("com.squareup.okio:okio:3.17.0")
-    implementation ("com.squareup.okhttp3:okhttp:5.3.2")
-    implementation ("com.squareup.okhttp3:okhttp-coroutines:5.3.2")
+    implementation ("com.squareup.okio:okio:3.18.2")
+    implementation ("com.squareup.okhttp3:okhttp:5.5.0")
+    implementation ("com.squareup.okhttp3:okhttp-coroutines:5.5.0")
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.10.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.11.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
 
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.39.2")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.2")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.45.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.45.0")
     implementation ("androidx.browser:browser:1.10.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")

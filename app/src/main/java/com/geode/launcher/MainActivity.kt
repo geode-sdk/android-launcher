@@ -266,7 +266,7 @@ fun mapLaunchStatusToInfo(state: LaunchViewModel.LaunchUIState, inSafeMode: Bool
             )
         }
         is LaunchViewModel.LaunchUIState.Cancelled -> {
-            return mapCancelReasonToInfo(state.reason)
+            mapCancelReasonToInfo(state.reason)
         }
     }
 }
@@ -725,6 +725,9 @@ fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Un
             when (releaseState.exception.reason) {
                 ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
                     R.string.release_fetch_external_in_use_short
+                )
+                ReleaseManager.UpdateException.Reason.HASH_VALIDATION_FAILED -> stringResource(
+                    R.string.release_fetch_hash_validation_failed_short
                 )
                 else -> stringResource(R.string.release_fetch_generic_short)
             }

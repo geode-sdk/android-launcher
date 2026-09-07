@@ -39,6 +39,8 @@ import com.geode.launcher.utils.GamePackageUtils
 import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 enum class LaunchNotificationType {
     GEODE_UPDATED, LAUNCHER_UPDATE_AVAILABLE, UPDATE_FAILED, UNSUPPORTED_VERSION, FAILED_LOAD;
@@ -87,7 +89,7 @@ fun NotificationCardFromType(type: LaunchNotificationType) {
             }
 
             AnimatedNotificationCard(
-                displayLength = 5000L,
+                displayLength = 5.seconds,
                 onClick = {
                     showInfoDialog = true
                 }
@@ -140,15 +142,15 @@ fun LaunchNotification(cards: List<LaunchNotificationType>) {
 }
 
 @Composable
-fun AnimatedNotificationCard(modifier: Modifier = Modifier, visibilityDelay: Long = 0L, displayLength: Long = 3000L, onClick: (() -> Unit)? = null, contents: @Composable () -> Unit) {
+fun AnimatedNotificationCard(modifier: Modifier = Modifier, visibilityDelay: Duration = Duration.ZERO, displayLength: Duration = 3.seconds, onClick: (() -> Unit)? = null, contents: @Composable () -> Unit) {
     val state = remember {
         MutableTransitionState(false).apply {
-            targetState = visibilityDelay <= 0
+            targetState = visibilityDelay <= Duration.ZERO
         }
     }
 
     LaunchedEffect(true) {
-        if (visibilityDelay > 0) {
+        if (visibilityDelay > Duration.ZERO) {
             delay(visibilityDelay)
             state.targetState = true
         }

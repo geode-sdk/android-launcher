@@ -36,6 +36,7 @@ import com.geode.launcher.utils.GeodeUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
@@ -142,7 +143,7 @@ fun onSettings(context: Context) {
 }
 
 @Composable
-fun LongPressButton(onClick: () -> Unit, onLongPress: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+fun LongPressButton(onClick: () -> Unit, onLongPress: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     // compose apis don't provide a good way of adding long press to a button
     var isLongPress by remember { mutableStateOf(false) }
 
@@ -154,11 +155,11 @@ fun LongPressButton(onClick: () -> Unit, onLongPress: () -> Unit, enabled: Boole
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    delay(viewConfiguration.longPressTimeoutMillis)
+                    delay(viewConfiguration.longPressTimeoutMillis.milliseconds)
 
                     // perform a second delay to make the action more obvious
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    delay(viewConfiguration.longPressTimeoutMillis)
+                    delay(viewConfiguration.longPressTimeoutMillis.milliseconds)
 
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
 
