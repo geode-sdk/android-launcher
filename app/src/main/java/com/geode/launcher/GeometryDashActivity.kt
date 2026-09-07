@@ -408,6 +408,7 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         val geodeFilename = LaunchUtils.geodeFilename
         val geodePath = File(filesDir.path, "launcher/$geodeFilename")
         if (geodePath.exists()) {
+            println("Loading Geode from ${geodePath.path}")
             System.load(geodePath.path)
             return true
         }
