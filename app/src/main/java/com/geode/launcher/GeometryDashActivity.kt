@@ -690,7 +690,6 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         }
 
         val resourcesDirectory = LaunchUtils.getGeodeResourcesDirectory(this)
-        resourcesDirectory.mkdirs()
 
         val pathBase = "geode.loader"
         val versionFilename = "version"
@@ -712,6 +711,11 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
             println("copyGeodeResources: found $resourcesVersion, expected $bundledVersion. No work needs to be done!")
             return
         }
+
+        if (resourcesDirectory.exists()) {
+            resourcesDirectory.deleteRecursively()
+        }
+        resourcesDirectory.mkdirs()
 
         println("copyGeodeResources: found $resourcesVersion, expected $bundledVersion. Copying assets")
 
