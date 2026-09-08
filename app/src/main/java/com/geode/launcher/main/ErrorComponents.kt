@@ -202,7 +202,11 @@ fun onShowLogs(context: Context) {
 fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val currentRelease = remember {
-        PreferenceUtils.get(context).getString(PreferenceUtils.Key.CURRENT_VERSION_TAG)
+        @Suppress("SENSELESS_COMPARISON")
+        if (BuildConfig.PREBUNDLED_GEODE != null)
+            "${BuildConfig.PREBUNDLED_GEODE}*"
+        else
+            PreferenceUtils.get(context).getString(PreferenceUtils.Key.CURRENT_VERSION_TAG)
     }
 
     val gameVersion = remember {

@@ -63,6 +63,10 @@ object GamePackageUtils {
         return gameVersionMap[versionCode] ?: getGameVersionString(packageManager)
     }
 
+    fun getSupportedUnifiedVersion(): String {
+        return gameVersionMap[Constants.SUPPORTED_VERSION_CODE] ?: Constants.SUPPORTED_VERSION_STRING
+    }
+
     fun detectAbiMismatch(context: Context, packageInfo: PackageInfo, loadException: Error): Boolean {
         val abi = LaunchUtils.applicationArchitecture
         val isExtracted =

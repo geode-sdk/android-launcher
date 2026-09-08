@@ -42,6 +42,9 @@ object LaunchUtils {
     }
 
     fun isGeodeInstalled(context: Context): Boolean {
+        @Suppress("SENSELESS_COMPARISON")
+        if (BuildConfig.PREBUNDLED_GEODE != null) return true
+
         return getInstalledGeodePath(context) != null
     }
 

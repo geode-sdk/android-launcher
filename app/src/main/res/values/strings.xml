@@ -35,7 +35,7 @@
     </string>
 
     <string name="launcher_game_update_required_short">A Geometry Dash update is required.</string>
-    <string name="launcher_game_update_required">The currently installed version of Geometry Dash is no longer supported. Please update Geometry Dash to continue receiving Geode updates.</string>
+    <string name="launcher_game_update_required">The currently installed version of Geometry Dash is no longer supported. Please update Geometry Dash to version %1$s to continue receiving Geode updates.</string>
 
     <string name="launcher_update_available">A new launcher update is available!</string>
     <string name="launcher_update_dismiss">Dismiss</string>
@@ -82,7 +82,7 @@
     <string name="launcher_cancelled_crash">Launch paused due to a crash.</string>
     <string name="launcher_cancelled_crash_instant">Geode crashed.</string>
     <string name="launcher_cancelled_error">Geode cannot be used.</string>
-    <string name="launcher_cancelled_outdated">A Geometry Dash update is required.</string>
+    <string name="launcher_cancelled_outdated">Geometry Dash version %1$s is required.</string>
     <string name="launcher_cancelled_restart">Restart</string>
     <string name="launcher_cancelled_resume">Resume</string>
     <string name="launcher_cancelled_retry">Retry</string>
