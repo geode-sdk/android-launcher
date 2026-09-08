@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.geode.launcher.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,6 +90,10 @@ class ReleaseViewModel(private val application: Application): ViewModel() {
     }
 
     fun runReleaseCheck(isManual: Boolean = false) {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            return
+        }
+
         hasPerformedCheck = true
 
         viewModelScope.launch(Dispatchers.IO) {

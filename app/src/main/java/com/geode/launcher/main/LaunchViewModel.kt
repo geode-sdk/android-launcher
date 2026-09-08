@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.geode.launcher.BuildConfig
 import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.utils.Constants
 import com.geode.launcher.utils.GamePackageUtils
@@ -182,7 +183,9 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             return
         }
 
-        if (GamePackageUtils.getGameVersionCode(packageManager) < Constants.SUPPORTED_VERSION_CODE_MIN) {
+        // play store build only comes with the one build of geode
+        val minVersionCode = if (BuildConfig.GOOGLE_PLAY_BUILD) Constants.SUPPORTED_VERSION_CODE else Constants.SUPPORTED_VERSION_CODE_MIN
+        if (GamePackageUtils.getGameVersionCode(packageManager) < minVersionCode) {
             _uiState.tryEmit(LaunchUIState.Cancelled(LaunchCancelReason.GAME_OUTDATED))
             return
         }
@@ -248,25 +251,31 @@ class LaunchViewModel(private val application: Application): ViewModel() {
             initReadyTimer()
         }
 
-        val releaseManager = ReleaseManager.get(application)
+        if (!BuildConfig.GOOGLE_PLAY_BUILD) {
+            val releaseManager = ReleaseManager.get(application)
 
-        val hasGeode = LaunchUtils.isGeodeInstalled(application)
-        val shouldUpdate = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
+            val hasGeode = LaunchUtils.isGeodeInstalled(application)
+            val shouldUpdate = PreferenceUtils.get(application).getBoolean(PreferenceUtils.Key.UPDATE_AUTOMATICALLY)
 
-        if ((shouldUpdate && !hasCheckedForUpdates) || !hasGeode) {
-            releaseManager.checkForUpdates(false)
-        } else {
-            releaseManager.afterUseCachedUpdate()
-        }
+            if ((shouldUpdate && !hasCheckedForUpdates) || !hasGeode) {
+                releaseManager.checkForUpdates(false)
+            } else {
+                releaseManager.afterUseCachedUpdate()
+            }
 
-        if (isRestart) {
-            releaseManager.dismissedLauncherUpdate = true
+            if (isRestart) {
+                releaseManager.dismissedLauncherUpdate = true
+            }
         }
 
         preReadyCheck()
     }
 
     fun retryUpdate() {
+        if (BuildConfig.GOOGLE_PLAY_BUILD) {
+            return
+        }
+
         ReleaseManager.get(application).checkForUpdates(true)
         if (ReleaseManager.get(application).isInUpdate) {
             restoreUpdateState = _uiState.value

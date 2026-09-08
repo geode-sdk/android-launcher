@@ -187,6 +187,8 @@ fun LongPressButton(onClick: () -> Unit, onLongPress: () -> Unit, modifier: Modi
 
 @Composable
 fun UnsupportedVersionWarning(modifier: Modifier = Modifier) {
+    val gameVersion = GamePackageUtils.getSupportedUnifiedVersion()
+
     InlineDialog(
         headline = {
             Icon(
@@ -202,7 +204,7 @@ fun UnsupportedVersionWarning(modifier: Modifier = Modifier) {
         },
         body = {
             Text(
-                stringResource(R.string.launcher_game_update_required),
+                stringResource(R.string.launcher_game_update_required, gameVersion),
             )
         },
         modifier = modifier.padding(8.dp)

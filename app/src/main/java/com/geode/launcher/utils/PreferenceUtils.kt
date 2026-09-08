@@ -149,6 +149,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
         LAST_UPDATE_CHECK_TIME,
         LAST_LAUNCHER_UPDATE,
         DISABLE_UPDATE_CACHE,
+        PREBUNDLED_GEODE_MIGRATION_PERFORMED,
         NATIVE_FRAME_PACING,
     }
 
@@ -200,6 +201,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             Key.LAST_UPDATE_CHECK_TIME -> "PreferenceLastUpdateCheckTime"
             Key.LAST_LAUNCHER_UPDATE -> "PreferenceLastLauncherUpdate"
             Key.DISABLE_UPDATE_CACHE -> "PreferenceDisableUpdateCache"
+            Key.PREBUNDLED_GEODE_MIGRATION_PERFORMED -> "PreferencePrebundledGeodeMigrationPerformed"
             Key.NATIVE_FRAME_PACING -> "PreferenceNativeFramePacing"
             // Key.RELEASE_CHANNEL -> "PreferenceReleaseChannel"
             // Key.LAST_DISMISSED_UPDATE -> "PreferenceLastDismissedUpdate"

@@ -70,7 +70,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.BuildConfig
-import com.geode.launcher.MainActivity
 import com.geode.launcher.R
 import com.geode.launcher.UserDirectoryProvider
 import com.geode.launcher.preferences.components.BackupButton
@@ -510,6 +509,10 @@ fun GameplaySettingsGroup() {
 
 @Composable
 fun UpdateSettingsGroup(releaseViewModel: ReleaseViewModel, snackbarHostState: SnackbarHostState, onUpdate: () -> Unit) {
+    if (BuildConfig.GOOGLE_PLAY_BUILD) {
+        return
+    }
+
     val updateStatus by releaseViewModel.uiState.collectAsState()
 
     OptionsGroup(stringResource(R.string.preference_category_updater)) {
@@ -661,11 +664,14 @@ fun AboutSettingsGroup(developerModeEnabled: Boolean) {
             )
         }
 
+        @Suppress("SENSELESS_COMPARISON")
         OptionsLabel(
             stringResource(R.string.preference_loader_version_name),
             stringResource(
                 R.string.preference_loader_version_description,
-                currentRelease ?: "unknown"
+                if (BuildConfig.PREBUNDLED_GEODE != null)
+                        "${BuildConfig.PREBUNDLED_GEODE}*"
+                else (currentRelease ?: "unknown")
             ),
             displayInline = true
         )
