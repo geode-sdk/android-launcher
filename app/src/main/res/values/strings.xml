@@ -147,12 +147,11 @@
     <string name="preferences_open_file_manager">Open file manager</string>
     <string name="preference_installed_mods">See installed mods list</string>
     <string name="preference_installed_mods_title">Installed mods</string>
-    <string name="preference_installed_mods_loading">Loading installed mods…</string>
+    <string name="preference_installed_mods_subtitle">You could toggle some mods on/off from here! eg. disabling a mod with suspicion of crashing the game</string>
     <string name="preference_installed_mods_empty">No installed mods found.</string>
     <string name="preference_installed_mods_missing">Saved mod data file not found.</string>
     <string name="preference_installed_mods_read_error">Unable to read saved mod data: %1$s</string>
-    <string name="preference_installed_mods_loaded">Loaded</string>
-    <string name="preference_installed_mods_not_loaded">Not loaded</string>
+    <string name="preference_installed_mods_write_error">Unable to update saved mod data: %1$s</string>
     <string name="preferences_view_logs">View application logs</string>
     <string name="preferences_view_crashes">View crash dumps</string>
     <string name="preferences_view_geode_logs">View Geode logs</string>

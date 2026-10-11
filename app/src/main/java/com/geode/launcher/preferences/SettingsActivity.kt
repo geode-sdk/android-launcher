@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateUtils
+import android.util.AtomicFile
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,12 +28,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn // used to add lines to wherever
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -433,6 +436,26 @@ private fun readInstalledMods(file: File): List<InstalledMod> {
         .toList()
 }
 
+private fun setInstalledModLoaded(file: File, modId: String, isLoaded: Boolean) {
+    val savedMods = JSONObject(file.readText())
+    val settingKey = "should-load-$modId"
+    if (savedMods.opt(settingKey) !is Boolean) {
+        throw IOException("Load setting for $modId was not found")
+    }
+
+    savedMods.put(settingKey, isLoaded)
+
+    val atomicFile = AtomicFile(file)
+    val output = atomicFile.startWrite()
+    try {
+        output.write(savedMods.toString(4).toByteArray(Charsets.UTF_8))
+        atomicFile.finishWrite(output)
+    } catch (error: IOException) {
+        atomicFile.failWrite(output)
+        throw error
+    }
+}
+
 @Composable
 private fun InstalledModsButton() {
     var showDialog by remember { mutableStateOf(false) }
@@ -452,6 +475,9 @@ private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
     val context = LocalContext.current
     var mods by remember { mutableStateOf<List<InstalledMod>?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
+    var writeError by remember { mutableStateOf<String?>(null) }
+    var updatingModId by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(context) {
         try {
@@ -485,13 +511,22 @@ private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
         }
     }
 
+    if (mods == null && loadError == null) return
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(R.string.preference_installed_mods_title)) },
+        title = {
+            Column {
+                Text(stringResource(R.string.preference_installed_mods_title))
+                Text(
+                    stringResource(R.string.preference_installed_mods_subtitle),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
         text = {
             when {
                 loadError != null -> Text(loadError.orEmpty())
-                mods == null -> Text(stringResource(R.string.preference_installed_mods_loading))
                 mods.isNullOrEmpty() -> Text(stringResource(R.string.preference_installed_mods_empty))
                 else -> Column(
                     modifier = Modifier
@@ -499,25 +534,64 @@ private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
                         .heightIn(max = 360.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
+                    writeError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     mods.orEmpty().forEach { mod ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .toggleable(
+                                    value = mod.isLoaded,
+                                    enabled = updatingModId == null,
+                                    role = Role.Checkbox,
+                                    onValueChange = { isLoaded ->
+                                        updatingModId = mod.id
+                                        writeError = null
+                                        coroutineScope.launch {
+                                            try {
+                                                withContext(Dispatchers.IO) {
+                                                    val savedModsFile = File(
+                                                        LaunchUtils.getSaveDirectory(context),
+                                                        "geode/mods/geode.loader/saved.json"
+                                                    )
+                                                    setInstalledModLoaded(savedModsFile, mod.id, isLoaded)
+                                                }
+                                                mods = mods.orEmpty().map {
+                                                    if (it.id == mod.id) it.copy(isLoaded = isLoaded) else it
+                                                }
+                                            } catch (error: IOException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } catch (error: JSONException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } catch (error: SecurityException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } finally {
+                                                updatingModId = null
+                                            }
+                                        }
+                                    }
+                                )
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(mod.id, modifier = Modifier.weight(1f))
-                            Icon(
-                                painter = painterResource(
-                                    if (mod.isLoaded) R.drawable.icon_check
-                                    else R.drawable.icon_close_small
-                                ),
-                                contentDescription = stringResource(
-                                    if (mod.isLoaded) R.string.preference_installed_mods_loaded
-                                    else R.string.preference_installed_mods_not_loaded
-                                ),
-                                tint = if (mod.isLoaded) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            Text(
+                                mod.id,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                            )
+                            Checkbox(
+                                checked = mod.isLoaded,
+                                onCheckedChange = null,
+                                enabled = updatingModId == null
                             )
                         }
                     }
