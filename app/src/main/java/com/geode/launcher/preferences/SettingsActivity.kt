@@ -22,10 +22,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn // used to add lines to wherever
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -56,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -97,8 +100,14 @@ import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.ConnectException
 import java.net.UnknownHostException
+import java.io.File // File :wilted_rose:
+import java.io.IOException
+import org.json.JSONException
+import org.json.JSONObject
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 
@@ -401,7 +410,126 @@ fun GeneralSettingsGroup() {
             },
             onClick = { onOpenFileManager(context) }
         )
+
+        InstalledModsButton()
     }
+}
+
+private data class InstalledMod(val id: String, val isLoaded: Boolean)
+
+private fun readInstalledMods(file: File): List<InstalledMod> {
+    val savedMods = JSONObject(file.readText())
+    val loadSettingPrefix = "should-load-"
+
+    return savedMods.keys().asSequence()
+        .mapNotNull { key ->
+            if (!key.startsWith(loadSettingPrefix)) return@mapNotNull null
+
+            val modId = key.removePrefix(loadSettingPrefix)
+            val isLoaded = savedMods.opt(key) as? Boolean ?: return@mapNotNull null
+            modId.takeIf { it.isNotBlank() }?.let { InstalledMod(it, isLoaded) }
+        }
+        .sortedBy { it.id }
+        .toList()
+}
+
+@Composable
+private fun InstalledModsButton() {
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsButton(
+        title = stringResource(R.string.preference_installed_mods),
+        onClick = { showDialog = true }
+    )
+
+    if (showDialog) {
+        InstalledModsDialog(onDismissRequest = { showDialog = false })
+    }
+}
+
+@Composable
+private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    var mods by remember { mutableStateOf<List<InstalledMod>?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(context) {
+        try {
+            val result = withContext(Dispatchers.IO) {
+                val savedModsFile = File(
+                    LaunchUtils.getBaseDirectory(context),
+                    "save/geode/mods/geode.launcher/saved.json"
+                )
+                if (savedModsFile.isFile) readInstalledMods(savedModsFile) else null
+            }
+            if (result == null) {
+                loadError = context.getString(R.string.preference_installed_mods_missing)
+            } else {
+                mods = result
+            }
+        } catch (error: IOException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        } catch (error: JSONException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        } catch (error: SecurityException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(R.string.preference_installed_mods_title)) },
+        text = {
+            when {
+                loadError != null -> Text(loadError.orEmpty())
+                mods == null -> Text(stringResource(R.string.preference_installed_mods_loading))
+                mods.isNullOrEmpty() -> Text(stringResource(R.string.preference_installed_mods_empty))
+                else -> Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    mods.orEmpty().forEach { mod ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(mod.id, modifier = Modifier.weight(1f))
+                            Icon(
+                                painter = painterResource(
+                                    if (mod.isLoaded) R.drawable.icon_check
+                                    else R.drawable.icon_close_small
+                                ),
+                                contentDescription = stringResource(
+                                    if (mod.isLoaded) R.string.preference_installed_mods_loaded
+                                    else R.string.preference_installed_mods_not_loaded
+                                ),
+                                tint = if (mod.isLoaded) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        }
+    )
 }
 
 @Composable
