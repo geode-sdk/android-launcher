@@ -457,8 +457,8 @@ private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
         try {
             val result = withContext(Dispatchers.IO) {
                 val savedModsFile = File(
-                    LaunchUtils.getBaseDirectory(context),
-                    "save/geode/mods/geode.launcher/saved.json"
+                    LaunchUtils.getSaveDirectory(context),
+                    "geode/mods/geode.loader/saved.json"
                 )
                 if (savedModsFile.isFile) readInstalledMods(savedModsFile) else null
             }
