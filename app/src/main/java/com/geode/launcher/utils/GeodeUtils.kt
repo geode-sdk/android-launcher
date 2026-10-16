@@ -191,7 +191,7 @@ object GeodeUtils {
 
     @JvmStatic
     fun restartGame() {
-        restartGame(true)
+        restartGame(false)
     }
 
     @JvmStatic
