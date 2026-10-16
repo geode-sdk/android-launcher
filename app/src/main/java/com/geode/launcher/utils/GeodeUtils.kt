@@ -191,10 +191,16 @@ object GeodeUtils {
 
     @JvmStatic
     fun restartGame() {
+        restartGame(true)
+    }
+
+    @JvmStatic
+    fun restartGame(safeMode: Boolean) {
         activity.get()?.run {
             packageManager.getLaunchIntentForPackage(packageName)?.also {
                 val mainIntent = Intent.makeRestartActivityTask(it.component)
                 mainIntent.putExtra("restarted", true)
+                mainIntent.putExtra("safe-mode", safeMode)
                 startActivity(mainIntent)
                 exitProcess(0)
             }

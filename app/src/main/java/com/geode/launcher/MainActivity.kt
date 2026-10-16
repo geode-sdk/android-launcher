@@ -104,8 +104,10 @@ class MainActivity : ComponentActivity() {
         val gdInstalled = GamePackageUtils.isGameInstalled(packageManager)
         val geodeInstalled = LaunchUtils.isGeodeInstalled(this)
 
-        if (gdInstalled && geodeInstalled && intent.getBooleanExtra("restarted", false)) {
-            onLaunch(this)
+        val restartImmediately = intent.getBooleanExtra("restarted", false)
+        if (gdInstalled && geodeInstalled && restartImmediately) {
+            val withSafeMode = intent.getBooleanExtra("safe-mode", false)
+            onLaunch(this, withSafeMode)
         }
 
         enableEdgeToEdge()
