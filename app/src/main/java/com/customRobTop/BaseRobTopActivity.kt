@@ -2,7 +2,11 @@ package com.customRobTop
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.*
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
@@ -13,14 +17,18 @@ import com.geode.launcher.R
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.closeIMEKeyboard
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView.Companion.openIMEKeyboard
 import java.lang.ref.WeakReference
-import java.util.*
-
+import java.util.UUID
 
 @Suppress("unused", "UNUSED_PARAMETER")
 object BaseRobTopActivity {
+    const val KEYBOARD_INPUT_MULTILINE = 1
+    const val KEYBOARD_INPUT_NUMERIC = 4
+    const val KEYBOARD_INPUT_PASSWORD = 2
+
     private var isLoaded = false
     var blockBackButton = false
     private var keyboardActive = false
+    var curKeyboardInputFlags = 0
 
     var isPaused = false
 
@@ -85,6 +93,18 @@ object BaseRobTopActivity {
                 ClipData.newPlainText("text", str)
             )
         }
+    }
+
+    @JvmStatic
+    fun getClipboardString(): String {
+        me.get()?.run {
+            val manager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = manager.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                return clip.getItemAt(0).coerceToText(this).toString()
+            }
+        }
+        return ""
     }
 
     @JvmStatic
@@ -264,4 +284,9 @@ object BaseRobTopActivity {
         level = DeprecationLevel.HIDDEN
     )
     fun logEvent(event: String) {}
+
+    @JvmStatic
+    fun setKeyboardInputFlags(flags: Int) {
+        curKeyboardInputFlags = flags
+    }
 }

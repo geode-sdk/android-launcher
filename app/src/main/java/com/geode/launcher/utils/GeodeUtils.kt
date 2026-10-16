@@ -794,7 +794,7 @@ object GeodeUtils {
 
     external fun internalKeyEvent(timestamp: Long, deviceId: Int, eventSource: Int, keyCode: Int, modifiers: Int, isDown: Boolean, repeatCount: Int)
     external fun internalTouchEvent(timestamp: Long, deviceId: Int, eventSource: Int, eventType: Int, ids: IntArray, xs: FloatArray, ys: FloatArray)
-    external fun internalScrollEvent(timestamp: Long, deviceId: Int, eventSource: Int, scrollX: Float, scrollY: Float)
+    external fun internalScrollEvent(timestamp: Long, deviceId: Int, eventSource: Int, scrollX: Float, scrollY: Float, mouseX: Float, mouseY: Float)
     external fun internalJoystickEvent(timestamp: Long, deviceId: Int, eventSource: Int, leftX: FloatArray, leftY: FloatArray, rightX: FloatArray, rightY: FloatArray, hatX: FloatArray, hatY: FloatArray, leftTrigger: FloatArray, rightTrigger: FloatArray)
 
     external fun inputDeviceAdded(deviceId: Int)

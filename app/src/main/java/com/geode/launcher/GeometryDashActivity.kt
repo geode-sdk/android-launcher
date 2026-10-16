@@ -171,7 +171,8 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         tryLoadLibrary(gdPackageInfo, Constants.FMOD_LIB_NAME)
         tryLoadLibrary(gdPackageInfo, Constants.COCOS_LIB_NAME)
 
-        if (GamePackageUtils.getGameVersionCode(packageManager) >= 39L) {
+        val gameVersionCode = GamePackageUtils.getGameVersionCode(packageManager)
+        if (gameVersionCode >= 39L) {
             // this fix requires geode v3, which is 2.206+
             // there is a short period in which 2.206 users will still have geode v2, but whatever. ig
             LauncherFix.enableExceptionsRenaming()
@@ -182,6 +183,9 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
         loadInternalMods()
 
         val baseView = createView()
+        if (gameVersionCode >= 42L) {
+            mGLSurfaceView?.sendNewCocosEvents = true
+        }
 
         if (!GeodeUtils.handleSafeArea && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val frameLayoutParams = ViewGroup.LayoutParams(
@@ -205,12 +209,22 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
                         left = 0, top = 0, right = 0, bottom = 0
                     )
                 }
+
+                Cocos2dxGLSurfaceView.onKeyboardInsets(insets)
+
                 WindowInsets.CONSUMED
             }
 
             frameLayout.addView(baseView)
             setContentView(frameLayout)
         } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                baseView.setOnApplyWindowInsetsListener { view, insets ->
+                    Cocos2dxGLSurfaceView.onKeyboardInsets(insets)
+                    return@setOnApplyWindowInsetsListener view.onApplyWindowInsets(insets)
+                }
+            }
+
             setContentView(baseView)
         }
 
@@ -496,6 +510,10 @@ class GeometryDashActivity : AppCompatActivity(), Cocos2dxHelper.Cocos2dxHelperL
 
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         glSurfaceView.cocos2dxEditText = editText
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            glSurfaceView.defaultFocusHighlightEnabled = false
+        }
 
         return frameLayout
     }
