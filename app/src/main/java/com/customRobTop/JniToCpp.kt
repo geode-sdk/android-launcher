@@ -55,4 +55,16 @@ object JniToCpp {
 
     @JvmStatic
     external fun videoAdShowed()
+
+    @JvmStatic
+    external fun filesPicked(files: Array<String>)
+
+    @JvmStatic
+    external fun fileShareFinished(success: Boolean)
+
+    @JvmStatic
+    external fun textInputCaretToEnd()
+
+    @JvmStatic
+    external fun textInputDone()
 }
