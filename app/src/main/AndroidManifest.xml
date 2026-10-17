@@ -125,7 +125,7 @@
         </activity>
         <activity
             android:name=".GeometryDashActivity"
-            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard"
+            android:configChanges="fontScale|layoutDirection|density|smallestScreenSize|screenSize|uiMode|screenLayout|orientation|navigation|keyboardHidden|keyboard|locale"
             android:exported="true"
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"

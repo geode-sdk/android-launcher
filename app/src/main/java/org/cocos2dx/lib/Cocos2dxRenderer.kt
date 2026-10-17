@@ -29,10 +29,27 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
         private external fun nativeKeyDown(keyCode: Int): Boolean
 
         @JvmStatic
+        private external fun nativeKeyboardEvent(
+            keyCode: Int,
+            down: Boolean,
+            isRepeat: Boolean,
+            timestamp: Double,
+            shiftPressed: Boolean,
+            ctrlPressed: Boolean,
+            altPressed: Boolean
+        )
+
+        @JvmStatic
+        private external fun nativeKeyboardWillShow(offset: Int)
+
+        @JvmStatic
         private external fun nativeOnPause()
 
         @JvmStatic
         private external fun nativeOnResume()
+
+        @JvmStatic
+        private external fun nativeScroll(x: Float, y: Float, scrollY: Float, scrollX: Float)
 
         @JvmStatic
         private external fun nativeRender()
@@ -131,6 +148,18 @@ class Cocos2dxRenderer(private var handler: Cocos2dxGLSurfaceView) : GLSurfaceVi
 
     fun handleKeyDown(keyCode: Int) {
         nativeKeyDown(keyCode)
+    }
+
+    fun handleKeyboardWillShow(offset: Int) {
+        nativeKeyboardWillShow(offset)
+    }
+
+    fun handleKeyboardEvent(keyCode: Int, down: Boolean, isRepeat: Boolean, timestamp: Double, shiftPressed: Boolean, ctrlPressed: Boolean, altPressed: Boolean) {
+        nativeKeyboardEvent(keyCode, down, isRepeat, timestamp, shiftPressed, ctrlPressed, altPressed)
+    }
+
+    fun handleScroll(x: Float, y: Float, scrollY: Float, scrollX: Float) {
+        nativeScroll(x, y, scrollY, scrollX)
     }
 
     fun handleOnPause() {

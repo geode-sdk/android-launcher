@@ -53,6 +53,7 @@ object GamePackageUtils {
         39L to "2.206",
         40L to "2.2074", // ok
         41L to "2.2081",
+        42L to "2.209",
     )
 
     /**
