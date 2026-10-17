@@ -97,6 +97,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         @RequiresApi(Build.VERSION_CODES.R)
         fun onKeyboardInsets(windowInsets: WindowInsets) {
+            if (!cocos2dxGLSurfaceView.sendNewCocosEvents) {
+                return
+            }
+
             val visible = windowInsets.isVisible(WindowInsets.Type.ime())
             val offsetHeight = if (visible) windowInsets.getInsets(WindowInsets.Type.ime()).bottom else 0
 
