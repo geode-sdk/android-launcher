@@ -248,8 +248,8 @@ android {
         applicationId = "com.geode.launcher"
         minSdk = 23
         targetSdk = 37
-        versionCode = 30
-        versionName = "1.8.0"
+        versionCode = 31
+        versionName = "1.9.0"
 
         vectorDrawables {
             useSupportLibrary = true
