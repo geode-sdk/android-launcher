@@ -37,7 +37,7 @@ fun inputTypeForFlags(i: Int): Int {
     }
 
     if ((i and BaseRobTopActivity.KEYBOARD_INPUT_MULTILINE) != 0) {
-        InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_CLASS_TEXT
+        return InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_CLASS_TEXT
     }
 
     return InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_CLASS_TEXT
