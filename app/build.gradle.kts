@@ -1,5 +1,4 @@
 import groovy.json.JsonSlurper
-import java.io.IOException
 import java.net.URI
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
@@ -16,7 +15,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val currentGeodeVersion = "5.10.1"
+val currentGeodeVersion = "5.11.2"
 
 abstract class DownloadVersionMetadataTask : DefaultTask() {
     @get:Input
@@ -248,7 +247,7 @@ android {
     defaultConfig {
         applicationId = "com.geode.launcher"
         minSdk = 23
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 30
         versionName = "1.8.0"
 
@@ -331,7 +330,7 @@ android {
         }
     }
     namespace = "com.geode.launcher"
-    ndkVersion = "29.0.14206865"
+    ndkVersion = "30.0.16248370"
 }
 
 androidComponents {
@@ -348,8 +347,8 @@ androidComponents {
 }
 
 dependencies {
-    implementation (platform("androidx.compose:compose-bom:2026.08.00"))
-    implementation ("androidx.core:core-ktx:1.19.0")
+    implementation (platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation ("androidx.core:core-ktx:1.19.1")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
@@ -368,8 +367,8 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.11.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
 
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.45.0")
-    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.45.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.46.0")
+    implementation ("com.mikepenz:multiplatform-markdown-renderer-m3:0.46.0")
     implementation ("androidx.browser:browser:1.10.0")
     debugImplementation ("androidx.compose.ui:ui-tooling")
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.1.5")
