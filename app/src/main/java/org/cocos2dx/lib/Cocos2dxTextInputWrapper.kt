@@ -32,7 +32,7 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
         val unchanged = str.commonPrefixWith(cText)
 
         var unchangedUntil = unchanged.length
-        if (unchangedUntil > 0 && unchangedUntil < str.length && Character.isLowSurrogate(unchanged.last())) {
+        if (unchangedUntil > 0 && unchangedUntil < str.length && Character.isLowSurrogate(str[unchangedUntil])) {
             unchangedUntil--
         }
 
@@ -64,25 +64,26 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
         val fullscreenIme = cocos2dxGLSurfaceView.cocos2dxEditText == textView && isFullScreenEdit
         if (fullscreenIme) {
             var text = textView.text.toString()
-            if (originText != text) {
+            if (originText != text || !cocos2dxGLSurfaceView.sendNewCocosEvents) {
                 if (cocos2dxGLSurfaceView.sendNewCocosEvents) {
                     cocos2dxGLSurfaceView.queueEvent {
                         JniToCpp.textInputCaretToEnd()
                     }
                 }
 
-                for (i in originText!!.length downTo 1) {
+                repeat(originText!!.length) {
                     cocos2dxGLSurfaceView.deleteBackward()
                 }
 
-                // this bit was removed in 2.209, and I don't know if it's important on previous versions
                 if (!cocos2dxGLSurfaceView.sendNewCocosEvents) {
                     if (!text.endsWith('\n')) {
                         text += '\n'
                     }
                 }
 
-                cocos2dxGLSurfaceView.insertText(text)
+                if (text.isNotEmpty()) {
+                    cocos2dxGLSurfaceView.insertText(text)
+                }
             }
         }
 

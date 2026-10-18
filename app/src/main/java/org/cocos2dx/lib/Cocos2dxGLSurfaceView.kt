@@ -158,8 +158,10 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                             cocos2dxEditText?.apply {
                                 removeTextChangedListener(cocos2dxTextInputWrapper)
 
-                                inputType = inputTypeForFlags(BaseRobTopActivity.curKeyboardInputFlags)
-                                imeOptions = imeOptionsForFlags(BaseRobTopActivity.curKeyboardInputFlags)
+                                if (sendNewCocosEvents) {
+                                    inputType = inputTypeForFlags(BaseRobTopActivity.curKeyboardInputFlags)
+                                    imeOptions = imeOptionsForFlags(BaseRobTopActivity.curKeyboardInputFlags)
+                                }
 
                                 setText("")
                                 val text = msg.obj as String
@@ -369,8 +371,19 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         }
     }
 
-    private fun queueKeyboardEvent(keyCode: Int, event: KeyEvent, down: Boolean) {
-        sendNextEventTimestamp(event.eventTime * MS_TO_NS)
+    private fun queueKeyboardEvent(keyCode: Int, event: KeyEvent, down: Boolean): Boolean {
+        val keypadCode = keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_BACK
+        if (event.isSystem && !keypadCode) {
+            return false
+        }
+
+        if (keypadCode && BaseRobTopActivity.blockBackButton) {
+            return true
+        }
+
+        queueEvent {
+            sendNextEventTimestamp(event.eventTime * MS_TO_NS)
+        }
 
         if (useKeyboardEvents) {
             if (down) {
@@ -382,7 +395,6 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                     GeodeUtils.nativeKeyUp(keyCode, event.modifiers)
                 }
             }
-            return
         }
 
         if (controllerEventsEnabled) {
@@ -397,28 +409,57 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                     event.repeatCount
                 )
             }
-            return
+        }
+
+        // geode events override native callbacks
+        if (useKeyboardEvents || controllerEventsEnabled) {
+            return true
         }
 
         if (sendNewCocosEvents) {
             if (KeyEvent.isGamepadButton(keyCode)) {
-                return
+                return false
             }
 
             if (keyCode == KeyEvent.KEYCODE_ESCAPE && BaseRobTopActivity.blockBackButton) {
-                return
+                return true
             }
 
+            // messy logic
             val isRepeat = event.repeatCount > 0
+            if (keypadCode) {
+                if (down) {
+                    if (isRepeat || BaseRobTopActivity.blockBackButton) {
+                        return true
+                    }
+
+                    queueEvent {
+                        cocos2dxRenderer.handleKeyDown(keyCode)
+                    }
+
+                    return true
+                } else {
+                    return false
+                }
+            }
+
             val eventTimestamp = event.eventTime / 1000.0
+
+            val shiftPressed = event.isShiftPressed
+            val ctrlPressed = event.isCtrlPressed
+            val altPressed = event.isAltPressed
 
             queueEvent {
                 cocos2dxRenderer.handleKeyboardEvent(
                     keyCode, down, isRepeat, eventTimestamp,
-                    event.isShiftPressed, event.isCtrlPressed, event.isAltPressed
+                    shiftPressed, ctrlPressed, altPressed
                 )
             }
+
+            return true
         }
+
+        return false
     }
 
     private fun legacyKeyDown(keyCode: Int, keyEvent: KeyEvent): Boolean {
@@ -478,50 +519,20 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        val deliverGeodeEvents = useKeyboardEvents || controllerEventsEnabled
-        if (!deliverGeodeEvents && !sendNewCocosEvents) {
+        if (!queueKeyboardEvent(keyCode, event, true)) {
             return legacyKeyDown(keyCode, event)
         }
 
-        if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
-            if (deliverGeodeEvents) {
-                queueKeyboardEvent(keyCode, event, true)
-                return true
-            }
-
-            if (event.repeatCount != 0 || BaseRobTopActivity.blockBackButton) {
-                return true
-            }
-
-            queueEvent {
-                cocos2dxRenderer.handleKeyDown(keyCode)
-            }
-            return true
-        }
-
-        if (event.isSystem) {
-            return super.onKeyDown(keyCode, event)
-        }
-
-        queueKeyboardEvent(keyCode, event, true)
         return true
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        val deliverGeodeEvents = useKeyboardEvents || controllerEventsEnabled
-        if (!deliverGeodeEvents && !sendNewCocosEvents) {
+        if (!queueKeyboardEvent(keyCode, event, false)) {
             return super.onKeyUp(keyCode, event)
         }
 
-        if (event.isSystem) {
-            return super.onKeyUp(keyCode, event)
-        }
-
-        queueKeyboardEvent(keyCode, event, false)
         return true
     }
-
-
 
     // i'm lazy.
     // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/controller-input
