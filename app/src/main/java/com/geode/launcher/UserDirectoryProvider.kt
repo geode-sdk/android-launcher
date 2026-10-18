@@ -10,7 +10,10 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
+import com.geode.launcher.utils.ApplicationIcon
+import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.LaunchUtils
+import com.geode.launcher.utils.PreferenceUtils
 import java.io.File
 
 private val DEFAULT_ROOT_PROJECTION: Array<String> = arrayOf(
@@ -60,8 +63,17 @@ class UserDirectoryProvider : DocumentsProvider() {
                         DocumentsContract.Root.FLAG_SUPPORTS_RECENTS or
                         DocumentsContract.Root.FLAG_SUPPORTS_SEARCH
             )
-            add(DocumentsContract.Root.COLUMN_TITLE, context.getString(R.string.app_name))
-            add(DocumentsContract.Root.COLUMN_ICON, R.drawable.geode_logo)
+
+            val selectedIconKey = PreferenceUtils.get(context).getString(PreferenceUtils.Key.SELECTED_ICON)
+                ?: "geode"
+            val selectedIcon = ApplicationIcon.fromId(selectedIconKey)
+            val iconDetails = IconUtils.getIconDetails(selectedIcon)
+
+            val nameId = if (selectedIcon == ApplicationIcon.SAPPHIRE) R.string.application_icon_sapphire else R.string.app_name
+            val logoId = if (selectedIcon == ApplicationIcon.GEODE) R.drawable.geode_logo else iconDetails.iconId
+
+            add(DocumentsContract.Root.COLUMN_TITLE, context.getString(nameId))
+            add(DocumentsContract.Root.COLUMN_ICON, logoId)
         }
 
         return result
