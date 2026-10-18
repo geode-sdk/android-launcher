@@ -233,6 +233,26 @@
                 <data android:scheme="geode-launcher" android:host="main" />
             </intent-filter>
         </activity-alias>
+        <activity-alias
+            android:name=".MainActivityGreen"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_green"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geode-launcher" android:host="main" />
+            </intent-filter>
+        </activity-alias>
 
         <provider
             android:name=".UserDirectoryProvider"

@@ -44,6 +44,7 @@ enum class ApplicationIcon {
     GEODE,
     PRIDE,
     TRANS,
+    GREEN,
     SAPPHIRE;
 
     companion object {
@@ -53,6 +54,7 @@ enum class ApplicationIcon {
             "pride" -> PRIDE
             "trans" -> TRANS
             "sapphire" -> SAPPHIRE
+            "green" -> GREEN
             else -> DEFAULT
         }
     }
@@ -63,6 +65,7 @@ enum class ApplicationIcon {
         DEFAULT -> "default"
         TRANS -> "trans"
         SAPPHIRE -> "sapphire"
+        GREEN -> "green"
     }
 }
 
@@ -104,6 +107,12 @@ object IconUtils {
             component = "MainActivitySapphire",
             iconId = R.mipmap.ic_launcher_sapphire,
             nameId = R.string.application_icon_sapphire,
+        )
+        ApplicationIcon.GREEN -> ApplicationIconDetails(
+            id = id.toId(),
+            component = "MainActivityGreen",
+            iconId = R.mipmap.ic_launcher_green,
+            nameId = R.string.application_icon_green,
         )
     }
 }
