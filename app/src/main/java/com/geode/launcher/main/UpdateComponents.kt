@@ -408,7 +408,8 @@ fun LauncherUpdateIndicator(modifier: Modifier = Modifier) {
         }
     }
 
-    ElevatedCard(modifier) {
+    // there's like a single pixel of the shadow that gets clipped without this...
+    ElevatedCard(modifier = modifier.padding(bottom = 1.dp)) {
         Column(
             // buttons add enough padding already, lower to compensate
             modifier = Modifier.padding(
