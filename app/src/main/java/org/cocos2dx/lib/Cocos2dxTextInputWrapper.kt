@@ -14,15 +14,21 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
     private var originText: String? = null
     private var text: String? = null
 
-    private val isFullScreenEdit: Boolean
-        get() = (cocos2dxGLSurfaceView.cocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).isFullscreenMode
+    private fun isFullScreenEdit(): Boolean {
+        if (cocos2dxGLSurfaceView.usesInlineKeyboard()) {
+            return false
+        }
+
+        val inputMethodManager = cocos2dxGLSurfaceView.cocos2dxEditText?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        return inputMethodManager.isFullscreenMode
+    }
 
     fun setOriginText(originText: String?) {
         this.originText = originText
     }
 
     override fun afterTextChanged(editable: Editable) {
-        if (isFullScreenEdit) {
+        if (isFullScreenEdit()) {
             return
         }
 
@@ -61,7 +67,7 @@ class Cocos2dxTextInputWrapper(private val cocos2dxGLSurfaceView: Cocos2dxGLSurf
 
     override fun onTextChanged(pCharSequence: CharSequence, start: Int, before: Int, count: Int) {}
     override fun onEditorAction(textView: TextView, actionID: Int, keyEvent: KeyEvent?): Boolean {
-        val fullscreenIme = cocos2dxGLSurfaceView.cocos2dxEditText == textView && isFullScreenEdit
+        val fullscreenIme = cocos2dxGLSurfaceView.cocos2dxEditText == textView && isFullScreenEdit()
         if (fullscreenIme) {
             var text = textView.text.toString()
             if (originText != text || !cocos2dxGLSurfaceView.sendNewCocosEvents) {

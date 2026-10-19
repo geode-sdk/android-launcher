@@ -43,19 +43,6 @@ fun inputTypeForFlags(i: Int): Int {
     return InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_CLASS_TEXT
 }
 
-fun usesInlineKeyboard(): Boolean {
-    return Build.VERSION.SDK_INT >= 30
-}
-
-fun imeOptionsForFlags(i: Int): Int {
-    val i2 = if ((i and BaseRobTopActivity.KEYBOARD_INPUT_MULTILINE) == 0 || !usesInlineKeyboard())
-        EditorInfo.IME_ACTION_DONE else EditorInfo.IME_ACTION_NONE
-
-    return if (usesInlineKeyboard())
-        EditorInfo.IME_FLAG_NO_FULLSCREEN or EditorInfo.IME_FLAG_NO_EXTRACT_UI or i2
-    else i2
-}
-
 class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
     companion object {
         lateinit var cocos2dxGLSurfaceView: Cocos2dxGLSurfaceView
@@ -143,6 +130,21 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
             field?.setOnEditorActionListener(cocos2dxTextInputWrapper)
             requestFocus()
         }
+
+    fun usesInlineKeyboard(): Boolean {
+        if (!sendNewCocosEvents) return false
+
+        return Build.VERSION.SDK_INT >= 30
+    }
+
+    fun imeOptionsForFlags(i: Int): Int {
+        val i2 = if ((i and BaseRobTopActivity.KEYBOARD_INPUT_MULTILINE) == 0 || !usesInlineKeyboard())
+            EditorInfo.IME_ACTION_DONE else EditorInfo.IME_ACTION_NONE
+
+        return if (usesInlineKeyboard())
+            EditorInfo.IME_FLAG_NO_FULLSCREEN or EditorInfo.IME_FLAG_NO_EXTRACT_UI or i2
+        else i2
+    }
 
     fun initView() {
         setEGLContextClientVersion(2)
