@@ -2,6 +2,7 @@ package org.cocos2dx.lib
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.hardware.input.InputManager
 import android.opengl.GLSurfaceView
 import android.os.Build
@@ -52,8 +53,22 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
         private var keyboardVisible = false
         private var keyboardHeight = 0
 
+        private var textInputActive = false
+
+        private fun hasHardwareKeyboard(): Boolean {
+            val config = cocos2dxGLSurfaceView.resources.configuration
+            return config.keyboard != Configuration.KEYBOARD_NOKEYS
+                    && config.hardKeyboardHidden != Configuration.HARDKEYBOARDHIDDEN_YES
+        }
+
         private var keyboardHideCheck = Runnable {
             if (keyboardVisible) {
+                return@Runnable
+            }
+
+            // fix for a silly 2.209 bug where the visible check forgets about the existence
+            // of keyboards that aren't visible (hardware keyboards)
+            if (textInputActive && hasHardwareKeyboard()) {
                 return@Runnable
             }
 
@@ -173,6 +188,8 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                                     cocos2dxTextInputWrapper
                                 )
                             }
+
+                            textInputActive = true
                             (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
                                 cocos2dxEditText,
                                 0
@@ -182,6 +199,7 @@ class Cocos2dxGLSurfaceView(context: Context) : GLSurfaceView(context) {
                         return
                     }
                     HANDLER_CLOSE_IME_KEYBOARD -> {
+                        textInputActive = false
                         cocos2dxEditText?.apply {
                             removeTextChangedListener(cocos2dxTextInputWrapper)
                             (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
