@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.format.DateUtils
+import android.util.AtomicFile
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -22,15 +23,19 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,6 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -97,8 +103,14 @@ import com.geode.launcher.utils.IconUtils
 import com.geode.launcher.utils.LaunchUtils
 import com.geode.launcher.utils.PreferenceUtils
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.ConnectException
 import java.net.UnknownHostException
+import java.io.File // File :wilted_rose:
+import java.io.IOException
+import org.json.JSONException
+import org.json.JSONObject
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 
@@ -401,7 +413,197 @@ fun GeneralSettingsGroup() {
             },
             onClick = { onOpenFileManager(context) }
         )
+
+        InstalledModsButton()
     }
+}
+
+private data class InstalledMod(val id: String, val isLoaded: Boolean)
+
+private fun readInstalledMods(file: File): List<InstalledMod> {
+    val savedMods = JSONObject(file.readText())
+    val loadSettingPrefix = "should-load-"
+
+    return savedMods.keys().asSequence()
+        .mapNotNull { key ->
+            if (!key.startsWith(loadSettingPrefix)) return@mapNotNull null
+
+            val modId = key.removePrefix(loadSettingPrefix)
+            val isLoaded = savedMods.opt(key) as? Boolean ?: return@mapNotNull null
+            modId.takeIf { it.isNotBlank() }?.let { InstalledMod(it, isLoaded) }
+        }
+        .sortedBy { it.id }
+        .toList()
+}
+
+private fun setInstalledModLoaded(file: File, modId: String, isLoaded: Boolean) {
+    val savedMods = JSONObject(file.readText())
+    val settingKey = "should-load-$modId"
+    if (savedMods.opt(settingKey) !is Boolean) {
+        throw IOException("Load setting for $modId was not found")
+    }
+
+    savedMods.put(settingKey, isLoaded)
+
+    val atomicFile = AtomicFile(file)
+    val output = atomicFile.startWrite()
+    try {
+        output.write(savedMods.toString(4).toByteArray(Charsets.UTF_8))
+        atomicFile.finishWrite(output)
+    } catch (error: IOException) {
+        atomicFile.failWrite(output)
+        throw error
+    }
+}
+
+@Composable
+private fun InstalledModsButton() {
+    var showDialog by remember { mutableStateOf(false) }
+
+    OptionsButton(
+        title = stringResource(R.string.preference_installed_mods),
+        onClick = { showDialog = true }
+    )
+
+    if (showDialog) {
+        InstalledModsDialog(onDismissRequest = { showDialog = false })
+    }
+}
+
+@Composable
+private fun InstalledModsDialog(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    var mods by remember { mutableStateOf<List<InstalledMod>?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var writeError by remember { mutableStateOf<String?>(null) }
+    var updatingModId by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(context) {
+        try {
+            val result = withContext(Dispatchers.IO) {
+                val savedModsFile = File(
+                    LaunchUtils.getSaveDirectory(context),
+                    "geode/mods/geode.loader/saved.json"
+                )
+                if (savedModsFile.isFile) readInstalledMods(savedModsFile) else null
+            }
+            if (result == null) {
+                loadError = context.getString(R.string.preference_installed_mods_missing)
+            } else {
+                mods = result
+            }
+        } catch (error: IOException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        } catch (error: JSONException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        } catch (error: SecurityException) {
+            loadError = context.getString(
+                R.string.preference_installed_mods_read_error,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
+        }
+    }
+
+    if (mods == null && loadError == null) return
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Column {
+                Text(stringResource(R.string.preference_installed_mods_title))
+                Text(
+                    stringResource(R.string.preference_installed_mods_subtitle),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
+        text = {
+            when {
+                loadError != null -> Text(loadError.orEmpty())
+                mods.isNullOrEmpty() -> Text(stringResource(R.string.preference_installed_mods_empty))
+                else -> Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    writeError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    mods.orEmpty().forEach { mod ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .toggleable(
+                                    value = mod.isLoaded,
+                                    enabled = updatingModId == null,
+                                    role = Role.Checkbox,
+                                    onValueChange = { isLoaded ->
+                                        updatingModId = mod.id
+                                        writeError = null
+                                        coroutineScope.launch {
+                                            try {
+                                                withContext(Dispatchers.IO) {
+                                                    val savedModsFile = File(
+                                                        LaunchUtils.getSaveDirectory(context),
+                                                        "geode/mods/geode.loader/saved.json"
+                                                    )
+                                                    setInstalledModLoaded(savedModsFile, mod.id, isLoaded)
+                                                }
+                                                mods = mods.orEmpty().map {
+                                                    if (it.id == mod.id) it.copy(isLoaded = isLoaded) else it
+                                                }
+                                            } catch (error: IOException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } catch (error: JSONException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } catch (error: SecurityException) {
+                                                writeError = context.getString(
+                                                    R.string.preference_installed_mods_write_error,
+                                                    error.localizedMessage ?: error.javaClass.simpleName
+                                                )
+                                            } finally {
+                                                updatingModId = null
+                                            }
+                                        }
+                                    }
+                                )
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                mod.id,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                            )
+                            Checkbox(
+                                checked = mod.isLoaded,
+                                onCheckedChange = null,
+                                enabled = updatingModId == null
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        }
+    )
 }
 
 @Composable
