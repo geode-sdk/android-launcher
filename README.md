@@ -1,7 +1,6 @@
-# Geode Android Launcher
+# В͜͡а͜͡ж͜͡н͜͡а͜͡я͜͡ и̻н̻ф̻а̻
 
-Launches a vanilla copy of Geometry Dash with the Geode loader added.
-
+б͎л͎а͎ б͙л͙а͙ б̻л̻а̻
 ## Shortcut Links
 
 The launcher supports a handful of links as an escape hatch when the main functionality is impaired in some way (such as needing to prevent an automatic launch due to a crash).  
