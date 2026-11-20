@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -41,7 +40,6 @@ import com.geode.launcher.R
 import com.geode.launcher.log.BaseDirectoryViewModel
 import com.geode.launcher.ui.theme.Typography
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrashLogsTopBar(
     onBackPressedDispatcher: OnBackPressedDispatcher?,
@@ -160,7 +158,6 @@ fun <T> CrashLogsListing(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> DirectoryListingScreen(
     onBackPressedDispatcher: OnBackPressedDispatcher?,

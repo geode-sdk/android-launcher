@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,11 +26,12 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -169,6 +169,7 @@ fun onShareCrash(context: Context) {
     val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         putExtra(Intent.EXTRA_STREAM, uri)
         type = "application/octet-stream"
     }
@@ -246,7 +247,6 @@ fun ErrorInfoDescription(description: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 fun ErrorInfoActions(extraDetails: String?, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
@@ -392,7 +392,10 @@ fun DownloadRecommendation(needsUniversal: Boolean, modifier: Modifier = Modifie
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ErrorInfoSheet(failureInfo: LoadFailureInfo, onDismiss: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    )
 
     ModalBottomSheet(onDismissRequest = { onDismiss() }, sheetState = sheetState) {
         // second container created for scroll (before padding is added)

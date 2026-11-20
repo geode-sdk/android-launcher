@@ -94,6 +94,7 @@ fun shareLog(context: Context, filename: String) {
     val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         putExtra(Intent.EXTRA_STREAM, uri)
         type = "text/plain"
     }

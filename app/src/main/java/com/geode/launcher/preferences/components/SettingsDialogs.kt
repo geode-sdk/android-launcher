@@ -23,6 +23,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -136,10 +137,12 @@ fun RangeDialog(
                 val precision = log10(scale.toFloat()).roundToInt()
 
                 Slider(
-                    value = enteredValue,
+                    state = rememberSliderState(
+                        value = enteredValue,
+                        steps = ((range.last - range.first) - 1) / step,
+                        trackRange = (range.first.toFloat() / scale)..(range.last.toFloat() / scale)
+                    ),
                     onValueChange = { enteredValue = it },
-                    valueRange = (range.first.toFloat()/scale)..(range.last.toFloat()/scale),
-                    steps = ((range.last - range.first) - 1) / step,
                     modifier = Modifier.weight(1.0f)
                 )
 

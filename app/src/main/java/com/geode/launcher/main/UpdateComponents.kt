@@ -27,8 +27,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -259,7 +261,7 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
     val nextReleaseName by releaseManager.availableLauncherUpdateTag.collectAsState()
     val nextRelease by releaseManager.availableLauncherUpdateDetails.collectAsState()
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
 
     var updateJob by remember { mutableStateOf<Job?>(null) }

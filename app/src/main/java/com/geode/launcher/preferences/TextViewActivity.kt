@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -106,6 +105,7 @@ fun onShareFile(context: Context, filename: File) {
     val uri = DocumentsContract.buildDocumentUri("${context.packageName}.user", documentsPath)
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         putExtra(Intent.EXTRA_STREAM, uri)
         type = "application/octet-stream"
     }
@@ -117,7 +117,6 @@ fun onShareFile(context: Context, filename: File) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeodeLogView(
     onBackPressedDispatcher: OnBackPressedDispatcher?,

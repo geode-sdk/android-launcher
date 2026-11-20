@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -105,7 +104,6 @@ fun onOpenLogs(context: Context) {
     context.startActivity(launchIntent)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()

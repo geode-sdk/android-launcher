@@ -41,7 +41,8 @@ object FMOD {
             context.registerReceiver(gPluginBroadcastReceiver, intentFilter)
         }
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val pluginAudioDeviceCallback = PluginAudioDeviceCallback(audioManager.getDevices(3))
+        val pluginAudioDeviceCallback = PluginAudioDeviceCallback(audioManager.getDevices(
+            AudioManager.GET_DEVICES_OUTPUTS or AudioManager.GET_DEVICES_INPUTS))
         gPluginAudioDeviceCallback = pluginAudioDeviceCallback
         audioManager.registerAudioDeviceCallback(pluginAudioDeviceCallback, null)
     }

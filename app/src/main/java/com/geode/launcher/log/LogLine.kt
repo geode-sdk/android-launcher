@@ -7,7 +7,6 @@ import kotlinx.datetime.toLocalDateTime
 import okio.Buffer
 import okio.BufferedSource
 import java.io.IOException
-import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
 fun BufferedSource.readCChar(): Char {
@@ -116,7 +115,7 @@ enum class LogPriority {
 /**
  * Represents a log entry from logcat.
  */
-data class LogLine @OptIn(ExperimentalTime::class) constructor(
+data class LogLine(
     val process: ProcessInformation,
     val time: Instant,
     val logId: Int,
@@ -135,7 +134,6 @@ data class LogLine @OptIn(ExperimentalTime::class) constructor(
             else -> throw IOException("LogLine::fromInputStream: unknown format for (headerSize = $size)")
         }
 
-        @OptIn(ExperimentalTime::class)
         fun fromBufferedSource(source: BufferedSource): LogLine {
             /*
                 // from android <liblog/include/log/log_read.h>
@@ -202,7 +200,6 @@ data class LogLine @OptIn(ExperimentalTime::class) constructor(
             )
         }
 
-        @OptIn(ExperimentalTime::class)
         fun showException(exception: Exception) = LogLine(
             process = ProcessInformation(0, 0, 0),
             time = Clock.System.now(),
@@ -213,14 +210,12 @@ data class LogLine @OptIn(ExperimentalTime::class) constructor(
         )
     }
 
-    @OptIn(ExperimentalTime::class)
     val identifier = time.toJavaInstant()
 
     val messageTrimmed by lazy {
         this.message.trim { it <= ' ' }
     }
 
-    @OptIn(ExperimentalTime::class)
     val formattedTime by lazy { this.time.toLocalDateTime(TimeZone.currentSystemDefault()) }
     val asSimpleString by lazy {
         "$formattedTime [${this.priority.toChar()}/${this.tag}]: ${this.messageTrimmed}"

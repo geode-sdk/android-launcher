@@ -194,9 +194,6 @@ fun CardView(onClick: (() -> Unit)?, modifier: Modifier = Modifier, contents: @C
 @Composable
 fun LauncherUpdateContent(modifier: Modifier = Modifier) {
     ListItem(
-        headlineContent = {
-            Text(text = stringResource(id = R.string.launcher_update_available))
-        },
         supportingContent = {
             Text(text = stringResource(id = R.string.launcher_notification_update_cta))
         },
@@ -207,7 +204,9 @@ fun LauncherUpdateContent(modifier: Modifier = Modifier) {
             )
         },
         modifier = modifier.width(IntrinsicSize.Max)
-    )
+    ) {
+        Text(text = stringResource(id = R.string.launcher_update_available))
+    }
 }
 
 /*
@@ -232,9 +231,6 @@ fun UpdateNotificationContent(modifier: Modifier = Modifier) {
 @Composable
 fun OutdatedVersionContent(modifier: Modifier = Modifier) {
     ListItem(
-        headlineContent = {
-            Text(text = stringResource(id = R.string.launcher_notification_compatibility))
-        },
         leadingContent = {
             Icon(
                 painterResource(R.drawable.icon_warning),
@@ -245,15 +241,14 @@ fun OutdatedVersionContent(modifier: Modifier = Modifier) {
             Text(text = stringResource(id = R.string.launcher_notification_compatibility_description))
         },
         modifier = modifier.width(IntrinsicSize.Max)
-    )
+    ) {
+        Text(text = stringResource(id = R.string.launcher_notification_compatibility))
+    }
 }
 
 @Composable
 fun UpdateFailedContent(modifier: Modifier = Modifier) {
     ListItem(
-        headlineContent = {
-            Text(text = stringResource(id = R.string.launcher_notification_update_failed))
-        },
         leadingContent = {
             Icon(
                 painterResource(R.drawable.icon_warning),
@@ -261,15 +256,14 @@ fun UpdateFailedContent(modifier: Modifier = Modifier) {
             )
         },
         modifier = modifier.width(IntrinsicSize.Max)
-    )
+    ) {
+        Text(text = stringResource(id = R.string.launcher_notification_update_failed))
+    }
 }
 
 @Composable
 fun ForwardCompatibilityContent(modifier: Modifier = Modifier) {
     ListItem(
-        headlineContent = {
-            Text(text = stringResource(id = R.string.launcher_notification_forwards_compatibility))
-        },
         leadingContent = {
             Icon(
                 painterResource(R.drawable.icon_warning),
@@ -280,5 +274,7 @@ fun ForwardCompatibilityContent(modifier: Modifier = Modifier) {
             Text(text = stringResource(id = R.string.launcher_notification_forwards_compatibility_description))
         },
         modifier = modifier.width(IntrinsicSize.Max)
-    )
+    ) {
+        Text(text = stringResource(id = R.string.launcher_notification_forwards_compatibility))
+    }
 }
