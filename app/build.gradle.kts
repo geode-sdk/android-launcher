@@ -242,11 +242,15 @@ val fullDownloadTask = tasks.register<MergeGeodeFilesTask>("downloadGeodeFull") 
 }
 
 android {
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "com.geode.launcher"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 31
         versionName = "1.9.0"
@@ -347,24 +351,24 @@ androidComponents {
 }
 
 dependencies {
-    implementation (platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation (platform("androidx.compose:compose-bom:2026.11.01"))
     implementation ("androidx.core:core-ktx:1.19.1")
     implementation ("androidx.compose.ui:ui")
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.11.1")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.1")
     implementation ("androidx.activity:activity-compose:1.13.0")
     implementation ("androidx.activity:activity-ktx:1.13.0")
     implementation ("androidx.appcompat:appcompat:1.8.0")
     implementation ("androidx.documentfile:documentfile:1.1.0")
 
     implementation ("com.squareup.okio:okio:3.18.2")
-    implementation ("com.squareup.okhttp3:okhttp:5.5.0")
-    implementation ("com.squareup.okhttp3:okhttp-coroutines:5.5.0")
+    implementation ("com.squareup.okhttp3:okhttp:5.5.1")
+    implementation ("com.squareup.okhttp3:okhttp-coroutines:5.5.1")
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.11.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.13.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
 
     implementation ("com.mikepenz:multiplatform-markdown-renderer-android:0.46.0")
