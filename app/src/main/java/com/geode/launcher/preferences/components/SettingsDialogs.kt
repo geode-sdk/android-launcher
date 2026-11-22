@@ -12,6 +12,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,9 +63,9 @@ fun StringDialog(
     onDismissRequest: () -> Unit,
     onSelect: (String) -> Unit,
     initialValue: String,
-    filterInput: ((String) -> String)? = null
+    inputTransformation: InputTransformation? = null,
 ) {
-    var enteredValue by remember { mutableStateOf(initialValue) }
+    val textFieldState = rememberTextFieldState(initialText = initialValue)
 
     BaseDialog(
         onDismissRequest = { onDismissRequest() },
@@ -73,18 +78,16 @@ fun StringDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OutlinedTextField(
-                    value = enteredValue,
-                    onValueChange = {
-                        enteredValue = filterInput?.invoke(it) ?: it
-                    },
-                    singleLine = true,
+                    state = textFieldState,
+                    inputTransformation = inputTransformation,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Ascii,
                         autoCorrectEnabled = false
                     ),
                     trailingIcon = {
-                        if (enteredValue.isNotEmpty()) {
-                            IconButton(onClick = { enteredValue = "" }) {
+                        if (textFieldState.text.isNotEmpty()) {
+                            IconButton(onClick = { textFieldState.clearText() }) {
                                 Icon(
                                     painterResource(R.drawable.icon_close_small),
                                     contentDescription = stringResource(R.string.preference_text_clear)
@@ -94,10 +97,9 @@ fun StringDialog(
                     }
                 )
             }
-
         },
         confirmButton = {
-            TextButton(onClick = { onSelect(enteredValue) }) {
+            TextButton(onClick = { onSelect(textFieldState.text.toString()) }) {
                 Text(stringResource(R.string.message_box_accept))
             }
         },

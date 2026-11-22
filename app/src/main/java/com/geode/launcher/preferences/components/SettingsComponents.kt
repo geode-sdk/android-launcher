@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -187,7 +188,7 @@ fun SettingsStringCard(
     title: String,
     dialogTitle: String,
     preferenceKey: PreferenceUtils.Key,
-    filterInput: ((String) -> String)? = null
+    inputTransformation: InputTransformation? = null,
 ) {
     var preferenceValue by PreferenceUtils.useStringPreference(preferenceKey)
 
@@ -215,7 +216,7 @@ fun SettingsStringCard(
                 showDialog = false
             },
             initialValue = preferenceValue ?: "",
-            filterInput = filterInput
+            inputTransformation = inputTransformation,
         )
     }
 }

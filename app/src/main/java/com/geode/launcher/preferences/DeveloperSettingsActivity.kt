@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -104,6 +107,20 @@ fun onOpenLogs(context: Context) {
     context.startActivity(launchIntent)
 }
 
+object LaunchArgumentFilterTransformation : InputTransformation {
+    val SYMBOL_LIST = "!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".toSet()
+
+    private fun validCharacter(c: Char) = c.isLetterOrDigit() || SYMBOL_LIST.contains(c)
+
+    override fun TextFieldBuffer.transformInput() {
+        for (i in length - 1 downTo 0) {
+            if (!validCharacter(charAt(i))) {
+                delete(i, i + 1)
+            }
+        }
+    }
+}
+
 @Composable
 fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -157,14 +174,7 @@ fun DeveloperSettingsScreen(onBackPressedDispatcher: OnBackPressedDispatcher?) {
                         title = stringResource(R.string.preference_launch_arguments_name),
                         dialogTitle = stringResource(R.string.preference_launch_arguments_set_title),
                         preferenceKey = PreferenceUtils.Key.LAUNCH_ARGUMENTS,
-                        filterInput = {
-                            it.filter { c ->
-                                // if only there was a better way to define this!
-                                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*(){}<>[]?:;'\"~`-_+=\\| ".contains(
-                                    c
-                                )
-                            }
-                        }
+                        inputTransformation = LaunchArgumentFilterTransformation,
                     )
 
                     /*
