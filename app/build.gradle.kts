@@ -15,7 +15,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val currentGeodeVersion = "5.11.2"
+val currentGeodeVersion = "6.0.0"
 
 abstract class DownloadVersionMetadataTask : DefaultTask() {
     @get:Input
