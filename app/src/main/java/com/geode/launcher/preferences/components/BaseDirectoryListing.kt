@@ -126,7 +126,7 @@ fun <T> CrashLogsListing(
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
         if (!isLoading && logLines.isEmpty()) {
-            item {
+            item(contentType = "empty") {
                 Text(
                     stringResource(noneAvailableId),
                     textAlign = TextAlign.Center,
@@ -140,7 +140,8 @@ fun <T> CrashLogsListing(
 
         itemsIndexed(
             logLines,
-            key = { index, line -> directoryViewModel.getItemKey(line) }
+            key = { _, line -> directoryViewModel.getItemKey(line) },
+            contentType = { _, _ -> "log" },
         ) { index, line ->
             val shape = RoundedCornerShape(
                 topStart = if (index == 0) 16.dp else 4.dp,
@@ -152,7 +153,7 @@ fun <T> CrashLogsListing(
             logCard(line, shape)
         }
 
-        item {
+        item(contentType = "spacer") {
             Spacer(Modifier.height(4.dp))
         }
     }

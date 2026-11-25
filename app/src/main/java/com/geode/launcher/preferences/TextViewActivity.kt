@@ -198,7 +198,7 @@ fun GeodeLogView(
                         .padding(horizontal = 8.dp)
                     ) {
 
-                        items(description) { line ->
+                        items(description, contentType = { "line" }) { line ->
                             Text(
                                 line,
                                 fontFamily = robotoMonoFamily,
@@ -206,7 +206,7 @@ fun GeodeLogView(
                             )
                         }
 
-                        item {
+                        item(contentType = "spacer") {
                             Spacer(Modifier.height(16.dp))
                         }
                     }

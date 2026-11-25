@@ -325,7 +325,7 @@ fun ApplicationLogsScreen(
             state = listState
         ) {
             if (!isLoading && logLines.isEmpty()) {
-                item {
+                item(contentType = "empty") {
                     Text(
                         stringResource(R.string.application_logs_no_logs),
                         textAlign = TextAlign.Center,
@@ -336,7 +336,8 @@ fun ApplicationLogsScreen(
             }
 
             items(
-                logLines
+                logLines,
+                contentType = { "log" },
             ) { line ->
                 LogCard(line)
                 HorizontalDivider()
