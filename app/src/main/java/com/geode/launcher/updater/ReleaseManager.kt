@@ -76,7 +76,8 @@ class ReleaseManager private constructor(
     class UpdateException(reason: Reason? = null, cause: Throwable? = null) : Exception(reason?.name, cause) {
         enum class Reason {
             EXTERNAL_FILE_IN_USE,
-            HASH_VALIDATION_FAILED
+            HASH_VALIDATION_FAILED,
+            NO_RELEASE_FOUND
         }
 
         var reason: Reason? = reason
@@ -456,7 +457,7 @@ class ReleaseManager private constructor(
             val currentTime = Clock.System.now().toEpochMilliseconds()
             sharedPreferences.setLong(PreferenceUtils.Key.LAST_UPDATE_CHECK_TIME, currentTime)
 
-            _uiState.value = ReleaseManagerState.Finished()
+            sendError(UpdateException(UpdateException.Reason.NO_RELEASE_FOUND))
             return
         }
 

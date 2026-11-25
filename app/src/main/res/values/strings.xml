@@ -14,7 +14,7 @@
     <string name="launcher_download_icon_alt">download icon</string>
     <string name="launcher_download_game">Download game</string>
     <string name="launcher_download_32bit">Download the 32-bit version of launcher.</string>
-    <string name="launcher_download_universal">Download the non 32-bit version of launcher.</string>
+    <string name="launcher_download_universal">Download the non-32-bit version of launcher.</string>
     <string name="launcher_settings_icon_alt">settings icon</string>
     <string name="launcher_retry_icon_alt">retry icon</string>
     <string name="geode_download_title">Geode is not installed.</string>
@@ -36,6 +36,9 @@
 
     <string name="launcher_game_update_required_short">A Geometry Dash update is required.</string>
     <string name="launcher_game_update_required">The currently installed version of Geometry Dash is no longer supported. Please update Geometry Dash to version %1$s to continue receiving Geode updates.</string>
+    <string name="launcher_game_update_required_no_geode">
+        <![CDATA[The currently installed version of Geometry Dash is <b>not supported</b> by Geode. Please update Geometry Dash to <b>version %1$s</b> to download Geode.<br /> You are currently on version %2$s.]]>
+    </string>
 
     <string name="launcher_update_available">A new launcher update is available!</string>
     <string name="launcher_update_dismiss">Dismiss</string>

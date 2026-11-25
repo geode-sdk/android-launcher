@@ -43,8 +43,12 @@ object GamePackageUtils {
     }
 
     fun getGameVersionString(packageManager: PackageManager): String {
-        val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
-        return game.versionName ?: "0.000"
+        return try {
+            val game = packageManager.getPackageInfo(Constants.PACKAGE_NAME, 0)
+            return game.versionName ?: "0.000"
+        } catch (_: PackageManager.NameNotFoundException) {
+            "0.000"
+        }
     }
 
     private val gameVersionMap = mapOf(

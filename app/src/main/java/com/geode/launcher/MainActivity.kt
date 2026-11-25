@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -73,7 +74,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -85,6 +90,7 @@ import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Theme.DARK
 import com.geode.launcher.ui.theme.Theme.LIGHT
+import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.launcherTitleStyle
 import com.geode.launcher.ui.theme.sapphireTitleStyle
 import com.geode.launcher.updater.ReleaseManager
@@ -97,6 +103,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.net.ConnectException
 import java.net.UnknownHostException
+import androidx.core.text.htmlEncode
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -719,6 +726,48 @@ fun GeodeLogo(modifier: Modifier = Modifier, shouldAnimate: Boolean = false, bas
 }
 
 @Composable
+fun GeodeUpdateNotFoundDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val packageManager = remember { context.packageManager }
+
+    val gdVersionString = remember { GamePackageUtils.getSupportedUnifiedVersion().htmlEncode() }
+    val currentVersionString = remember { GamePackageUtils.getUnifiedVersionName(packageManager).htmlEncode() }
+
+    AlertDialog(
+        icon = {
+            Icon(
+                painterResource(R.drawable.icon_error),
+                contentDescription = null
+            )
+        },
+        title = {
+            Text(stringResource(R.string.launcher_unsupported_version_title))
+        },
+        text = {
+            Text(
+                AnnotatedString.fromHtml(
+                    stringResource(
+                        R.string.launcher_game_update_required_no_geode,
+                        gdVersionString,
+                        currentVersionString,
+                    )
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onDismiss()
+            }) {
+                Text(stringResource(R.string.message_box_accept))
+            }
+        },
+
+        onDismissRequest = { onDismiss() }
+    )
+
+}
+
+@Composable
 fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Unit) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -729,22 +778,36 @@ fun GeodeUpdateIndicator(snackbarHostState: SnackbarHostState, onRetry: () -> Un
         return
     }
 
-    val message = when (releaseState.exception) {
-        is UnknownHostException, is ConnectException ->
-            stringResource(R.string.release_fetch_no_internet_short)
-        is ReleaseManager.UpdateException -> {
-            when (releaseState.exception.reason) {
-                ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> stringResource(
-                    R.string.release_fetch_external_in_use_short
-                )
-                ReleaseManager.UpdateException.Reason.HASH_VALIDATION_FAILED -> stringResource(
-                    R.string.release_fetch_hash_validation_failed_short
-                )
-                else -> stringResource(R.string.release_fetch_generic_short)
+    var showNotFoundDialog by remember { mutableStateOf(false) }
+
+    val message = remember(releaseState.exception) {
+        when (releaseState.exception) {
+            is UnknownHostException, is ConnectException ->
+                resources.getString(R.string.release_fetch_no_internet_short)
+            is ReleaseManager.UpdateException -> {
+                when (releaseState.exception.reason) {
+                    ReleaseManager.UpdateException.Reason.EXTERNAL_FILE_IN_USE -> resources.getString(
+                        R.string.release_fetch_external_in_use_short
+                    )
+                    ReleaseManager.UpdateException.Reason.HASH_VALIDATION_FAILED -> resources.getString(
+                        R.string.release_fetch_hash_validation_failed_short
+                    )
+                    ReleaseManager.UpdateException.Reason.NO_RELEASE_FOUND -> {
+                        showNotFoundDialog = true
+                        null
+                    }
+                    else -> resources.getString(R.string.release_fetch_generic_short)
+                }
             }
+            is CancellationException -> null
+            else -> resources.getString(R.string.release_fetch_generic_short)
         }
-        is CancellationException -> null
-        else -> stringResource(R.string.release_fetch_generic_short)
+    }
+
+    if (showNotFoundDialog) {
+        GeodeUpdateNotFoundDialog {
+            showNotFoundDialog = false
+        }
     }
 
     if (message == null) {

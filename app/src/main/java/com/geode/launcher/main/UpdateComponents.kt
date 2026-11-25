@@ -301,7 +301,7 @@ fun LauncherUpdateInformation(onDismiss: () -> Unit) {
 
                     val nextRelease = nextRelease
                     if (nextRelease != null) {
-                        val releasedTime = remember {
+                        val releasedTime = remember(nextRelease.release.publishedAt) {
                             DateFormat.getDateInstance().format(
                                 Date.from(nextRelease.release.publishedAt.toJavaInstant())
                             )

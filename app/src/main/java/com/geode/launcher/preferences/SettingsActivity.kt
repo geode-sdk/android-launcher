@@ -63,10 +63,13 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.core.text.htmlEncode
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geode.launcher.BuildConfig
 import com.geode.launcher.R
@@ -88,6 +91,7 @@ import com.geode.launcher.ui.theme.LocalTheme
 import com.geode.launcher.ui.theme.Theme
 import com.geode.launcher.ui.theme.Typography
 import com.geode.launcher.ui.theme.robotoMonoFamily
+import com.geode.launcher.updater.ReleaseManager
 import com.geode.launcher.updater.ReleaseViewModel
 import com.geode.launcher.utils.ApplicationIcon
 import com.geode.launcher.utils.Constants
@@ -167,6 +171,10 @@ fun UpdateErrorDialog(
     val coroutineScope = rememberCoroutineScope()
     val clipboardLabel = stringResource(R.string.application_log_copy_label)
 
+    val missingRelease = remember(error) {
+        error is ReleaseManager.UpdateException && error.reason == ReleaseManager.UpdateException.Reason.NO_RELEASE_FOUND
+    }
+
     AlertDialog(
         icon = {
             Icon(
@@ -176,24 +184,44 @@ fun UpdateErrorDialog(
         },
         title = { Text(stringResource(R.string.preference_check_for_updates_help_title)) },
         text = {
-            SelectionContainer {
+            if (missingRelease) {
+                val context = LocalContext.current
+                val packageManager = remember { context.packageManager }
+
+                val gdVersionString = remember { GamePackageUtils.getSupportedUnifiedVersion().htmlEncode() }
+                val currentVersionString = remember { GamePackageUtils.getUnifiedVersionName(packageManager).htmlEncode() }
+
                 Text(
-                    error.stackTraceToString(),
-                    fontFamily = robotoMonoFamily,
-                    style = Typography.bodyMedium,
-                    modifier = Modifier.verticalScroll(rememberScrollState())
+                    AnnotatedString.fromHtml(
+                        stringResource(
+                            R.string.launcher_game_update_required_no_geode,
+                            gdVersionString,
+                            currentVersionString,
+                        )
+                    )
                 )
+            } else {
+                SelectionContainer {
+                    Text(
+                        error.stackTraceToString(),
+                        fontFamily = robotoMonoFamily,
+                        style = Typography.bodyMedium,
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    )
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                coroutineScope.launch {
-                    clipboard.setClipEntry(
-                        ClipEntry(ClipData.newPlainText(clipboardLabel, error.stackTraceToString()))
-                    )
+            if (!missingRelease) {
+                TextButton(onClick = {
+                    coroutineScope.launch {
+                        clipboard.setClipEntry(
+                            ClipEntry(ClipData.newPlainText(clipboardLabel, error.stackTraceToString()))
+                        )
+                    }
+                }) {
+                    Text(stringResource(R.string.preference_check_for_updates_help_copy))
                 }
-            }) {
-                Text(stringResource(R.string.preference_check_for_updates_help_copy))
             }
         },
         confirmButton = {
@@ -259,6 +287,8 @@ fun UpdateIndicator(
                 val message = when (updateStatus.exception) {
                     is UnknownHostException, is ConnectException ->
                         resources.getString(R.string.release_fetch_no_internet)
+                    is ReleaseManager.UpdateException if updateStatus.exception.reason ==
+                        ReleaseManager.UpdateException.Reason.NO_RELEASE_FOUND -> resources.getString(R.string.launcher_game_update_required_short)
                     else -> resources.getString(R.string.preference_check_for_updates_failed)
                 }
 
