@@ -67,6 +67,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -594,6 +596,17 @@ fun SapphireLogoAnimatedPreview() {
     }
 }
 
+private fun DrawScope.drawGradientOverlay(brush: Brush, gradientShift: Offset) {
+    translate(left = gradientShift.x, top = gradientShift.y) {
+        drawRect(
+            brush = brush,
+            topLeft = -gradientShift,
+            size = size,
+            blendMode = BlendMode.SrcIn
+        )
+    }
+}
+
 @Composable
 fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
     val theme = LocalTheme.current
@@ -605,7 +618,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
     val outerColorPalette = colorPalette.outerColors
 
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
-    val offset by infiniteTransition.animateFloat(
+    val offset = infiniteTransition.animateFloat(
         initialValue = -1.0f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
@@ -615,19 +628,23 @@ fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
         label = "gradient offset"
     )
 
-    val innerBrush = Brush.linearGradient(
-        colorStops = innerColorPalette.toTypedArray(),
-        start = Offset(0.0f, 0.0f + (165.06f * offset)),
-        end = Offset(0.0f, 165.06f + (165.06f * offset)),
-        tileMode = TileMode.Mirror
-    )
+    val innerBrush = remember(innerColorPalette) {
+        Brush.linearGradient(
+            colorStops = innerColorPalette.toTypedArray(),
+            start = Offset.Zero,
+            end = Offset(0.0f, 165.06f),
+            tileMode = TileMode.Mirror
+        )
+    }
 
-    val outerBrush = Brush.linearGradient(
-        colorStops = outerColorPalette.toTypedArray(),
-        start = Offset(0.0f + (84.69f * offset), 0.0f + (165.06f * offset)),
-        end = Offset(84.69f + (84.69f * offset), 169.61f + (165.06f * offset)),
-        tileMode = TileMode.Mirror
-    )
+    val outerBrush = remember(outerColorPalette) {
+        Brush.linearGradient(
+            colorStops = outerColorPalette.toTypedArray(),
+            start = Offset.Zero,
+            end = Offset(84.69f, 169.61f),
+            tileMode = TileMode.Mirror
+        )
+    }
 
     Box(modifier = modifier) {
         Icon(
@@ -637,10 +654,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .drawWithContent {
                     drawContent()
-                    drawRect(
-                        brush = innerBrush,
-                        blendMode = BlendMode.SrcIn
-                    )
+                    drawGradientOverlay(innerBrush, Offset(0.0f, 165.06f * offset.value))
                 }
                 .size(64.dp, 64.dp)
         )
@@ -651,10 +665,7 @@ fun AnimatedLogo(modifier: Modifier = Modifier, spec: AnimatedIconSpec) {
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .drawWithContent {
                     drawContent()
-                    drawRect(
-                        brush = outerBrush,
-                        blendMode = BlendMode.SrcIn
-                    )
+                    drawGradientOverlay(outerBrush, Offset(84.69f * offset.value, 165.06f * offset.value))
                 }
                 .size(64.dp, 64.dp)
         )
