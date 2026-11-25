@@ -70,9 +70,11 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
             val context = LocalContext.current
 
             val currentProfile = remember { ProfileManager.get(context).getCurrentFileKey() }
-            val sharedPreferences = context.getSharedPreferences(currentProfile, Context.MODE_PRIVATE)
+            val sharedPreferences = remember {
+                context.getSharedPreferences(currentProfile, Context.MODE_PRIVATE)
+            }
 
-            val preferences = get(sharedPreferences)
+            val preferences = remember { get(sharedPreferences) }
 
             // inferring the type causes an internal compiler error. lol
             val preferenceValue: MutableState<T> = remember {
@@ -90,11 +92,11 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
                 }
             }
 
-            val listener = SharedPreferences.OnSharedPreferenceChangeListener {
-                    _, _ -> preferenceValue.value = preferenceGet(preferences, preferenceKey)
-            }
-
             DisposableEffect(lifecycleOwner) {
+                val listener = SharedPreferences.OnSharedPreferenceChangeListener {
+                        _, _ -> preferenceValue.value = preferenceGet(preferences, preferenceKey)
+                }
+
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_START) {
                         sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -107,6 +109,7 @@ class PreferenceUtils(private val sharedPreferences: SharedPreferences) {
 
                 onDispose {
                     lifecycleOwner.lifecycle.removeObserver(observer)
+                    sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
                 }
             }
 
