@@ -13,10 +13,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,11 +34,8 @@ import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,9 +122,11 @@ fun RangeDialog(
     step: Int,
     children: @Composable () -> Unit
 ) {
-    var enteredValue by remember {
-        mutableFloatStateOf(initialValue / scale.toFloat())
-    }
+    val sliderState = rememberSliderState(
+        value = initialValue / scale.toFloat(),
+        steps = ((range.last - range.first) - 1) / step,
+        trackRange = (range.first.toFloat() / scale)..(range.last.toFloat() / scale)
+    )
 
     BaseDialog(
         onDismissRequest = { onDismissRequest() },
@@ -139,22 +140,18 @@ fun RangeDialog(
                 val precision = log10(scale.toFloat()).roundToInt()
 
                 Slider(
-                    state = rememberSliderState(
-                        value = enteredValue,
-                        steps = ((range.last - range.first) - 1) / step,
-                        trackRange = (range.first.toFloat() / scale)..(range.last.toFloat() / scale)
-                    ),
-                    onValueChange = { enteredValue = it },
+                    state = sliderState,
+                    onValueChange = { sliderState.value = it },
                     modifier = Modifier.weight(1.0f)
                 )
 
-                Text("%.${precision}f$labelSuffix".format(enteredValue))
+                Text("%.${precision}f$labelSuffix".format(sliderState.value))
             }
 
             children()
         },
         confirmButton = {
-            TextButton(onClick = { onSelect((enteredValue * scale).roundToInt()) }) {
+            TextButton(onClick = { onSelect((sliderState.value * scale).roundToInt()) }) {
                 Text(stringResource(R.string.message_box_accept))
             }
         },
@@ -166,6 +163,16 @@ fun RangeDialog(
     )
 }
 
+object NumberOnlyFilterTransformation : InputTransformation {
+    override fun TextFieldBuffer.transformInput() {
+        for (i in length - 1 downTo 0) {
+            if (!charAt(i).isDigit()) {
+                delete(i, i + 1)
+            }
+        }
+    }
+}
+
 @Composable
 fun FrameRateDialog(
     title: String,
@@ -174,15 +181,13 @@ fun FrameRateDialog(
     initialValue: Int,
     maxFrameRate: Int,
 ) {
-    var enteredValue by remember {
-        mutableStateOf(
-            if (initialValue == 0) maxFrameRate.toString()
-            else initialValue.toString()
-        )
-    }
+    val textFieldState = rememberTextFieldState(
+        initialText = if (initialValue == 0) maxFrameRate.toString()
+        else initialValue.toString()
+    )
 
     val minFrameRate = 5
-    val currentValue = enteredValue.toIntOrNull()
+    val currentValue = textFieldState.text.toString().toIntOrNull()
     val maximumReached = currentValue != null && currentValue > maxFrameRate
     val minimumReached = currentValue != null && currentValue < minFrameRate
 
@@ -199,7 +204,7 @@ fun FrameRateDialog(
                 ) {
                     IconButton(onClick = {
                         val prevValue = max((currentValue ?: 0) - 5, minFrameRate)
-                        enteredValue = prevValue.toString()
+                        textFieldState.setTextAndPlaceCursorAtEnd(prevValue.toString())
                     }, enabled = currentValue == null || currentValue > minFrameRate) {
                         Icon(
                             painterResource(R.drawable.icon_remove),
@@ -210,14 +215,12 @@ fun FrameRateDialog(
                     Spacer(Modifier.size(8.dp))
 
                     OutlinedTextField(
-                        value = enteredValue,
-                        onValueChange = {
-                            enteredValue = it
-                        },
-                        singleLine = true,
+                        state = textFieldState,
+                        lineLimits = TextFieldLineLimits.SingleLine,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                         ),
+                        inputTransformation = NumberOnlyFilterTransformation,
                         suffix = {
                             Text(stringResource(R.string.preference_limit_framerate_suffix))
                         },
@@ -232,7 +235,7 @@ fun FrameRateDialog(
 
                     IconButton(onClick = {
                         val nextValue = min((currentValue ?: 0) + 5, maxFrameRate)
-                        enteredValue = nextValue.toString()
+                        textFieldState.setTextAndPlaceCursorAtEnd(nextValue.toString())
                     }, enabled = currentValue == null || currentValue < maxFrameRate) {
                         Icon(
                             painterResource(R.drawable.icon_add),
@@ -297,7 +300,8 @@ fun FrameRateDialog(
 
 @Composable
 fun ProfileCreateDialog(onDismissRequest: () -> Unit) {
-    var enteredValue by remember { mutableStateOf("") }
+    val textFieldState = rememberTextFieldState()
+    val enteredValue = textFieldState.text.toString()
 
     val filename = enteredValue.take(16)
         .lowercase()
@@ -329,11 +333,8 @@ fun ProfileCreateDialog(onDismissRequest: () -> Unit) {
                     .padding(horizontal = 12.dp)
             ) {
                 OutlinedTextField(
-                    value = enteredValue,
-                    onValueChange = {
-                        enteredValue = it
-                    },
-                    singleLine = true,
+                    state = textFieldState,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                     ),
