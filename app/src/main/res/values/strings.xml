@@ -27,11 +27,9 @@
     <string name="launcher_warning_icon_alt">warning</string>
     <string name="launcher_error_icon_alt">error</string>
     <string name="launcher_unsupported_version_title">Unsupported version</string>
-    <string name="launcher_outdated_version_description">
-        The current version of Geometry Dash is not compatible with the version supported by the launcher (%2$s). You must update Geometry Dash to fix this.\nLaunch will continue, but crashes may occur!
-    </string>
+    <string name="launcher_newer_version_title">Unsupported version</string>
     <string name="launcher_unsupported_version_description">
-        The current version of Geometry Dash is not compatible with the version supported by the launcher. A launcher update is required to fix this.\nLaunch will continue, but crashes may occur!
+        <![CDATA[The currently installed version of Geometry Dash is <b>newer than</b> what the launcher expects. This is <b>separate</b> from the version supported by Geode.<br />To prevent instability, make sure you are using the latest updates of the launcher and Geode.]]>
     </string>
 
     <string name="launcher_game_update_required_short">A Geometry Dash update is required.</string>

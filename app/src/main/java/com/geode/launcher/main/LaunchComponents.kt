@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.unit.dp
 import com.geode.launcher.GeometryDashActivity
 import com.geode.launcher.R
@@ -45,34 +47,30 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
     val packageManager = context.packageManager
 
     val gdVersionCode = remember { GamePackageUtils.getGameVersionCode(packageManager) }
-    val gdVersionString = remember { GamePackageUtils.getGameVersionString(packageManager) }
 
     var lastDismissedVersion by PreferenceUtils.useLongPreference(
         preferenceKey = PreferenceUtils.Key.DISMISSED_GJ_UPDATE
     )
 
-    val onUnsupportedVersion = gdVersionCode < Constants.SUPPORTED_VERSION_CODE_MIN || gdVersionCode > Constants.SUPPORTED_VERSION_CODE
-    val canDismissRelease = gdVersionCode >= Constants.SUPPORTED_VERSION_CODE
-    val shouldDismiss = canDismissRelease && gdVersionCode == lastDismissedVersion
+    val onUnsupportedVersion = gdVersionCode > Constants.SUPPORTED_VERSION_CODE
+    val shouldDismiss = gdVersionCode <= lastDismissedVersion
 
     if (onUnsupportedVersion && !shouldDismiss) {
         AlertDialog(
             icon = {
                 Icon(
-                    painterResource(R.drawable.icon_warning),
-                    contentDescription = stringResource(R.string.launcher_warning_icon_alt)
+                    painterResource(R.drawable.icon_info),
+                    contentDescription = null
                 )
             },
             title = {
-                Text(stringResource(R.string.launcher_unsupported_version_title))
+                Text(stringResource(R.string.launcher_newer_version_title))
             },
             text = {
                 Text(
-                    stringResource(
-                    R.string.launcher_unsupported_version_description,
-                    gdVersionString,
-                    Constants.SUPPORTED_VERSION_STRING
-                )
+                    AnnotatedString.fromHtml(
+                        stringResource(R.string.launcher_unsupported_version_description)
+                    )
                 )
             },
             confirmButton = {
@@ -82,7 +80,7 @@ fun UpdateWarning(inSafeMode: Boolean = false, onDismiss: () -> Unit) {
 
                     onLaunch(context, inSafeMode)
                 }) {
-                    Text(stringResource(R.string.message_box_accept))
+                    Text(stringResource(R.string.message_box_continue))
                 }
             },
             dismissButton = {
